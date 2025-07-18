@@ -39,8 +39,8 @@ const Navigation = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="text-2xl font-bold">
-            <span className="text-primary">Digital</span>
-            <span className="text-secondary">Forge</span>
+            <span className="text-primary">Optimum</span>
+            <span className="text-secondary"> Solutions Group</span>
           </div>
 
           {/* Desktop Navigation */}

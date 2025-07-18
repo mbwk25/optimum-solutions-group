@@ -65,7 +65,7 @@ const ContactSection = () => {
     {
       icon: Mail,
       title: "Email Us",
-      details: "hello@digitalforge.com",
+      details: "hello@optimumsolutions.com",
       description: "Get a response within 24 hours"
     },
     {

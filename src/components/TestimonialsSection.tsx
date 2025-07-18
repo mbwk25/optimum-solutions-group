@@ -7,7 +7,7 @@ const TestimonialsSection = () => {
       role: "CEO, GreenLeaf Consulting",
       company: "Marketing Agency",
       rating: 5,
-      testimonial: "DigitalForge transformed our entire client management process. What used to take hours now takes minutes, and our team productivity has increased by 60%. The custom CRM they built fits our workflow perfectly.",
+      testimonial: "Optimum Solutions Group transformed our entire client management process. What used to take hours now takes minutes, and our team productivity has increased by 60%. The custom CRM they built fits our workflow perfectly.",
       result: "60% increase in productivity"
     },
     {
