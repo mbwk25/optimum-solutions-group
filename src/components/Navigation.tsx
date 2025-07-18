@@ -40,13 +40,20 @@ const Navigation = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative">
+            <div className="relative overflow-hidden">
               <img 
                 src={logo} 
                 alt="Optimum Solutions Group"
-                className="h-10 w-10 transition-transform duration-300 group-hover:scale-110"
+                className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 drop-shadow-lg"
               />
-              <div className="absolute inset-0 bg-primary/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"></div>
+              {/* Multi-layered glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-primary opacity-0 group-hover:opacity-70 transition-all duration-500 rounded-xl blur-lg scale-150 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-secondary via-primary to-secondary opacity-0 group-hover:opacity-40 transition-all duration-700 rounded-xl blur-md scale-125"></div>
+              <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-20 transition-all duration-300 rounded-lg blur-sm"></div>
+              {/* Orbiting particles */}
+              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:animate-ping" style={{ transform: 'translate(-50%, -50%) rotate(0deg) translateX(20px)' }}></div>
+              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-secondary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700" style={{ transform: 'translate(-50%, -50%) rotate(120deg) translateX(25px)', animationDelay: '0.2s' }}></div>
+              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-600" style={{ transform: 'translate(-50%, -50%) rotate(240deg) translateX(22px)', animationDelay: '0.4s' }}></div>
             </div>
             <div className="font-bold text-xl tracking-tight">
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
