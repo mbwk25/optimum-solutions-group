@@ -88,13 +88,26 @@
   /* Hero Section Enhancements */
   .hero-gradient {
     background: var(--gradient-hero);
+    position: relative;
+  }
+
+  .hero-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, hsl(0 84% 60% / 0.1) 50%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
   }
 
   .hero-text-gradient {
-    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(15 100% 55%) 100%);
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(15 100% 55%) 50%, hsl(0 84% 70%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: gradientShift 4s ease-in-out infinite;
   }
 
   /* Dark Theme Glassmorphism Effect */
@@ -196,5 +209,27 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(100%);
+    opacity: 1;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: 100% 50%;
   }
 }
