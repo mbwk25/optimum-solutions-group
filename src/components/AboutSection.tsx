@@ -31,15 +31,19 @@ const AboutSection = () => {
   return (
     <section id="about" className="section-padding bg-gradient-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-20 items-center">
           <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              We Help Small Businesses{' '}
-              <span className="text-primary">Win with Technology</span>
-            </h2>
+            <div className="mb-8">
+              <h2 className="font-playfair italic text-5xl md:text-6xl lg:text-7xl font-light text-foreground mb-4 leading-tight">
+                Digital transformation
+              </h2>
+              <h3 className="font-playfair italic text-4xl md:text-5xl lg:text-6xl font-light text-primary leading-tight">
+                made simple.
+              </h3>
+            </div>
             
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Too many businesses struggle with inefficient processes, scattered data, and tools that don't talk to each other. We fix that by creating integrated digital platforms that work exactly how you do business.
+            <p className="text-xl text-muted-foreground mb-8 leading-relaxed font-light">
+              Too many businesses struggle with inefficient processes, scattered data, and tools that don't work together. We create integrated digital solutions that transform how you operate.
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">

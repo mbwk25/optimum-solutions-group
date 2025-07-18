@@ -55,13 +55,13 @@ const TestimonialsSection = () => {
   return (
     <section id="testimonials" className="section-padding bg-gradient-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Success Stories From{' '}
-            <span className="text-primary">Real Businesses</span>
+        <div className="text-center mb-20">
+          <h2 className="font-playfair italic text-5xl md:text-6xl lg:text-7xl font-light text-foreground mb-6 leading-tight">
+            Real businesses.{' '}
+            <span className="text-primary">Real results.</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            See how businesses like yours have transformed their operations and achieved measurable results with our custom solutions.
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto font-light leading-relaxed">
+            Discover how forward-thinking companies have transformed their operations and achieved measurable growth with our tailored solutions.
           </p>
         </div>
 

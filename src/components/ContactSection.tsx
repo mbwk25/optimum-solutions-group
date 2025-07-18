@@ -114,13 +114,13 @@ const ContactSection = () => {
   return (
     <section id="contact" className="section-padding bg-gradient-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+        <div className="text-center mb-20">
+          <h2 className="font-playfair italic text-5xl md:text-6xl lg:text-7xl font-light text-foreground mb-6 leading-tight">
             Ready to{' '}
-            <span className="text-primary">Transform Your Business?</span>
+            <span className="text-primary">evolve?</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Let's discuss your challenges and explore how custom software can drive your business forward. No commitments, just insights.
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto font-light leading-relaxed">
+            Let's explore how custom software can accelerate your business transformation. No pressure, just insights and possibilities.
           </p>
         </div>
 

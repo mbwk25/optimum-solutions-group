@@ -71,13 +71,13 @@ const ServicesSection = () => {
   return (
     <section id="services" className="section-padding bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Digital Solutions That{' '}
-            <span className="text-primary">Drive Results</span>
+        <div className="text-center mb-20">
+          <h2 className="font-playfair italic text-5xl md:text-6xl lg:text-7xl font-light text-foreground mb-6 leading-tight">
+            Solutions that{' '}
+            <span className="text-primary">scale with you.</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            We offer end-to-end digital transformation services designed specifically for small and medium businesses ready to scale.
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto font-light leading-relaxed">
+            End-to-end digital transformation services designed specifically for ambitious businesses ready to evolve and thrive in the modern marketplace.
           </p>
         </div>
 

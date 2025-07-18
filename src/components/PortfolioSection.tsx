@@ -43,13 +43,13 @@ const PortfolioSection = () => {
   return (
     <section id="portfolio" className="section-padding bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Real Projects,{' '}
-            <span className="text-primary">Real Impact</span>
+        <div className="text-center mb-20">
+          <h2 className="font-playfair italic text-5xl md:text-6xl lg:text-7xl font-light text-foreground mb-6 leading-tight">
+            Work that{' '}
+            <span className="text-primary">drives impact.</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Take a look at how we've helped businesses like yours solve complex challenges with custom software solutions.
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto font-light leading-relaxed">
+            Explore how we've helped businesses across industries solve complex challenges with elegant, powerful digital solutions.
           </p>
         </div>
 
