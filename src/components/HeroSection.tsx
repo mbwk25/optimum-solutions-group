@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 import heroBackground from '@/assets/hero-background.jpg';
+import ParticleSystem from '@/components/ParticleSystem';
 
 const HeroSection = () => {
   const scrollToContact = () => {
@@ -27,6 +28,7 @@ const HeroSection = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 hero-gradient opacity-90"></div>
+        <ParticleSystem />
       </div>
 
       {/* Content - Minimalist centered layout inspired by Amp */}

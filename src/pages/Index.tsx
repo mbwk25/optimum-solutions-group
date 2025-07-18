@@ -8,6 +8,7 @@ import PortfolioSection from '@/components/PortfolioSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
+import CustomCursor from '@/components/CustomCursor';
 import { LoadingScreen, usePageLoad } from '@/components/LoadingScreen';
 
 const Index = () => {
@@ -18,17 +19,20 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      <HeroSection />
-      <AboutSection />
-      <ServicesSection />
-      <PortfolioSection />
-      <TestimonialsSection />
-      <ContactSection />
-      <Footer />
-      <BackToTop />
-    </div>
+    <>
+      <CustomCursor />
+      <div className="min-h-screen">
+        <Navigation />
+        <HeroSection />
+        <AboutSection />
+        <ServicesSection />
+        <PortfolioSection />
+        <TestimonialsSection />
+        <ContactSection />
+        <Footer />
+        <BackToTop />
+      </div>
+    </>
   );
 };
 
