@@ -29,80 +29,61 @@ const HeroSection = () => {
         <div className="absolute inset-0 hero-gradient opacity-90"></div>
       </div>
 
-      {/* Content */}
+      {/* Content - Minimalist centered layout inspired by Amp */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="text-white">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 fade-in-up">
-              Turn Your Business Into A{' '}
-              <span className="hero-text-gradient">Digital Powerhouse</span>
+        <div className="min-h-[80vh] flex items-center justify-center">
+          <div className="text-center max-w-5xl mx-auto">
+            {/* Main headline with elegant serif typography */}
+            <h1 className="mb-8 fade-in-up">
+              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-white/95 leading-tight mb-2">
+                Everything
+              </span>
+              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-white/95 leading-tight mb-4">
+                is changing.
+              </span>
+              <span className="block font-inter text-xl md:text-2xl lg:text-3xl font-normal text-white/80 mt-8 leading-relaxed">
+                Your business needs to evolve.
+              </span>
             </h1>
             
-            <p className="text-xl md:text-2xl mb-8 text-white/90 leading-relaxed fade-in-up stagger-1">
-              We build custom software platforms, automate workflows, and create digital tools that help small and medium businesses scale intelligently.
+            <p className="text-lg md:text-xl mb-12 text-white/70 leading-relaxed fade-in-up stagger-1 max-w-3xl mx-auto font-light">
+              We help ambitious businesses transform their operations with custom software solutions that drive real, measurable results in an ever-changing digital landscape.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-12 fade-in-up stagger-2">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center fade-in-up stagger-2">
               <Button 
                 onClick={scrollToContact}
                 size="lg"
-                className="btn-hero text-lg px-8 py-4 h-auto"
+                className="btn-hero text-lg px-12 py-6 h-auto font-medium tracking-wide"
               >
-                Book Free Consultation
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Start Your Transformation
               </Button>
               
               <Button 
                 onClick={scrollToServices}
                 variant="outline" 
                 size="lg"
-                className="btn-secondary-outline text-lg px-8 py-4 h-auto border-white/30 text-white hover:bg-white hover:text-primary"
+                className="text-lg px-12 py-6 h-auto border-white/20 text-white hover:bg-white/10 hover:border-white/40 backdrop-blur-sm font-medium tracking-wide"
               >
-                <Play className="mr-2 h-5 w-5" />
-                See How We Work
+                Explore Solutions
               </Button>
             </div>
 
-            <div className="flex items-center gap-8 text-white/80 fade-in-up stagger-3">
+            {/* Subtle stats section */}
+            <div className="flex items-center justify-center gap-12 text-white/60 fade-in-up stagger-3 mt-16 text-sm font-light">
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary">50+</div>
-                <div className="text-sm">Successful Projects</div>
+                <div className="text-2xl font-playfair text-secondary mb-1">50+</div>
+                <div>Successful Projects</div>
               </div>
-              <div className="w-px h-12 bg-white/20"></div>
+              <div className="w-px h-8 bg-white/20"></div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary">95%</div>
-                <div className="text-sm">Client Satisfaction</div>
+                <div className="text-2xl font-playfair text-secondary mb-1">95%</div>
+                <div>Client Satisfaction</div>
               </div>
-              <div className="w-px h-12 bg-white/20"></div>
+              <div className="w-px h-8 bg-white/20"></div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary">2x</div>
-                <div className="text-sm">Average ROI</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative fade-in-up stagger-4">
-            <div className="glass-card p-8 rounded-2xl">
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Transform Your Workflow Today
-              </h3>
-              <div className="space-y-3 text-white/90">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span>Custom Platform Development</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span>Process Automation</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span>Team Management Tools</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span>Performance Analytics</span>
-                </div>
+                <div className="text-2xl font-playfair text-secondary mb-1">2x</div>
+                <div>Average ROI</div>
               </div>
             </div>
           </div>
