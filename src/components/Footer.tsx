@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, LinkedinIcon, TwitterIcon, GithubIcon } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import LazyImage from '@/components/LazyImage';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -43,10 +44,13 @@ const Footer = () => {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
-              <img 
+              <LazyImage 
                 src={logo} 
                 alt="Optimum Solutions Group"
                 className="h-12 w-12"
+                loading="lazy"
+                width={48}
+                height={48}
               />
               <div className="font-bold text-xl tracking-tight">
                 <span className="bg-gradient-to-r from-secondary to-primary-foreground bg-clip-text text-transparent">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import HeroSection from '@/components/HeroSection';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import AboutSection from '@/components/AboutSection';
 import ServicesSection from '@/components/ServicesSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
@@ -13,6 +14,9 @@ import { LoadingScreen, usePageLoad } from '@/components/LoadingScreen';
 
 const Index = () => {
   const isLoading = usePageLoad();
+  
+  // Monitor performance metrics
+  usePerformanceMonitor();
 
   if (isLoading) {
     return <LoadingScreen />;

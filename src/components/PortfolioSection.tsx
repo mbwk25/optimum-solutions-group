@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ExternalLink, ArrowRight, Users, TrendingUp, Clock } from 'lucide-react';
 import portfolioPreview from '@/assets/portfolio-preview.jpg';
+import LazyImage from '@/components/LazyImage';
 
 const PortfolioSection = () => {
   const projects = [
@@ -87,10 +88,13 @@ const PortfolioSection = () => {
                 </Button>
               </div>
               <div className="relative">
-                <img 
+                <LazyImage 
                   src={portfolioPreview} 
                   alt="Portfolio showcase"
                   className="rounded-2xl shadow-2xl"
+                  loading="lazy"
+                  width={600}
+                  height={400}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent rounded-2xl"></div>
               </div>
