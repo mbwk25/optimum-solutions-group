@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import CriticalCSS from "@/components/CriticalCSS";
+import PerformanceOptimizer from "@/components/PerformanceOptimizer";
+import ResourcePrefetcher from "@/components/ResourcePrefetcher";
+import { useServiceWorker } from "@/hooks/useServiceWorker";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -12,10 +15,16 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CriticalCSS />
+const App = () => {
+  // Initialize service worker for caching
+  useServiceWorker();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <CriticalCSS />
+        <PerformanceOptimizer />
+        <ResourcePrefetcher />
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -31,6 +40,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

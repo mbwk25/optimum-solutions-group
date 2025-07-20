@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { logPerformanceWarnings } from '@/utils/performanceBudget';
 
 export const usePerformanceMonitor = () => {
   useEffect(() => {
@@ -44,15 +45,22 @@ export const usePerformanceMonitor = () => {
       }).observe({ type: 'layout-shift', buffered: true });
     };
 
+    // Run after page load and check performance budgets
+    const checkBudgetsAfterLoad = () => {
+      reportWebVitals();
+      // Check performance budgets after a delay to ensure metrics are captured
+      setTimeout(logPerformanceWarnings, 3000);
+    };
+
     // Run after page load
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', reportWebVitals);
+      document.addEventListener('DOMContentLoaded', checkBudgetsAfterLoad);
     } else {
-      reportWebVitals();
+      checkBudgetsAfterLoad();
     }
 
     return () => {
-      document.removeEventListener('DOMContentLoaded', reportWebVitals);
+      document.removeEventListener('DOMContentLoaded', checkBudgetsAfterLoad);
     };
   }, []);
 };
