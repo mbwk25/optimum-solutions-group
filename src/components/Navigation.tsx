@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/optimum-logo.png';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,8 +19,9 @@ const Navigation = () => {
   const navItems = [
     { label: 'About', href: '#about' },
     { label: 'Services', href: '#services' },
+    { label: 'IoT Solutions', href: '#iot' },
+    { label: 'Estimator', href: '#estimator' },
     { label: 'Portfolio', href: '#portfolio' },
-    { label: 'Testimonials', href: '#testimonials' },
     { label: 'Contact', href: '#contact' },
   ];
 

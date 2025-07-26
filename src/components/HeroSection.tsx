@@ -53,7 +53,7 @@ const HeroSection = () => {
             </h1>
             
             <p className="text-lg md:text-xl mb-12 text-white/70 leading-relaxed fade-in-up stagger-1 max-w-3xl mx-auto font-light">
-              We help ambitious businesses transform their operations with custom software solutions that drive real, measurable results in an ever-changing digital landscape.
+              Optimum Solutions Group helps ambitious businesses transform their operations with custom software, IoT systems, and digital solutions that drive real, measurable results.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center fade-in-up stagger-2">
@@ -78,18 +78,18 @@ const HeroSection = () => {
             {/* Subtle stats section */}
             <div className="flex items-center justify-center gap-12 text-white/60 fade-in-up stagger-3 mt-16 text-sm font-light">
               <div className="text-center">
+                <div className="text-2xl font-playfair text-secondary mb-1">100+</div>
+                <div>Connected Devices</div>
+              </div>
+              <div className="w-px h-8 bg-white/20"></div>
+              <div className="text-center">
                 <div className="text-2xl font-playfair text-secondary mb-1">50+</div>
                 <div>Successful Projects</div>
               </div>
               <div className="w-px h-8 bg-white/20"></div>
               <div className="text-center">
-                <div className="text-2xl font-playfair text-secondary mb-1">95%</div>
-                <div>Client Satisfaction</div>
-              </div>
-              <div className="w-px h-8 bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-2xl font-playfair text-secondary mb-1">2x</div>
-                <div>Average ROI</div>
+                <div className="text-2xl font-playfair text-secondary mb-1">3x</div>
+                <div>Efficiency Improvement</div>
               </div>
             </div>
           </div>

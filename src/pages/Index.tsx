@@ -4,6 +4,8 @@ import HeroSection from '@/components/HeroSection';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import AboutSection from '@/components/AboutSection';
 import ServicesSection from '@/components/ServicesSection';
+import IoTSection from '@/components/IoTSection';
+import ProjectEstimator from '@/components/ProjectEstimator';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import PortfolioSection from '@/components/PortfolioSection';
 import ContactSection from '@/components/ContactSection';
@@ -30,6 +32,8 @@ const Index = () => {
         <HeroSection />
         <AboutSection />
         <ServicesSection />
+        <IoTSection />
+        <ProjectEstimator />
         <PortfolioSection />
         <TestimonialsSection />
         <ContactSection />

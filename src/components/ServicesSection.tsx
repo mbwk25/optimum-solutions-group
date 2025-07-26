@@ -1,4 +1,4 @@
-import { Code, Workflow, Users, BarChart, Palette, Headphones, TrendingUp, Database } from 'lucide-react';
+import { Code, Workflow, Users, BarChart, Palette, Headphones, TrendingUp, Database, Cpu, Wifi, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useScrollAnimation from '@/hooks/useScrollAnimation';
 
@@ -70,6 +70,22 @@ const ServicesSection = () => {
       features: ["Data Visualization", "Predictive Analytics", "Custom Reports", "KPI Tracking"],
       cta: "Analyze Data",
       gradient: "from-teal-500/10 to-green-500/10"
+    },
+    {
+      icon: Cpu,
+      title: "IoT & Smart Systems",
+      description: "Connect physical devices to digital intelligence with comprehensive IoT solutions.",
+      features: ["Device Connectivity", "Real-time Monitoring", "Edge Computing", "Predictive Maintenance"],
+      cta: "Build IoT Platform",
+      gradient: "from-blue-500/10 to-cyan-500/10"
+    },
+    {
+      icon: Shield,
+      title: "Security & Compliance",
+      description: "Protect your digital assets with robust security measures and compliance frameworks.",
+      features: ["Data Encryption", "Access Control", "Audit Trails", "GDPR Compliance"],
+      cta: "Secure Systems",
+      gradient: "from-red-500/10 to-pink-500/10"
     }
   ];
 
