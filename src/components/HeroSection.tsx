@@ -41,18 +41,18 @@ const HeroSection = () => {
           <div className="text-center max-w-5xl mx-auto">
             {/* Main headline with elegant serif typography */}
             <h1 className="mb-8 fade-in-up">
-              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-white/95 leading-tight mb-2">
+              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-foreground leading-tight mb-2">
                 Everything
               </span>
-              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-white/95 leading-tight mb-4">
+              <span className="block font-playfair italic text-6xl md:text-8xl lg:text-9xl font-light text-foreground leading-tight mb-4">
                 is changing.
               </span>
-              <span className="block font-inter text-xl md:text-2xl lg:text-3xl font-normal text-white/80 mt-8 leading-relaxed">
+              <span className="block font-inter text-xl md:text-2xl lg:text-3xl font-normal text-foreground/90 mt-8 leading-relaxed">
                 Your business needs to evolve.
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl mb-12 text-white/70 leading-relaxed fade-in-up stagger-1 max-w-3xl mx-auto font-light">
+            <p className="text-lg md:text-xl mb-12 text-foreground/80 leading-relaxed fade-in-up stagger-1 max-w-3xl mx-auto font-light">
               Optimum Solutions Group helps ambitious businesses transform their operations with custom software, IoT systems, and digital solutions that drive real, measurable results.
             </p>
 
@@ -69,24 +69,24 @@ const HeroSection = () => {
                 onClick={scrollToServices}
                 variant="outline" 
                 size="lg"
-                className="text-lg px-12 py-6 h-auto border-white/20 text-white hover:bg-white/10 hover:border-white/40 backdrop-blur-sm font-medium tracking-wide"
+                className="text-lg px-12 py-6 h-auto border-foreground/20 text-foreground hover:bg-foreground/10 hover:border-foreground/40 backdrop-blur-sm font-medium tracking-wide"
               >
                 Explore Solutions
               </Button>
             </div>
 
             {/* Subtle stats section */}
-            <div className="flex items-center justify-center gap-12 text-white/60 fade-in-up stagger-3 mt-16 text-sm font-light">
+            <div className="flex items-center justify-center gap-12 text-foreground/60 fade-in-up stagger-3 mt-16 text-sm font-light">
               <div className="text-center">
                 <div className="text-2xl font-playfair text-secondary mb-1">100+</div>
                 <div>Connected Devices</div>
               </div>
-              <div className="w-px h-8 bg-white/20"></div>
+              <div className="w-px h-8 bg-foreground/20"></div>
               <div className="text-center">
                 <div className="text-2xl font-playfair text-secondary mb-1">50+</div>
                 <div>Successful Projects</div>
               </div>
-              <div className="w-px h-8 bg-white/20"></div>
+              <div className="w-px h-8 bg-foreground/20"></div>
               <div className="text-center">
                 <div className="text-2xl font-playfair text-secondary mb-1">3x</div>
                 <div>Efficiency Improvement</div>
@@ -97,9 +97,9 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 animate-bounce">
-        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-white/60 rounded-full mt-2"></div>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-foreground/60 animate-bounce">
+        <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-foreground/60 rounded-full mt-2"></div>
         </div>
       </div>
     </section>
