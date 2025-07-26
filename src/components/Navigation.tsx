@@ -4,6 +4,8 @@ import { Menu, X } from 'lucide-react';
 import logo from '@/assets/optimum-logo.png';
 
 const Navigation = () => {
+  console.log('Navigation component starting, React available:', typeof React !== 'undefined');
+  console.log('useState available:', typeof useState !== 'undefined');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
