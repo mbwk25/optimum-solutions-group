@@ -20,8 +20,8 @@ const Navigation = () => {
     { label: 'About', href: '#about' },
     { label: 'Services', href: '#services' },
     { label: 'IoT Solutions', href: '#iot' },
-    { label: 'Estimator', href: '#estimator' },
     { label: 'Portfolio', href: '#portfolio' },
+    { label: 'FAQ', href: '#faq' },
     { label: 'Contact', href: '#contact' },
   ];
 
