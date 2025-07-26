@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const useScrollAnimation = <T extends HTMLElement = HTMLDivElement>() => {
   const ref = useRef<T>(null);

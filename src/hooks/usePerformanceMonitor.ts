@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { logPerformanceWarnings } from '@/utils/performanceBudget';
 
 export const usePerformanceMonitor = () => {
