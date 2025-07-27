@@ -1,14 +1,13 @@
 import * as React from "react";
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
 import CriticalCSS from "@/components/CriticalCSS";
 import PerformanceOptimizer from "@/components/PerformanceOptimizer";
 import ResourcePrefetcher from "@/components/ResourcePrefetcher";
-import { useServiceWorker } from "@/hooks/useServiceWorker";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -17,8 +16,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Initialize service worker for caching
-  useServiceWorker();
+  // Temporarily disable service worker to isolate React bundling issue
+  // useServiceWorker();
 
   return (
     <QueryClientProvider client={queryClient}>
