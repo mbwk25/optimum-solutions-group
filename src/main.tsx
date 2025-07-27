@@ -1,13 +1,17 @@
-import * as React from 'react'
+import React from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
 import './index.css'
 
-// Ensure React is available globally
-(window as any).React = React;
+// Minimal test to isolate React issue
+const TestApp = () => {
+  return React.createElement('div', {}, 
+    React.createElement('h1', {}, 'React Test'),
+    React.createElement('p', {}, 'Basic functionality test')
+  );
+};
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const container = document.getElementById("root");
+if (container) {
+  const root = createRoot(container);
+  root.render(React.createElement(TestApp));
+}
