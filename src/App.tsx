@@ -3,8 +3,8 @@ import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Lazy load components for better performance
-const Index = lazy(() => import("./pages/Index"));
+// Test with minimal component first
+const Index = lazy(() => import("./pages/TestIndex"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
