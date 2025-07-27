@@ -1,35 +1,26 @@
-// Clear all potential caches and force fresh start
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-    for(let registration of registrations) {
-      registration.unregister();
-    }
-  });
-}
-
-// Clear all caches
-if ('caches' in window) {
-  caches.keys().then(function(names) {
-    for (let name of names) {
-      caches.delete(name);
-    }
-  });
-}
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 
-// Emergency minimal React test - timestamp to force reload
-console.log('LOADING FRESH REACT APP - ' + new Date().toISOString());
+// Force clear everything
+console.log('EMERGENCY REACT RESET');
 
-function EmergencyApp() {
-  return React.createElement('div', { style: { padding: '20px', backgroundColor: 'lightgreen' } }, 
-    React.createElement('h1', {}, 'EMERGENCY TEST APP'),
-    React.createElement('p', {}, 'If you see this, React is working: ' + new Date().toISOString()),
-    React.createElement('p', {}, 'No hooks, no external libraries, pure React')
+const EmergencyApp = () => {
+  return React.createElement('div', { 
+    style: { 
+      padding: '50px', 
+      backgroundColor: '#00ff00', 
+      color: '#000',
+      fontSize: '24px',
+      textAlign: 'center'
+    } 
+  }, 
+    React.createElement('h1', {}, 'EMERGENCY MODE ACTIVE'),
+    React.createElement('p', {}, 'React is now working safely'),
+    React.createElement('p', {}, new Date().toISOString())
   );
-}
+};
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(React.createElement(EmergencyApp));
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  React.createElement(EmergencyApp)
+);
