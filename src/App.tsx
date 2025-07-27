@@ -21,10 +21,10 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <CriticalCSS />
-        <PerformanceOptimizer />
-        <ResourcePrefetcher />
+      {/* Temporarily removed TooltipProvider to isolate React bundling issue */}
+      <CriticalCSS />
+      <PerformanceOptimizer />
+      <ResourcePrefetcher />
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -38,8 +38,7 @@ const App = () => {
           </Routes>
         </Suspense>
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
   );
 };
 
