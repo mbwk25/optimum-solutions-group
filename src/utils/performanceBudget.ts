@@ -13,8 +13,8 @@ export const checkPerformanceBudget = () => {
 
   // Check bundle size
   const bundleSize = performance.getEntriesByType('navigation')[0];
-  if (bundleSize) {
-    const transferSize = (bundleSize as any).transferSize || 0;
+  if (bundleSize && 'transferSize' in bundleSize) {
+    const transferSize = (bundleSize as { transferSize: number }).transferSize || 0;
     results.bundleSize = {
       value: transferSize,
       budget: PERFORMANCE_BUDGETS.BUNDLE_SIZE,
@@ -30,11 +30,15 @@ export const logPerformanceWarnings = () => {
   
   Object.entries(budgetResults).forEach(([metric, result]) => {
     if (!result.passed) {
-      console.warn(
-        `🚨 Performance Budget Exceeded: ${metric}`,
-        `Actual: ${result.value}, Budget: ${result.budget}`
-      );
-    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          `🚨 Performance Budget Exceeded: ${metric}`,
+          `Actual: ${result.value}, Budget: ${result.budget}`
+        );
+      }
+      // In production, send to your monitoring service
+      // Example: analytics.track('performance_budget_exceeded', { metric, ...result });
+    } else if (process.env.NODE_ENV === 'development') {
       console.log(
         `✅ Performance Budget Met: ${metric}`,
         `Actual: ${result.value}, Budget: ${result.budget}`

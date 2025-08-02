@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import Navigation from '@/components/Navigation';
-import HeroSection from '@/components/HeroSection';
-import AboutSection from '@/components/AboutSection';
-import ServicesSection from '@/components/ServicesSection';
-import IoTSection from '@/components/IoTSection';
-import ProjectEstimator from '@/components/ProjectEstimator';
-import TestimonialsSection from '@/components/TestimonialsSection';
-import PortfolioSection from '@/components/PortfolioSection';
-import FAQSection from '@/components/FAQSection';
-import ContactSection from '@/components/ContactSection';
-import Footer from '@/components/Footer';
-import BackToTop from '@/components/BackToTop';
-import CustomCursor from '@/components/CustomCursor';
-import { LoadingScreen, usePageLoad } from '@/components/LoadingScreen';
+import React from 'react';
+import {
+  Navigation,
+  HeroSection,
+  AboutSection,
+  ServicesSection,
+  IoTSection,
+  ProjectEstimator,
+  TestimonialsSection,
+  PortfolioSection,
+  FAQSection,
+  ContactSection,
+  Footer,
+  BackToTop,
+  CustomCursor,
+  LoadingScreen
+} from '@/components';
+import { usePageLoad } from '@/components/LoadingScreen';
+import SEOHead from '@/components/optimized/SEOHead';
+import { generateStructuredData } from '@/utils/seo';
 
 const Index = () => {
   const isLoading = usePageLoad();
-  
-  // Removed performance monitor to prevent hook errors
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -25,6 +28,12 @@ const Index = () => {
 
   return (
     <>
+      <SEOHead
+        title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
+        description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
+        keywords={['digital transformation', 'IoT solutions', 'custom software', 'business automation', 'web development', 'mobile apps']}
+        structuredData={generateStructuredData()}
+      />
       <CustomCursor />
       <div className="min-h-screen">
         <Navigation />

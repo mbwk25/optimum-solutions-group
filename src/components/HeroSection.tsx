@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 import heroBackground from '@/assets/hero-background.jpg';
 import ParticleSystem from '@/components/ParticleSystem';
+import OptimizedImage from '@/components/optimized/OptimizedImage';
 
 const HeroSection = () => {
   const scrollToContact = () => {
@@ -22,14 +23,14 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img 
-          src={heroBackground} 
+        <OptimizedImage
+          src={heroBackground}
           alt="Digital workspace"
           className="w-full h-full object-cover"
-          loading="eager"
-          fetchPriority="high"
-          width="1920"
-          height="1080"
+          priority={true}
+          width={1920}
+          height={1080}
+          sizes="100vw"
         />
         <div className="absolute inset-0 hero-gradient opacity-90"></div>
         <ParticleSystem />

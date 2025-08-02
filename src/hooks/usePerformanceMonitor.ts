@@ -1,68 +1,89 @@
-import React, { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { logPerformanceWarnings } from '@/utils/performanceBudget';
+import type { PerformanceEventTiming, LayoutShift, WebVitalsMetrics } from '@/types/performance';
 
 export const usePerformanceMonitor = () => {
-  useEffect(() => {
-    // Monitor Core Web Vitals
-    const reportWebVitals = () => {
-      // First Contentful Paint (FCP)
-      new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          if (entry.name === 'first-contentful-paint') {
-            console.log('FCP:', entry.startTime);
-          }
-        }
-      }).observe({ type: 'paint', buffered: true });
-
-      // Largest Contentful Paint (LCP)
-      new PerformanceObserver((entryList) => {
-        const entries = entryList.getEntries();
-        const lastEntry = entries[entries.length - 1];
-        console.log('LCP:', lastEntry.startTime);
-      }).observe({ type: 'largest-contentful-paint', buffered: true });
-
-      // First Input Delay (FID) / Interaction to Next Paint (INP)
-      new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          const fidEntry = entry as any; // PerformanceEventTiming
-          if (fidEntry.processingStart) {
-            const inputDelay = fidEntry.processingStart - fidEntry.startTime;
-            console.log('Input Delay:', inputDelay);
-          }
-        }
-      }).observe({ type: 'first-input', buffered: true });
-
-      // Cumulative Layout Shift (CLS)
-      new PerformanceObserver((entryList) => {
-        let clsValue = 0;
-        for (const entry of entryList.getEntries()) {
-          const clsEntry = entry as any; // LayoutShift
-          if (!clsEntry.hadRecentInput) {
-            clsValue += clsEntry.value;
-          }
-        }
-        console.log('CLS:', clsValue);
-      }).observe({ type: 'layout-shift', buffered: true });
-    };
-
-    // Run after page load and check performance budgets
-    const checkBudgetsAfterLoad = () => {
-      reportWebVitals();
-      // Check performance budgets after a delay to ensure metrics are captured
-      setTimeout(logPerformanceWarnings, 3000);
-    };
-
-    // Run after page load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', checkBudgetsAfterLoad);
+  const reportWebVital = useCallback((metric: string, value: number) => {
+    // Only log in development, send to analytics in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`${metric}:`, value);
     } else {
-      checkBudgetsAfterLoad();
+      // Here you would send to your analytics service
+      // Example: analytics.track('web_vital', { metric, value });
     }
+  }, []);
+
+  useEffect(() => {
+    const observers: PerformanceObserver[] = [];
+    const metrics: WebVitalsMetrics = {
+      fcp: null,
+      lcp: null,
+      fid: null,
+      cls: 0
+    };
+
+    // First Contentful Paint (FCP)
+    const fcpObserver = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.name === 'first-contentful-paint') {
+          metrics.fcp = entry.startTime;
+          reportWebVital('FCP', entry.startTime);
+        }
+      }
+    });
+    fcpObserver.observe({ type: 'paint', buffered: true });
+    observers.push(fcpObserver);
+
+    // Largest Contentful Paint (LCP)
+    const lcpObserver = new PerformanceObserver((entryList) => {
+      const entries = entryList.getEntries();
+      const lastEntry = entries[entries.length - 1];
+      if (lastEntry) {
+        metrics.lcp = lastEntry.startTime;
+        reportWebVital('LCP', lastEntry.startTime);
+      }
+    });
+    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+    observers.push(lcpObserver);
+
+    // First Input Delay (FID)
+    const fidObserver = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        const fidEntry = entry as unknown as PerformanceEventTiming;
+        if (fidEntry.processingStart) {
+          const inputDelay = fidEntry.processingStart - fidEntry.startTime;
+          metrics.fid = inputDelay;
+          reportWebVital('FID', inputDelay);
+        }
+      }
+    });
+    fidObserver.observe({ type: 'first-input', buffered: true });
+    observers.push(fidObserver);
+
+    // Cumulative Layout Shift (CLS)
+    const clsObserver = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        const clsEntry = entry as unknown as LayoutShift;
+        if (!clsEntry.hadRecentInput) {
+          metrics.cls += clsEntry.value;
+        }
+      }
+      reportWebVital('CLS', metrics.cls);
+    });
+    clsObserver.observe({ type: 'layout-shift', buffered: true });
+    observers.push(clsObserver);
+
+    // Check performance budgets after metrics are captured
+    const timeoutId = setTimeout(() => {
+      logPerformanceWarnings();
+    }, 3000);
 
     return () => {
-      document.removeEventListener('DOMContentLoaded', checkBudgetsAfterLoad);
+      // Cleanup observers
+      observers.forEach(observer => observer.disconnect());
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [reportWebVital]);
 };
 
 export default usePerformanceMonitor;

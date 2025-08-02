@@ -6,7 +6,9 @@ export const useServiceWorker = () => {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
-            console.log('SW registered: ', registration);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('SW registered: ', registration);
+            }
             
             // Check for updates
             registration.addEventListener('updatefound', () => {
@@ -15,14 +17,18 @@ export const useServiceWorker = () => {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                     // New version available - could show update notification
-                    console.log('New version available! Please refresh.');
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('New version available! Please refresh.');
+                    }
                   }
                 });
               }
             });
           })
           .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('SW registration failed: ', registrationError);
+            }
           });
       });
     }
