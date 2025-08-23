@@ -1,0 +1,471 @@
+name: Performance Benchmark
+
+on:
+  # Run on pull requests to main branch
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+
+  # Run on pushes to main branch
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to benchmark (default: deployed preview)'
+        required: false
+        type: string
+      runs:
+        description: 'Number of benchmark runs'
+        required: false
+        default: '3'
+        type: choice
+        options:
+          - '1'
+          - '3'
+          - '5'
+      fail_on_regression:
+        description: 'Fail if performance regressions detected'
+        required: false
+        default: true
+        type: boolean
+
+  # Schedule daily performance checks
+  schedule:
+    - cron: '0 6 * * *'  # 6 AM UTC daily
+
+env:
+  NODE_VERSION: '18'
+  BASELINE_BRANCH: 'main'
+
+jobs:
+  build-and-deploy-preview:
+    name: Build and Deploy Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    outputs:
+      preview_url: ${{ steps.deploy.outputs.preview_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          
+      - name: Deploy to preview
+        id: deploy
+        run: |
+          # This is a placeholder - replace with your actual deployment
+          # For example, Vercel, Netlify, or custom deployment
+          echo "preview_url=https://preview-${{ github.event.pull_request.number }}.your-domain.com" >> $GITHUB_OUTPUT
+
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy-preview]
+    if: always()
+    
+    strategy:
+      matrix:
+        # Test different scenarios
+        scenario:
+          - name: "Desktop"
+            device: "desktop"
+            throttling: "none"
+          - name: "Mobile"
+            device: "mobile"
+            throttling: "mobile3G"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for baseline comparison
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm install -g lighthouse chrome-launcher commander chalk ora
+
+      - name: Install Chrome dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2 \
+            libatk-bridge2.0-0 \
+            libdrm2 \
+            libgtk-3-0 \
+            libgtk-4-1 \
+            libnss3 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libxss1 \
+            libxtst6
+
+      - name: Build application (if not PR)
+        if: github.event_name != 'pull_request'
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Start local server (if not PR)
+        if: github.event_name != 'pull_request'
+        run: |
+          npm run preview &
+          sleep 10
+          curl -f http://localhost:4173 || exit 1
+
+      - name: Determine benchmark URL
+        id: url
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            URL="${{ needs.build-and-deploy-preview.outputs.preview_url }}"
+          elif [ "${{ github.event.inputs.url }}" != "" ]; then
+            URL="${{ github.event.inputs.url }}"
+          else
+            URL="http://localhost:4173"
+          fi
+          echo "benchmark_url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Download baseline (main branch)
+        id: baseline
+        run: |
+          BASELINE_FILE="performance-baseline-${{ matrix.scenario.name }}.json"
+          
+          # Try to download existing baseline from main branch
+          if git show ${{ env.BASELINE_BRANCH }}:.github/performance-baselines/$BASELINE_FILE > $BASELINE_FILE 2>/dev/null; then
+            echo "baseline_exists=true" >> $GITHUB_OUTPUT
+            echo "baseline_file=$BASELINE_FILE" >> $GITHUB_OUTPUT
+            echo "✅ Found existing baseline for ${{ matrix.scenario.name }}"
+          else
+            echo "baseline_exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No baseline found for ${{ matrix.scenario.name }}"
+          fi
+
+      - name: Run performance benchmark
+        id: benchmark
+        run: |
+          # Create reports directory
+          mkdir -p reports
+          
+          # Set benchmark parameters
+          RUNS="${{ github.event.inputs.runs || '3' }}"
+          URL="${{ steps.url.outputs.benchmark_url }}"
+          SCENARIO="${{ matrix.scenario.name }}"
+          
+          # Create config for this scenario
+          cat > benchmark-config.json << EOF
+          {
+            "url": "$URL",
+            "runs": $RUNS,
+            "throttling": {
+              "cpu": 4,
+              "network": "${{ matrix.scenario.throttling }}"
+            },
+            "thresholds": {
+              "performance": 80,
+              "accessibility": 90,
+              "bestPractices": 85,
+              "seo": 85,
+              "lcp": 2500,
+              "fid": 100,
+              "cls": 0.1,
+              "fcp": 1800,
+              "ttfb": 800
+            }
+          }
+          EOF
+          
+          # Run benchmark with baseline comparison if available
+          BENCHMARK_CMD="node scripts/performance-benchmark.js audit --config benchmark-config.json"
+          
+          if [ "${{ steps.baseline.outputs.baseline_exists }}" = "true" ]; then
+            BENCHMARK_CMD="$BENCHMARK_CMD --baseline ${{ steps.baseline.outputs.baseline_file }}"
+            
+            if [ "${{ github.event.inputs.fail_on_regression || 'true' }}" = "true" ]; then
+              BENCHMARK_CMD="$BENCHMARK_CMD --fail-on-regression"
+            fi
+          fi
+          
+          # Add output file
+          BENCHMARK_CMD="$BENCHMARK_CMD --output reports/performance-report-$SCENARIO.json --format json"
+          
+          echo "Running: $BENCHMARK_CMD"
+          
+          # Run the benchmark
+          if $BENCHMARK_CMD; then
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "result=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports-${{ matrix.scenario.name }}
+          path: |
+            reports/
+            performance-baseline-*.json
+          retention-days: 30
+
+      - name: Generate HTML report
+        if: always()
+        run: |
+          if [ -f "reports/performance-report-${{ matrix.scenario.name }}.json" ]; then
+            node scripts/performance-benchmark.js audit \
+              --config benchmark-config.json \
+              --output reports/performance-report-${{ matrix.scenario.name }}.html \
+              --format html \
+              --no-console
+          fi
+
+      - name: Comment PR with results (if PR)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const scenarioName = '${{ matrix.scenario.name }}';
+            const reportFile = `reports/performance-report-${scenarioName}.json`;
+            
+            if (!fs.existsSync(reportFile)) {
+              console.log('No report file found');
+              return;
+            }
+            
+            const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+            
+            // Create comment body
+            const statusIcon = report.summary.passed ? '✅' : '❌';
+            const status = report.summary.passed ? 'PASSED' : 'FAILED';
+            
+            let commentBody = `## ${statusIcon} Performance Benchmark - ${scenarioName}
+            
+            **Status:** ${status}  
+            **URL:** \`${report.summary.url}\`  
+            **Timestamp:** ${report.summary.timestamp}
+            
+            ### 📊 Lighthouse Scores
+            | Category | Score | Status |
+            |----------|-------|--------|`;
+            
+            Object.entries(report.scores).forEach(([category, score]) => {
+              const emoji = score >= 90 ? '🟢' : score >= 70 ? '🟡' : '🔴';
+              commentBody += `\n| ${category.charAt(0).toUpperCase() + category.slice(1)} | ${score} | ${emoji} |`;
+            });
+            
+            commentBody += `
+            
+            ### 🏃 Core Web Vitals
+            | Metric | Value | Status |
+            |--------|-------|--------|`;
+            
+            const webVitals = [
+              { key: 'lcp', name: 'LCP', good: 2500, poor: 4000, unit: 'ms' },
+              { key: 'fid', name: 'FID', good: 100, poor: 300, unit: 'ms' },
+              { key: 'cls', name: 'CLS', good: 0.1, poor: 0.25, unit: '' },
+              { key: 'fcp', name: 'FCP', good: 1800, poor: 3000, unit: 'ms' },
+              { key: 'ttfb', name: 'TTFB', good: 800, poor: 1800, unit: 'ms' }
+            ];
+            
+            webVitals.forEach(({ key, name, good, poor, unit }) => {
+              const value = report.metrics[key];
+              if (value != null) {
+                let status = '🟢';
+                if (key === 'cls') {
+                  status = value <= good ? '🟢' : value <= poor ? '🟡' : '🔴';
+                } else {
+                  status = value <= good ? '🟢' : value <= poor ? '🟡' : '🔴';
+                }
+                const displayValue = key === 'cls' ? value.toFixed(3) : Math.round(value);
+                commentBody += `\n| ${name} | ${displayValue}${unit} | ${status} |`;
+              }
+            });
+            
+            // Add regression analysis if available
+            if (report.regression) {
+              commentBody += `\n\n### 🔄 Regression Analysis\n${report.regression.summary}`;
+              
+              if (report.regression.regressions?.length > 0) {
+                commentBody += '\n\n**⚠️ Regressions Detected:**';
+                report.regression.regressions.forEach(reg => {
+                  commentBody += `\n- ${reg.metric}: ${reg.change > 0 ? '+' : ''}${reg.change}%`;
+                });
+              }
+              
+              if (report.regression.improvements?.length > 0) {
+                commentBody += '\n\n**✅ Improvements:**';
+                report.regression.improvements.forEach(imp => {
+                  commentBody += `\n- ${imp.metric}: +${imp.change}%`;
+                });
+              }
+            }
+            
+            // Add optimization opportunities
+            if (report.opportunities?.length > 0) {
+              commentBody += '\n\n### 💡 Top Optimization Opportunities';
+              report.opportunities.slice(0, 3).forEach((opp, index) => {
+                const savings = opp.savingsMs > 1000 
+                  ? `${(opp.savingsMs / 1000).toFixed(1)}s` 
+                  : `${Math.round(opp.savingsMs)}ms`;
+                commentBody += `\n${index + 1}. **${opp.title}** (saves ~${savings})`;
+              });
+            }
+            
+            commentBody += `\n\n---\n*Performance benchmark completed at ${new Date().toISOString()}*`;
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
+
+      - name: Update baseline (on main branch)
+        if: github.ref == 'refs/heads/main' && steps.benchmark.outputs.result == 'success'
+        run: |
+          # Create baselines directory
+          mkdir -p .github/performance-baselines
+          
+          # Copy current results as new baseline
+          SCENARIO="${{ matrix.scenario.name }}"
+          if [ -f "reports/performance-report-$SCENARIO.json" ]; then
+            # Extract just the metrics we need for baseline
+            jq '{
+              timestamp: .summary.timestamp,
+              url: .summary.url,
+              scores: .scores,
+              metrics: .metrics
+            }' "reports/performance-report-$SCENARIO.json" > ".github/performance-baselines/performance-baseline-$SCENARIO.json"
+            
+            echo "Updated baseline for $SCENARIO"
+          fi
+
+      - name: Commit baseline updates (on main branch)
+        if: github.ref == 'refs/heads/main' && steps.benchmark.outputs.result == 'success'
+        run: |
+          if [ -n "$(git status --porcelain .github/performance-baselines/)" ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add .github/performance-baselines/
+            git commit -m "chore: update performance baselines [skip ci]"
+            git push
+          fi
+
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [performance-benchmark]
+    if: always()
+    
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: performance-reports-*
+          merge-multiple: true
+          path: reports/
+          
+      - name: Generate performance summary
+        run: |
+          echo "# Performance Benchmark Summary" > performance-summary.md
+          echo "" >> performance-summary.md
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> performance-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> performance-summary.md
+          echo "" >> performance-summary.md
+          
+          for report in reports/performance-report-*.json; do
+            if [ -f "$report" ]; then
+              scenario=$(basename "$report" .json | sed 's/performance-report-//')
+              
+              echo "## $scenario Results" >> performance-summary.md
+              
+              status=$(jq -r '.summary.passed' "$report")
+              if [ "$status" = "true" ]; then
+                echo "**Status:** ✅ PASSED" >> performance-summary.md
+              else
+                echo "**Status:** ❌ FAILED" >> performance-summary.md
+              fi
+              
+              echo "" >> performance-summary.md
+              echo "| Metric | Value |" >> performance-summary.md
+              echo "|--------|-------|" >> performance-summary.md
+              
+              # Lighthouse scores
+              jq -r '.scores | to_entries[] | "| \(.key | ascii_upcase) Score | \(.value) |"' "$report" >> performance-summary.md
+              
+              # Core Web Vitals
+              lcp=$(jq -r '.metrics.lcp // 0 | floor' "$report")
+              fid=$(jq -r '.metrics.fid // 0 | floor' "$report")
+              cls=$(jq -r '.metrics.cls // 0 | . * 1000 | floor | . / 1000' "$report")
+              
+              echo "| LCP | ${lcp}ms |" >> performance-summary.md
+              echo "| FID | ${fid}ms |" >> performance-summary.md
+              echo "| CLS | ${cls} |" >> performance-summary.md
+              echo "" >> performance-summary.md
+            fi
+          done
+          
+      - name: Upload performance summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-summary
+          path: performance-summary.md
+
+  # Fail the workflow if any benchmark failed
+  check-performance-results:
+    name: Check Performance Results
+    runs-on: ubuntu-latest
+    needs: [performance-benchmark]
+    if: always()
+    
+    steps:
+      - name: Check benchmark results
+        run: |
+          # This step will fail if any of the benchmark jobs failed
+          if [ "${{ needs.performance-benchmark.result }}" != "success" ]; then
+            echo "❌ Performance benchmarks failed"
+            exit 1
+          else
+            echo "✅ All performance benchmarks passed"
+          fi
