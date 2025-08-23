@@ -1,0 +1,166 @@
+{
+  "users": {
+    "admin": {
+      "email": "admin@example.com",
+      "password": "admin123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin"
+    },
+    "user": {
+      "email": "user@example.com",
+      "password": "user123",
+      "firstName": "Test",
+      "lastName": "User",
+      "role": "user"
+    },
+    "guest": {
+      "email": "guest@example.com",
+      "password": "guest123",
+      "firstName": "Guest",
+      "lastName": "User",
+      "role": "guest"
+    }
+  },
+  "formData": {
+    "contactForm": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "message": "This is a test message for the contact form.",
+      "phone": "+1234567890"
+    },
+    "registrationForm": {
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane.smith@example.com",
+      "password": "SecurePass123!",
+      "confirmPassword": "SecurePass123!",
+      "agreeToTerms": true,
+      "newsletter": false
+    },
+    "profileForm": {
+      "displayName": "John Developer",
+      "bio": "Full-stack developer with expertise in React and TypeScript",
+      "website": "https://johndeveloper.dev",
+      "location": "San Francisco, CA"
+    }
+  },
+  "componentData": {
+    "selectOptions": ["Apple", "Banana", "Cherry", "Date", "Elderberry"],
+    "tableData": [
+      {
+        "id": 1,
+        "name": "Alice Johnson",
+        "email": "alice@example.com",
+        "role": "Developer",
+        "status": "Active"
+      },
+      {
+        "id": 2,
+        "name": "Bob Smith",
+        "email": "bob@example.com",
+        "role": "Designer",
+        "status": "Inactive"
+      },
+      {
+        "id": 3,
+        "name": "Carol Brown",
+        "email": "carol@example.com",
+        "role": "Manager",
+        "status": "Active"
+      }
+    ],
+    "cardData": [
+      {
+        "title": "Basic Plan",
+        "description": "Perfect for individuals starting out",
+        "price": "$9.99/month",
+        "features": ["Feature 1", "Feature 2", "Feature 3"]
+      },
+      {
+        "title": "Pro Plan",
+        "description": "Great for growing teams",
+        "price": "$19.99/month",
+        "features": ["All Basic features", "Feature 4", "Feature 5", "Priority support"]
+      }
+    ],
+    "notifications": [
+      {
+        "type": "success",
+        "title": "Success!",
+        "message": "Your changes have been saved successfully."
+      },
+      {
+        "type": "error",
+        "title": "Error",
+        "message": "Something went wrong. Please try again."
+      },
+      {
+        "type": "warning",
+        "title": "Warning",
+        "message": "Please review your input before proceeding."
+      },
+      {
+        "type": "info",
+        "title": "Information",
+        "message": "Here's some helpful information for you."
+      }
+    ]
+  },
+  "navigation": {
+    "mainMenu": [
+      { "label": "Home", "path": "/" },
+      { "label": "About", "path": "/about" },
+      { "label": "Services", "path": "/services" },
+      { "label": "Contact", "path": "/contact" }
+    ],
+    "userMenu": [
+      { "label": "Profile", "path": "/profile" },
+      { "label": "Settings", "path": "/settings" },
+      { "label": "Logout", "path": "/logout" }
+    ]
+  },
+  "api": {
+    "endpoints": {
+      "login": "/api/auth/login",
+      "register": "/api/auth/register",
+      "profile": "/api/user/profile",
+      "users": "/api/users",
+      "posts": "/api/posts"
+    },
+    "mockResponses": {
+      "loginSuccess": {
+        "token": "mock-jwt-token",
+        "user": {
+          "id": 1,
+          "email": "user@example.com",
+          "firstName": "Test",
+          "lastName": "User"
+        }
+      },
+      "loginError": {
+        "error": "Invalid credentials"
+      }
+    }
+  },
+  "accessibility": {
+    "testScenarios": [
+      {
+        "name": "keyboard_navigation",
+        "description": "Test keyboard navigation through components"
+      },
+      {
+        "name": "screen_reader",
+        "description": "Test screen reader compatibility"
+      },
+      {
+        "name": "color_contrast",
+        "description": "Test color contrast ratios"
+      },
+      {
+        "name": "focus_management",
+        "description": "Test focus management in interactive components"
+      }
+    ]
+  }
+}

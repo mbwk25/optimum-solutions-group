@@ -54,7 +54,7 @@ env:
   BASELINE_BRANCH: 'main'
 
 permissions:
-  contents: read
+  contents: write  # Need write permission for baseline commits
   issues: write
   pull-requests: write
 

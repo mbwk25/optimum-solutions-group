@@ -58,6 +58,12 @@ const Index = lazyWithPreload(
   () => true // Preload immediately for main page
 );
 
+const ComponentShowcase = lazyWithRetry(
+  () => import("./pages/ComponentShowcase"),
+  2, // 2 retries
+  1000 // 1s delay
+);
+
 const NotFound = lazyWithRetry(
   () => import("./pages/NotFound"),
   2, // 2 retries

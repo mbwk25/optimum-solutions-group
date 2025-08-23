@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Components Test</title>
+  <!-- Reset CSS to ensure consistent styling across tests -->
+  <style>
+    html, body, #root {
+      padding: 0;
+      margin: 0;
+      background-color: hsl(0 0% 100%);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      html, body, #root {
+        background-color: hsl(222.2 84% 4.9%);
+        color: hsl(210 40% 98%);
+      }
+    }
+
+    /* Ensure components are visible during testing */
+    .cypress-component-wrapper {
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" class="cypress-component-wrapper"></div>
+</body>
+</html>
