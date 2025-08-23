@@ -20,27 +20,48 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
     },
   },
   server: {
-    host: "::",
+    host: "localhost",
     port: 8080,
+    strictPort: true,
     headers: {
       'Cache-Control': 'public, max-age=31536000',
     },
+    hmr: {
+      port: 8080,
+      host: 'localhost',
+    },
   },
   build: {
-    sourcemap: true,
+    sourcemap: mode === 'development',
     minify: 'esbuild',
     cssMinify: true,
-    target: 'esnext',
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+    // Advanced build optimizations
+    cssCodeSplit: true,
+    assetsInlineLimit: 4096, // Inline assets smaller than 4kb
+    chunkSizeWarningLimit: 1000, // Warn for chunks larger than 1MB
     rollupOptions: {
+      // Optimize external dependencies
+      external: (id) => {
+        // Keep development dependencies out of bundle
+        return id.includes('node_modules') && 
+               (id.includes('@testing-library') || 
+                id.includes('vitest') ||
+                id.includes('jsdom'));
+      },
       output: {
+        // Optimized manual chunking strategy
         manualChunks: {
-          // React core dependencies
+          // Core React dependencies
           'react-core': ['react', 'react-dom'],
+          
           // Router and navigation
           'router': ['react-router-dom'],
+          
           // State management and data fetching
           'state-management': ['@tanstack/react-query'],
-          // All UI primitives in one optimized chunk
+          
+          // UI component libraries
           'ui-primitives': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
@@ -51,12 +72,14 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
             '@radix-ui/react-navigation-menu',
             '@radix-ui/react-menubar'
           ],
+          
           // Form handling
           'form-utilities': [
             'react-hook-form',
             '@hookform/resolvers', 
             'zod'
           ],
+          
           // Utility libraries
           'utilities': [
             'date-fns',
@@ -64,20 +87,58 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
             'tailwind-merge',
             'class-variance-authority'
           ],
+          
           // Icons - separate due to size
           'icons': ['lucide-react'],
+          
           // Charts and visualizations
           'charts': ['recharts', 'embla-carousel-react'],
+          
           // Performance monitoring
-          'monitoring': ['web-vitals']
+          'performance': ['web-vitals']
         },
-        // Optimize chunk sizes
+        
+        // Optimized file naming for better caching
+        entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId 
-            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') 
-            : 'chunk';
           return `assets/[name]-[hash].js`;
         },
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name!.split('.');
+          const extType = info[info.length - 1];
+          
+          // Organize assets by type for better caching
+          if (/\.(png|jpe?g|gif|svg|ico|webp|avif)$/i.test(assetInfo.name!)) {
+            return `assets/images/[name]-[hash].${extType}`;
+          }
+          if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name!)) {
+            return `assets/fonts/[name]-[hash].${extType}`;
+          }
+          if (/\.(css)$/i.test(assetInfo.name!)) {
+            return `assets/styles/[name]-[hash].${extType}`;
+          }
+          
+          return `assets/[name]-[hash].${extType}`;
+        },
+        
+        // Preserve module structure for better debugging
+        preserveModules: false,
+        preserveModulesRoot: 'src',
+        
+        // Optimize for HTTP/2
+        compact: true,
+      },
+      
+      // Tree shaking optimizations
+      treeshake: {
+        moduleSideEffects: (id, external) => {
+          // Preserve side effects for CSS and known libraries with side effects
+          return id.endsWith('.css') || 
+                 id.includes('polyfill') ||
+                 id.includes('web-vitals') ||
+                 external;
+        },
+        unknownGlobalSideEffects: false,
       },
     },
   },
