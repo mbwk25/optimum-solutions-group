@@ -112,7 +112,7 @@ jobs:
         echo "cls-score=$(jq -r '.audits."cumulative-layout-shift".numericValue // 0' performance-report.json)" >> $GITHUB_OUTPUT
 
     - name: Upload Performance Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-report-${{ github.sha }}
         path: |
@@ -280,7 +280,7 @@ jobs:
         pa11y-ci --sitemap-find http://localhost:4173 --sitemap-exclude "*.pdf" --reporter json > pa11y-report.json || true
 
     - name: Upload Accessibility Reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: accessibility-reports-${{ github.sha }}
         path: |
@@ -314,7 +314,7 @@ jobs:
         npm run analyze:bundle
         
     - name: Upload Bundle Analysis
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bundle-analysis-${{ github.sha }}
         path: |
@@ -341,7 +341,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download Performance Report
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: performance-report-${{ github.sha }}
 
@@ -371,7 +371,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download All Reports
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: ./reports
 
