@@ -7,9 +7,9 @@
  * Used in CI/CD pipeline to ensure bundle size stays within acceptable limits.
  */
 
-const fs = require('fs');
-const path = require('path');
-const { filesize } = require('filesize');
+import fs from 'fs';
+import path from 'path';
+import { filesize } from 'filesize';
 
 // Default size limits (in bytes)
 const DEFAULT_LIMITS = {
@@ -603,9 +603,9 @@ async function main() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ES module equivalent)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { BundleSizeChecker };
+export { BundleSizeChecker };

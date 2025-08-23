@@ -7,9 +7,9 @@
  * into a unified dashboard dataset for visualization.
  */
 
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
+import fs from 'fs';
+import path from 'path';
+import glob from 'glob';
 
 class DashboardDataGenerator {
   constructor(options = {}) {
@@ -696,9 +696,9 @@ async function main() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ES module equivalent)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { DashboardDataGenerator };
+export { DashboardDataGenerator };
