@@ -7,11 +7,11 @@
  * Supports multiple testing strategies, regression detection, and reporting.
  */
 
-const fs = require('fs');
-const path = require('path');
-const { program } = require('commander');
-const chalk = require('chalk');
-const ora = require('ora');
+import fs from 'fs';
+import path from 'path';
+import { program } from 'commander';
+import chalk from 'chalk';
+import ora from 'ora';
 
 // ========== CONFIGURATION ==========
 
@@ -48,8 +48,8 @@ const DEFAULT_CONFIG = {
 // ========== LIGHTHOUSE INTEGRATION ==========
 
 const runLighthouseAudit = async (config) => {
-  const lighthouse = require('lighthouse');
-  const chromeLauncher = require('chrome-launcher');
+  const { default: lighthouse } = await import('lighthouse');
+  const chromeLauncher = await import('chrome-launcher');
 
   const spinner = ora('Starting Chrome and running Lighthouse audit...').start();
 
@@ -686,11 +686,13 @@ program
 
 // ========== RUN PROGRAM ==========
 
-if (require.main === module) {
+// Check if this is the main module (ES module equivalent of require.main === module)
+if (import.meta.url === `file://${process.argv[1]}`) {
   program.parse();
 }
 
-module.exports = {
+// ES module exports
+export {
   runLighthouseAudit,
   checkThresholds,
   detectRegressions,
