@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button } from '../../src/components/ui/button'
+import { Button } from '../../src/shared/ui/button'
 
 describe('Button Component', () => {
   it('should render primary button', () => {
@@ -13,7 +13,7 @@ describe('Button Component', () => {
     cy.mount(<Button onClick={onClick}>Click me</Button>)
     cy.get('button').click()
     cy.then(() => {
-      expect(onClick).to.have.been.called
+      void expect(onClick).to.have.been.called
     })
   })
 

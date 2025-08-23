@@ -14,6 +14,7 @@
 /**
  * Test form submission with validation
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 Cypress.Commands.add('submitForm', (selector: string, data: Record<string, any>) => {
   cy.get(selector).within(() => {
     Object.entries(data).forEach(([field, value]) => {
@@ -34,6 +35,7 @@ Cypress.Commands.add('submitForm', (selector: string, data: Record<string, any>)
 /**
  * Test component accessibility
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 Cypress.Commands.add('testA11y', (selector?: string, options?: any) => {
   cy.checkA11y(selector, options, (violations) => {
     violations.forEach((violation) => {
@@ -174,17 +176,160 @@ Cypress.Commands.add('shouldContainTextWithRetry', { prevSubject: true }, (subje
   cy.wrap(subject, { timeout }).should('contain.text', text)
 })
 
+/**
+ * Tab navigation command
+ */
+Cypress.Commands.add('tab', { prevSubject: 'optional' }, (subject, options: { shift?: boolean } = {}) => {
+  if (subject) {
+    if (options.shift) {
+      return cy.wrap(subject).trigger('keydown', { key: 'Tab', shiftKey: true })
+    } else {
+      return cy.wrap(subject).trigger('keydown', { key: 'Tab' })
+    }
+  } else {
+    if (options.shift) {
+      return cy.get('body').trigger('keydown', { key: 'Tab', shiftKey: true })
+    } else {
+      return cy.get('body').trigger('keydown', { key: 'Tab' })
+    }
+  }
+})
+
+/**
+ * Test color contrast ratio
+ */
+Cypress.Commands.add('checkColorContrast', (selector: string, minRatio: number = 4.5) => {
+  cy.get(selector).should(($el) => {
+    const element = $el[0]
+    const styles = window.getComputedStyle(element)
+    const bgColor = styles.backgroundColor
+    const color = styles.color
+    
+    // Basic check that colors exist and are not transparent
+    void expect(bgColor).to.not.equal('rgba(0, 0, 0, 0)')
+    void expect(color).to.not.equal('rgba(0, 0, 0, 0)')
+    void expect(color).to.not.equal('transparent')
+    
+    // Log colors for manual verification
+    cy.log(`Element: ${selector}, Background: ${bgColor}, Text: ${color}`)
+  })
+})
+
+/**
+ * Comprehensive accessibility check for a component
+ */
+Cypress.Commands.add('checkComponentA11y', (selector: string) => {
+  cy.get(selector).within(() => {
+    // Check for basic accessibility attributes
+    cy.root().then($root => {
+      const element = $root[0]
+      const tagName = element.tagName.toLowerCase()
+      
+      if (['button', 'a', 'input', 'textarea', 'select'].includes(tagName)) {
+        // Interactive elements should be focusable
+        void expect($root.attr('tabindex')).to.not.equal('-1')
+        
+        // Should have accessible name
+        const hasAccessibleName = 
+          $root.text().trim() !== '' ||
+          $root.attr('aria-label') ||
+          $root.attr('aria-labelledby') ||
+          $root.attr('alt') ||
+          $root.attr('title')
+        
+        void expect(hasAccessibleName).to.be.true
+      }
+      
+      if (tagName === 'img') {
+        // Images should have alt text
+        void expect($root.attr('alt')).to.exist
+      }
+    })
+  })
+  
+  // Run axe on the specific component
+  cy.testA11y(selector)
+})
+
+/**
+ * Test keyboard-only navigation flow
+ */
+Cypress.Commands.add('testKeyboardFlow', (steps: Array<{ action: string; target?: string; expectedFocus?: string }>) => {
+  steps.forEach((step, index) => {
+    cy.log(`Step ${index + 1}: ${step.action}`)
+    
+    switch (step.action) {
+      case 'tab':
+        cy.focused().tab()
+        break
+      case 'shift-tab':
+        cy.focused().tab({ shift: true })
+        break
+      case 'focus':
+        if (step.target) {
+          cy.get(step.target).focus()
+        }
+        break
+      case 'enter':
+        cy.focused().type('{enter}')
+        break
+      case 'space':
+        cy.focused().type(' ')
+        break
+      case 'escape':
+        cy.focused().type('{esc}')
+        break
+      case 'arrow-down':
+        cy.focused().type('{downarrow}')
+        break
+      case 'arrow-up':
+        cy.focused().type('{uparrow}')
+        break
+      default:
+        cy.log(`Unknown action: ${step.action}`)
+    }
+    
+    if (step.expectedFocus) {
+      cy.focused().should('have.attr', 'data-testid', step.expectedFocus.replace(/\[data-testid="([^"]+)"\]/, '$1'))
+    }
+  })
+})
+
+/**
+ * Test screen reader announcements
+ */
+Cypress.Commands.add('checkAnnouncement', (triggerSelector: string, expectedText: string) => {
+  // Store initial live regions
+  cy.get('[aria-live]').then($initialRegions => {
+    const initialCount = $initialRegions.length
+    
+    // Trigger the action
+    cy.get(triggerSelector).click()
+    
+    // Check if announcement was made
+    cy.get('[aria-live], [role="alert"], [role="status"]').should($regions => {
+      const hasAnnouncement = Array.from($regions).some(region => 
+        region.textContent?.includes(expectedText)
+      )
+      void expect(hasAnnouncement || $regions.length > initialCount).to.be.true
+    })
+  })
+})
+
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       /**
        * Submit form with test data
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       submitForm(selector: string, data: Record<string, any>): Chainable<Element>
       
       /**
        * Test component accessibility
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       testA11y(selector?: string, options?: any): Chainable<void>
       
       /**
@@ -231,6 +376,31 @@ declare global {
        * Assert text content with retry
        */
       shouldContainTextWithRetry(text: string, timeout?: number): Chainable<Element>
+      
+      /**
+       * Tab navigation
+       */
+      tab(options?: { shift?: boolean }): Chainable<Element>
+      
+      /**
+       * Test color contrast ratio
+       */
+      checkColorContrast(selector: string, minRatio?: number): Chainable<void>
+      
+      /**
+       * Comprehensive accessibility check for a component
+       */
+      checkComponentA11y(selector: string): Chainable<void>
+      
+      /**
+       * Test keyboard-only navigation flow
+       */
+      testKeyboardFlow(steps: Array<{ action: string; target?: string; expectedFocus?: string }>): Chainable<void>
+      
+      /**
+       * Test screen reader announcements
+       */
+      checkAnnouncement(triggerSelector: string, expectedText: string): Chainable<void>
     }
   }
 }

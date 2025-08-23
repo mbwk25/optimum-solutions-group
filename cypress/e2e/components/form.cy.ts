@@ -51,7 +51,7 @@ describe('Form Components E2E Tests', () => {
         
       // Browser validation should trigger
       cy.get('[data-testid="input-email"]').then(($input) => {
-        expect($input[0].validity.valid).to.be.false
+        void expect($input[0].validity.valid).to.be.false
       })
       
       cy.get('[data-testid="input-email"]')
@@ -60,7 +60,7 @@ describe('Form Components E2E Tests', () => {
         .blur()
         
       cy.get('[data-testid="input-email"]').then(($input) => {
-        expect($input[0].validity.valid).to.be.true
+        void expect($input[0].validity.valid).to.be.true
       })
     })
 
@@ -140,7 +140,7 @@ describe('Form Components E2E Tests', () => {
         .type(longText)
         .then(($textarea) => {
           const value = $textarea.val() as string
-          expect(value.length).to.be.at.most(1000)
+          void expect(value.length).to.be.at.most(1000)
         })
     })
 
@@ -310,8 +310,8 @@ describe('Form Components E2E Tests', () => {
         .blur()
       
       cy.get('[data-testid="input-email"]').then(($input) => {
-        expect($input[0].validity.valid).to.be.false
-        expect($input[0].validationMessage).to.not.be.empty
+        void expect($input[0].validity.valid).to.be.false
+        void expect($input[0].validationMessage).to.not.be.empty
       })
     })
 
@@ -324,7 +324,7 @@ describe('Form Components E2E Tests', () => {
         .blur()
       
       cy.get('[data-testid="input-email"]').then(($input) => {
-        expect($input[0].validity.valid).to.be.true
+        void expect($input[0].validity.valid).to.be.true
       })
     })
   })

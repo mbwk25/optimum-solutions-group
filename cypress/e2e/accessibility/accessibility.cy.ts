@@ -1,6 +1,12 @@
 describe('Accessibility E2E Tests', () => {
   beforeEach(() => {
     cy.visit('/component-showcase')
+    // Wait for React to fully load and context to be available
+    cy.get('[data-testid="page-title"]').should('be.visible').and('contain', 'UI Components Showcase')
+    // Wait a bit more for all providers to initialize
+    cy.wait(1000)
+    // Reinject axe after page load to ensure it's available
+    cy.injectAxe()
   })
 
   describe('Overall Page Accessibility', () => {
@@ -105,7 +111,7 @@ describe('Accessibility E2E Tests', () => {
       
       // Test Space key on checkbox
       cy.get('[data-testid="checkbox-subscribe"]').focus().type(' ')
-      cy.get('[data-testid="checkbox-subscribe"]').should('be.checked')
+      cy.get('[data-testid="checkbox-subscribe"]').should('have.attr', 'data-state', 'checked')
     })
   })
 
@@ -118,9 +124,21 @@ describe('Accessibility E2E Tests', () => {
       cy.get('label[for="subscribe"]').should('exist').and('be.visible')
       
       // Check input associations
-      cy.get('#name').should('have.attr', 'aria-labelledby').or('have.attr', 'aria-label')
-      cy.get('#email').should('have.attr', 'aria-labelledby').or('have.attr', 'aria-label')
-      cy.get('#message').should('have.attr', 'aria-labelledby').or('have.attr', 'aria-label')
+      cy.get('#name').then($input => {
+        void expect(
+          $input.attr('aria-labelledby') || $input.attr('aria-label')
+        ).to.exist
+      })
+      cy.get('#email').then($input => {
+        void expect(
+          $input.attr('aria-labelledby') || $input.attr('aria-label')
+        ).to.exist
+      })
+      cy.get('#message').then($input => {
+        void expect(
+          $input.attr('aria-labelledby') || $input.attr('aria-label')
+        ).to.exist
+      })
     })
 
     it('should have proper roles and states', () => {
@@ -137,11 +155,16 @@ describe('Accessibility E2E Tests', () => {
         .should('have.attr', 'aria-checked', 'false')
         .click()
         .should('have.attr', 'aria-checked', 'true')
+        .should('have.attr', 'data-state', 'checked')
       
       // Check disabled states
       cy.get('[data-testid="btn-disabled"]')
         .should('be.disabled')
-        .should('have.attr', 'aria-disabled', 'true').or('not.have.attr', 'aria-disabled')
+        .then($btn => {
+          // Either has aria-disabled="true" or doesn't have aria-disabled at all (both are valid)
+          const ariaDisabled = $btn.attr('aria-disabled')
+          void expect(ariaDisabled === 'true' || ariaDisabled === undefined).to.be.true
+        })
     })
 
     it('should provide proper feedback for form validation', () => {
@@ -151,7 +174,7 @@ describe('Accessibility E2E Tests', () => {
         .blur()
         .then(($input) => {
           // Check for validation message
-          expect($input[0].validationMessage).to.not.be.empty
+          void expect($input[0].validationMessage).to.not.be.empty
         })
       
       // Test required field feedback
@@ -247,7 +270,7 @@ describe('Accessibility E2E Tests', () => {
             // Element should have focus styles (this might need adjustment based on actual CSS)
             const styles = window.getComputedStyle($el[0])
             // Check for common focus indicators
-            expect(
+            void expect(
               styles.outline !== 'none' || 
               styles.boxShadow !== 'none' ||
               styles.borderColor !== 'initial'
@@ -293,8 +316,8 @@ describe('Accessibility E2E Tests', () => {
           .should('be.visible')
           .should($el => {
             const styles = window.getComputedStyle($el[0])
-            expect(styles.color).to.not.equal('transparent')
-            expect(styles.backgroundColor).to.exist
+            void expect(styles.color).to.not.equal('transparent')
+            void expect(styles.backgroundColor).to.exist
           })
       })
     })
@@ -360,8 +383,8 @@ describe('Accessibility E2E Tests', () => {
       
       // Check that validation message is available to screen readers
       cy.get('[data-testid="input-email"]').then($input => {
-        expect($input[0].validationMessage).to.not.be.empty
-        expect($input[0].validity.valid).to.be.false
+        void expect($input[0].validationMessage).to.not.be.empty
+        void expect($input[0].validity.valid).to.be.false
       })
       
       // Fix email and verify
@@ -371,7 +394,7 @@ describe('Accessibility E2E Tests', () => {
         .blur()
       
       cy.get('[data-testid="input-email"]').then($input => {
-        expect($input[0].validity.valid).to.be.true
+        void expect($input[0].validity.valid).to.be.true
       })
     })
 
@@ -399,7 +422,7 @@ describe('Accessibility E2E Tests', () => {
       
       // Check card titles (should be properly nested)
       cy.get('h2, h3, h4, h5, h6').each($heading => {
-        expect($heading.text().trim()).to.not.be.empty
+        void expect($heading.text().trim()).to.not.be.empty
       })
     })
 
@@ -426,8 +449,8 @@ describe('Accessibility E2E Tests', () => {
       
       // Forms should be properly structured
       cy.get('form').within(() => {
-        cy.get('fieldset').should('exist').or('not.exist') // Optional but good practice
-        cy.get('legend').should('exist').or('not.exist') // Optional but good practice
+        // Fieldset and legend are optional but good practice - just verify form exists
+        cy.root().should('exist')
       })
     })
   })
@@ -436,7 +459,7 @@ describe('Accessibility E2E Tests', () => {
     it('should work with screen readers', () => {
       // Test that all interactive elements have accessible names
       cy.get('button').each($btn => {
-        expect(
+        void expect(
           $btn.text().trim() !== '' ||
           $btn.attr('aria-label') ||
           $btn.attr('aria-labelledby') ||
@@ -445,7 +468,7 @@ describe('Accessibility E2E Tests', () => {
       })
       
       cy.get('input').each($input => {
-        expect(
+        void expect(
           $input.attr('aria-label') ||
           $input.attr('aria-labelledby') ||
           $input.attr('placeholder') ||

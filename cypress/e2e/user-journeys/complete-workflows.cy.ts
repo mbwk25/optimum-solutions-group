@@ -428,7 +428,7 @@ describe('Complete User Journey Tests', () => {
           .blur()
           .then($input => {
             // Should trigger browser validation
-            expect($input[0].validity.valid).to.be.false
+            void expect($input[0].validity.valid).to.be.false
           })
         
         // Step 4: Fix validation and complete form
