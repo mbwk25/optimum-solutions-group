@@ -251,7 +251,11 @@ jobs:
 
     - name: Run axe Accessibility Tests
       run: |
-        npx axe --dir ./dist --save axe-report.json --reporter json
+        # Run axe-core CLI against the built static files
+        npx @axe-core/cli --dir ./dist --save axe-report.json
+        
+        # Also run axe against the live server
+        npx @axe-core/cli http://localhost:4173 --save axe-live-report.json || true
         
     - name: Run pa11y Accessibility Tests
       run: |
@@ -268,6 +272,7 @@ jobs:
         name: accessibility-reports-${{ github.sha }}
         path: |
           axe-report.json
+          axe-live-report.json
           pa11y-report.json
         retention-days: 30
 
