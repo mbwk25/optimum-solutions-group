@@ -1,40 +1,40 @@
 import { useEffect } from 'react';
+import { type Metric } from 'web-vitals';
 
 // Lightweight web-vitals based performance monitoring
 const PerformanceOptimizer = () => {
   useEffect(() => {
-    // Only load web-vitals in production for better performance
-    if (process.env.NODE_ENV === 'production') {
-      import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+    // Load web-vitals for both development and production
+    const loadWebVitals = async () => {
+      try {
+        const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import('web-vitals');
+        
         // Report to analytics service (can be customized)
-        const reportMetric = (metric: any) => {
-          // In development, log to console
-          if (process.env.NODE_ENV === 'development') {
-            console.log(metric.name, metric.value);
+        const reportMetric = (metric: Metric) => {
+          if (import.meta.env.MODE === 'development') {
+            console.log(`${metric.name}: ${metric.value}`);
+          } else {
+            // In production, send to your analytics service
+            // Example: analytics.track('web_vital', metric);
           }
-          // In production, send to your analytics service
-          // Example: analytics.track('web_vital', metric);
         };
 
-        getCLS(reportMetric);
-        getFID(reportMetric);
-        getFCP(reportMetric);
-        getLCP(reportMetric);
-        getTTFB(reportMetric);
-      });
-    } else if (process.env.NODE_ENV === 'development') {
-      // Lightweight development monitoring
-      import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP }) => {
-        const reportMetric = (metric: any) => {
-          console.log(`${metric.name}: ${metric.value}`);
-        };
+        // Initialize all web vitals
+        onCLS(reportMetric);
+        onINP(reportMetric); // Replaced onFID with onINP (Interaction to Next Paint)
+        onFCP(reportMetric);
+        onLCP(reportMetric);
+        
+        // Only include TTFB in production for performance
+        if (import.meta.env.MODE === 'production') {
+          onTTFB(reportMetric);
+        }
+      } catch (error) {
+        console.warn('Failed to load web-vitals:', error);
+      }
+    };
 
-        getCLS(reportMetric);
-        getFID(reportMetric);
-        getFCP(reportMetric);
-        getLCP(reportMetric);
-      });
-    }
+    loadWebVitals();
 
     // Optimize images loading (keep this lightweight optimization)
     const images = document.querySelectorAll('img[loading="lazy"]') as NodeListOf<HTMLImageElement>;

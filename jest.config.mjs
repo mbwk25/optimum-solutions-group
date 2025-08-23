@@ -9,14 +9,13 @@ export default {
   // Module file extensions for importing
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   
-  // Transform files with ts-jest
+  // Transform files with ts-jest (removed deprecated isolatedModules option)
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
         tsconfig: 'tsconfig.jest.json',
         useESM: false,
-        isolatedModules: true,
       },
     ],
   },
@@ -37,9 +36,36 @@ export default {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/main.tsx',
+    '!src/main-test.tsx',
     '!src/vite-env.d.ts',
     '!src/setupTests.ts',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/index.ts',
   ],
+  
+  // Coverage thresholds based on coding standards
+  coverageThreshold: {
+    global: {
+      branches: 85,
+      functions: 90,
+      lines: 95,
+      statements: 95,
+    },
+    './src/shared/ui/': {
+      statements: 95,
+      branches: 90,
+      functions: 95,
+      lines: 95,
+    },
+    './src/shared/utils/': {
+      statements: 100,
+      branches: 95,
+      functions: 100,
+      lines: 100,
+    },
+  },
   
   // Ignore patterns for transform
   transformIgnorePatterns: [
@@ -51,9 +77,22 @@ export default {
   // Test timeout configuration  
   testTimeout: 10000,
   
-  // Clear mocks between tests (optional) - not needed for Jest 29+
+  // Clear mocks between tests
   clearMocks: true,
   
-  // Restore mocks between tests (optional)  
+  // Restore mocks between tests
   restoreMocks: true,
+  
+  // Performance and accessibility testing configuration
+  
+  // Additional test environment options
+  testEnvironmentOptions: {
+    url: 'http://localhost:3000',
+  },
+  
+  // Verbose output for better debugging
+  verbose: true,
+  
+  // Maximum worker processes for parallel testing
+  maxWorkers: '50%',
 };

@@ -6,7 +6,7 @@ interface SEOHeadProps {
   keywords?: string[];
   ogImage?: string;
   canonicalUrl?: string;
-  structuredData?: Record<string, any>;
+  structuredData?: Record<string, unknown>;
 }
 
 const SEOHead = ({

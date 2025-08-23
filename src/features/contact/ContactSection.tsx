@@ -134,10 +134,11 @@ const ContactSection = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-name" className="block text-sm font-medium text-foreground mb-2">
                     Full Name *
                   </label>
                   <Input
+                    id="contact-name"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
@@ -146,10 +147,11 @@ const ContactSection = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-email" className="block text-sm font-medium text-foreground mb-2">
                     Email Address *
                   </label>
                   <Input
+                    id="contact-email"
                     name="email"
                     type="email"
                     value={formData.email}
@@ -162,10 +164,11 @@ const ContactSection = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-company" className="block text-sm font-medium text-foreground mb-2">
                     Company Name
                   </label>
                   <Input
+                    id="contact-company"
                     name="company"
                     value={formData.company}
                     onChange={handleInputChange}
@@ -173,10 +176,11 @@ const ContactSection = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-phone" className="block text-sm font-medium text-foreground mb-2">
                     Phone Number
                   </label>
                   <Input
+                    id="contact-phone"
                     name="phone"
                     type="tel"
                     value={formData.phone}
@@ -188,10 +192,11 @@ const ContactSection = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-project-type" className="block text-sm font-medium text-foreground mb-2">
                     Project Type
                   </label>
                   <select
+                    id="contact-project-type"
                     name="projectType"
                     value={formData.projectType}
                     onChange={handleInputChange}
@@ -208,10 +213,11 @@ const ContactSection = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="contact-timeline" className="block text-sm font-medium text-foreground mb-2">
                     Project Timeline
                   </label>
                   <select
+                    id="contact-timeline"
                     name="timeline"
                     value={formData.timeline}
                     onChange={handleInputChange}
@@ -227,10 +233,11 @@ const ContactSection = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="contact-message" className="block text-sm font-medium text-foreground mb-2">
                   Project Details *
                 </label>
                 <Textarea
+                  id="contact-message"
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}

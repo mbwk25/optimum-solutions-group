@@ -1,0 +1,468 @@
+/* ========== ACCESSIBILITY STYLES ========== */
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Screen Reader Only - Focusable */
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+/* ========== SKIP LINKS ========== */
+
+.skip-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  border-radius: 0 0 4px 4px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.skip-link:hover {
+  background-color: hsl(var(--primary) / 0.9);
+  transform: translateY(1px);
+}
+
+/* Multiple skip links */
+.skip-links .skip-link + .skip-link {
+  left: calc(6px + 120px); /* Offset for multiple skip links */
+}
+
+.skip-links .skip-link:nth-child(3) {
+  left: calc(6px + 240px);
+}
+
+/* ========== ENHANCED FOCUS INDICATORS ========== */
+
+/* High contrast focus rings */
+*:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[role="button"]:focus,
+[role="link"]:focus,
+[role="tab"]:focus,
+[role="menuitem"]:focus {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px hsl(var(--background));
+}
+
+/* Focus within for containers */
+.focus-within:focus-within {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ========== KEYBOARD NAVIGATION INDICATORS ========== */
+
+/* Keyboard-only focus (hide mouse focus) */
+.js-focus-visible *:focus:not(.focus-visible) {
+  outline: none;
+}
+
+.js-focus-visible *:focus-visible,
+.js-focus-visible *.focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ========== HIGH CONTRAST MODE SUPPORT ========== */
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high), (-ms-high-contrast: active) {
+  /* Ensure sufficient contrast for borders and text */
+  button,
+  input,
+  select,
+  textarea {
+    border: 2px solid;
+  }
+  
+  /* High contrast focus indicators */
+  *:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+  
+  /* Ensure images have borders in high contrast */
+  img {
+    border: 1px solid;
+  }
+}
+
+/* CSS class for high contrast detection */
+.prefers-high-contrast {
+  /* Custom high contrast styles */
+}
+
+.prefers-high-contrast button {
+  border: 2px solid currentColor;
+}
+
+.prefers-high-contrast .card {
+  border: 2px solid hsl(var(--border));
+}
+
+/* ========== REDUCED MOTION SUPPORT ========== */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* CSS class for reduced motion detection */
+.prefers-reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.prefers-reduced-motion {
+  scroll-behavior: auto !important;
+}
+
+/* Provide alternative indicators when animations are reduced */
+.prefers-reduced-motion .loading-spinner {
+  animation: none;
+  opacity: 0.6;
+}
+
+.prefers-reduced-motion .loading-spinner::after {
+  content: "Loading...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ========== FOCUS TRAPS ========== */
+
+/* Focus trap container */
+.focus-trap {
+  position: relative;
+}
+
+/* Ensure focus trap boundaries are clear */
+.focus-trap::before,
+.focus-trap::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.focus-trap:focus-within::before {
+  border-color: hsl(var(--ring) / 0.3);
+}
+
+/* ========== ROVING TABINDEX SUPPORT ========== */
+
+/* Items in roving tabindex groups */
+[role="tablist"] [role="tab"],
+[role="menubar"] [role="menuitem"],
+[role="group"][aria-activedescendant] > * {
+  cursor: pointer;
+}
+
+/* Indicate current item in roving tabindex */
+[role="tablist"] [role="tab"][aria-selected="true"],
+[role="menubar"] [role="menuitem"][aria-expanded="true"],
+[role="group"] > *[aria-current] {
+  position: relative;
+}
+
+[role="tablist"] [role="tab"][aria-selected="true"]::after,
+[role="menubar"] [role="menuitem"][aria-expanded="true"]::after,
+[role="group"] > *[aria-current]::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 2px;
+  background-color: hsl(var(--primary));
+}
+
+/* ========== ERROR STATES ========== */
+
+/* Accessible error indicators */
+[aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.2);
+}
+
+[aria-invalid="true"]:focus {
+  outline-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.1);
+}
+
+/* Error messages */
+[role="alert"],
+.error-message {
+  color: hsl(var(--destructive));
+  font-weight: 500;
+}
+
+[role="alert"]::before {
+  content: "⚠️ ";
+  margin-right: 0.25rem;
+}
+
+/* ========== LIVE REGIONS ========== */
+
+/* Visually hidden live regions */
+[aria-live] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ========== LANDMARK IMPROVEMENTS ========== */
+
+/* Ensure landmarks are properly indicated */
+main {
+  position: relative;
+}
+
+nav {
+  position: relative;
+}
+
+aside {
+  position: relative;
+}
+
+/* Add visual indication for landmarks in development */
+[data-dev="true"] main::before,
+[data-dev="true"] nav::before,
+[data-dev="true"] aside::before,
+[data-dev="true"] header::before,
+[data-dev="true"] footer::before {
+  content: attr(aria-label);
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* ========== TOOLTIPS AND DESCRIPTIONS ========== */
+
+/* Ensure tooltips are accessible */
+[role="tooltip"] {
+  position: absolute;
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  z-index: 1000;
+  max-width: 250px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== PRINT ACCESSIBILITY ========== */
+
+@media print {
+  /* Ensure skip links don't appear in print */
+  .skip-links {
+    display: none !important;
+  }
+  
+  /* Ensure focus indicators don't appear in print */
+  *:focus {
+    outline: none !important;
+  }
+  
+  /* Show URL for links in print */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  /* Hide decorative elements in print */
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ========== UTILITY CLASSES ========== */
+
+/* Focusable utility */
+.focusable:not([tabindex]) {
+  tabindex: 0;
+}
+
+.focusable[tabindex="-1"]:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Interactive utility */
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  opacity: 0.8;
+}
+
+.interactive:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+.disabled,
+[disabled],
+[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state */
+[aria-busy="true"] {
+  cursor: wait;
+  position: relative;
+}
+
+[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  margin: -0.5rem 0 0 -0.5rem;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respect reduced motion for loading spinner */
+@media (prefers-reduced-motion: reduce) {
+  [aria-busy="true"]::after {
+    animation: none;
+    border: none;
+    content: "⏳";
+    font-size: 1rem;
+    width: auto;
+    height: auto;
+    margin: -0.5rem 0 0 -0.5rem;
+  }
+}
+
+/* ========== RESPONSIVE ACCESSIBILITY ========== */
+
+/* Ensure touch targets are large enough on mobile */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Increase tap target for small interactive elements */
+  .tap-target-small {
+    position: relative;
+  }
+  
+  .tap-target-small::after {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: 1;
+  }
+}

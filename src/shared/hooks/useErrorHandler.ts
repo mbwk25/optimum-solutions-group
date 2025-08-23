@@ -4,7 +4,7 @@ import { errorHandler } from '@/shared/utils/errorHandler';
 export interface ErrorHandlerOptions {
   component?: string;
   action?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   onError?: (error: Error) => void;
 }
 
@@ -16,7 +16,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   const { component = 'UnknownComponent', action, context, onError } = options;
 
   // Handle synchronous errors
-  const handleError = useCallback((error: Error | string, additionalContext?: Record<string, any>) => {
+  const handleError = useCallback((error: Error | string, additionalContext?: Record<string, unknown>) => {
     const errorMessage = error instanceof Error ? error.message : error;
     const errorObj = error instanceof Error ? error : new Error(error);
     
@@ -36,7 +36,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   const handleAsync = useCallback(async <T>(
     asyncFn: () => Promise<T>,
     actionName?: string,
-    additionalContext?: Record<string, any>
+    additionalContext?: Record<string, unknown>
   ): Promise<T | null> => {
     return errorHandler.wrapAsync(asyncFn, {
       component,
@@ -50,7 +50,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   const handleSync = useCallback(<T>(
     syncFn: () => T,
     actionName?: string,
-    additionalContext?: Record<string, any>
+    additionalContext?: Record<string, unknown>
   ): T | null => {
     return errorHandler.wrapSync(syncFn, {
       component,
@@ -79,7 +79,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     };
 
     // Only add listeners in development or if explicitly requested
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       window.addEventListener('unhandledrejection', handleUnhandledRejection);
       window.addEventListener('error', handleGlobalError);
 

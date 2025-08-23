@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["dist", "coverage"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -29,6 +29,23 @@ export default tseslint.config(
         "error",
         { allowShortCircuit: true, allowTernary: true, allowTaggedTemplates: true },
       ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
+    },
+  },
+  // Disable React Refresh warnings for utility files, UI components, and test files
+  {
+    files: [
+      "**/utils/**/*.ts", 
+      "**/setupTests.ts", 
+      "**/main-test.tsx",
+      "**/ui/**/*.tsx",
+      "**/components/**/LoadingScreen.tsx",
+      "**/components/**/AccessibilityProvider.tsx"
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   }
 );

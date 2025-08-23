@@ -115,9 +115,9 @@ const ProjectEstimator = () => {
           <CardContent className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Project type</label>
+                <label htmlFor="estimator-project-type" className="text-sm font-medium">Project type</label>
                 <Select value={projectType} onValueChange={setProjectType}>
-                  <SelectTrigger>
+                  <SelectTrigger id="estimator-project-type">
                     <SelectValue placeholder="Select project type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -129,9 +129,9 @@ const ProjectEstimator = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Design</label>
+                <label htmlFor="estimator-design" className="text-sm font-medium">Design</label>
                 <Select value={design} onValueChange={setDesign}>
-                  <SelectTrigger>
+                  <SelectTrigger id="estimator-design">
                     <SelectValue placeholder="Select design level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -144,32 +144,34 @@ const ProjectEstimator = () => {
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-medium">Features</label>
-              <div className="grid md:grid-cols-2 gap-3">
-                {featureOptions.map((feature) => (
-                  <div key={feature.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={feature.id}
-                      checked={features.includes(feature.id)}
-                      onCheckedChange={(checked) => 
-                        handleFeatureChange(feature.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={feature.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {feature.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
+              <fieldset>
+                <legend className="text-sm font-medium mb-3">Features</legend>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {featureOptions.map((feature) => (
+                    <div key={feature.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={feature.id}
+                        checked={features.includes(feature.id)}
+                        onCheckedChange={(checked) => 
+                          handleFeatureChange(feature.id, checked as boolean)
+                        }
+                      />
+                      <label
+                        htmlFor={feature.id}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {feature.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Environment</label>
+              <label htmlFor="estimator-environment" className="text-sm font-medium">Environment</label>
               <Select value={environment} onValueChange={setEnvironment}>
-                <SelectTrigger>
+                <SelectTrigger id="estimator-environment">
                   <SelectValue placeholder="Select environment" />
                 </SelectTrigger>
                 <SelectContent>

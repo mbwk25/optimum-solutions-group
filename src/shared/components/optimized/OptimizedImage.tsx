@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { cn } from '@/shared/utils/utils';
+import { assetOptimizer } from '@/shared/utils/fontOptimizer';
 
 interface OptimizedImageProps {
   src: string | { default: string };
@@ -15,6 +16,12 @@ interface OptimizedImageProps {
   srcSet?: string;
   loading?: 'eager' | 'lazy';
   quality?: number;
+  format?: 'auto' | 'webp' | 'avif' | 'jpeg' | 'png';
+  responsive?: boolean;
+  responsiveSizes?: number[];
+  blurDataURL?: string;
+  objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  objectPosition?: string;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
@@ -29,104 +36,186 @@ const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
   onLoad,
   onError,
   loading = 'lazy',
-  quality = 80,
+  quality = 85,
+  format = 'auto',
+  responsive = false,
+  responsiveSizes = [400, 800, 1200, 1600],
+  blurDataURL,
+  objectFit = 'cover',
+  objectPosition = 'center',
+  ...props
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(blurDataURL || placeholder);
 
-  // Handle image source and generate srcSet
-  const { src: optimizedSrc, srcSet }: { src: string; srcSet?: string } = useMemo(() => {
-    if (!src) return { src: '', srcSet: undefined };
-    
-    // Handle imported images (they'll be objects with a default property)
+  // Process source URL
+  const processedSrc = useMemo(() => {
     if (typeof src === 'object' && 'default' in src) {
-      return { 
-        src: src.default,
-        srcSet: undefined 
-      };
+      return src.default;
     }
-    
-    const srcString: string = String(src);
-    
-    // Handle external URLs
-    if (srcString.startsWith('http') || srcString.startsWith('//')) {
-      return { 
-        src: srcString, 
-        srcSet: undefined 
-      };
-    }
-    
-    // Handle local paths in development
-    if (process.env.NODE_ENV === 'development') {
-      return { 
-        src: srcString,
-        srcSet: undefined
-      };
-    }
-    
-    // In production, generate WebP and srcSet if needed
-    const srcWithoutLeadingSlash: string = srcString.startsWith('/') ? srcString.slice(1) : srcString;
-    const baseUrl: string = 'https://optimumsolutions.dev';
-    const webpSrc: string = `${baseUrl}/${srcWithoutLeadingSlash.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`;
-    
-    const numWidth: number = typeof width === 'number' ? width : 0;
-    const responsiveSrcSet: string = numWidth > 0
-      ? [
-          `${webpSrc}?w=${numWidth}&q=${quality}&format=webp ${numWidth}w`,
-          `${webpSrc}?w=${Math.round(numWidth * 1.5)}&q=${quality}&format=webp ${Math.round(numWidth * 1.5)}w`,
-          `${webpSrc}?w=${numWidth * 2}&q=${quality}&format=webp ${numWidth * 2}w`,
-        ].join(', ')
-      : undefined;
-    
-    return {
-      src: webpSrc,
-      srcSet: responsiveSrcSet,
+    return String(src);
+  }, [src]);
+
+  // Generate optimized URLs and srcSet using asset optimizer
+  const { optimizedSrc, optimizedSrcSet, pictureElements } = useMemo(() => {
+    const baseOptions = {
+      width: typeof width === 'number' ? width : undefined,
+      height: typeof height === 'number' ? height : undefined,
+      quality,
+      format,
     };
-  }, [src, width, quality]);
+
+    const optimizedSrc = assetOptimizer.getOptimizedImageUrl(processedSrc, baseOptions);
+
+    let optimizedSrcSet = '';
+    if (responsive) {
+      optimizedSrcSet = assetOptimizer.generateSrcSet(processedSrc, responsiveSizes);
+    }
+
+    // Generate picture elements for multiple formats (WebP, AVIF fallbacks)
+    const pictureElements = [];
+    const formatSupport = assetOptimizer.getFormatSupport();
+
+    if (format === 'auto') {
+      // AVIF with fallback to WebP and JPEG
+      if (formatSupport.avif) {
+        const avifSrcSet = responsive 
+          ? assetOptimizer.generateSrcSet(processedSrc, responsiveSizes)
+          : assetOptimizer.getOptimizedImageUrl(processedSrc, { ...baseOptions, format: 'avif' });
+        
+        pictureElements.push({
+          type: 'image/avif',
+          srcSet: avifSrcSet,
+        });
+      }
+
+      if (formatSupport.webp) {
+        const webpSrcSet = responsive 
+          ? assetOptimizer.generateSrcSet(processedSrc, responsiveSizes)
+          : assetOptimizer.getOptimizedImageUrl(processedSrc, { ...baseOptions, format: 'webp' });
+        
+        pictureElements.push({
+          type: 'image/webp',
+          srcSet: webpSrcSet,
+        });
+      }
+    }
+
+    return { optimizedSrc, optimizedSrcSet, pictureElements };
+  }, [processedSrc, width, height, quality, format, responsive, responsiveSizes]);
 
   const handleLoad: React.ReactEventHandler<HTMLImageElement> = useCallback(() => {
     setIsLoaded(true);
+    setHasError(false);
+    setCurrentSrc(optimizedSrc);
     onLoad?.();
-  }, [onLoad]);
+  }, [optimizedSrc, onLoad]);
 
   const handleError: React.ReactEventHandler<HTMLImageElement> = useCallback((event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setHasError(true);
     onError?.(event);
   }, [onError]);
 
+  // Error fallback
   if (hasError) {
     return (
-      <div className={cn(
-        'flex items-center justify-center bg-muted text-muted-foreground',
-        className
-      )}>
-        Failed to load image
+      <div 
+        className={cn(
+          'flex items-center justify-center bg-muted text-muted-foreground',
+          'border border-dashed border-muted-foreground/20 rounded-md',
+          'min-h-[100px] text-sm',
+          className
+        )}
+        style={{ width, height }}
+      >
+        <div className="text-center p-4">
+          <div className="text-xs opacity-60 mb-1">Failed to load</div>
+          <div className="text-xs font-mono truncate max-w-[150px]">{alt}</div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className={cn('relative overflow-hidden', className)}>
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-muted animate-pulse" />
-      )}
-      <img
-        src={optimizedSrc}
-        alt={alt}
-        width={width}
-        height={height}
-        sizes={sizes}
-        loading={priority ? 'eager' : 'lazy'}
-        // Use lowercase fetchpriority for React 18+ compatibility
-        {...(priority ? { fetchpriority: 'high' } : {})}
-        decoding="async"
-        onLoad={handleLoad}
-        onError={handleError}
-        className={cn(
-          'transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0',
-          className
+  // Common image props
+  const imageProps = {
+    alt,
+    loading: priority ? 'eager' as const : loading,
+    onLoad: handleLoad,
+    onError: handleError,
+    className: cn(
+      'transition-all duration-300 ease-in-out',
+      isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105',
+      blurDataURL && !isLoaded && 'blur-sm',
+      blurDataURL && isLoaded && 'blur-none',
+      className
+    ),
+    style: {
+      width,
+      height,
+      objectFit,
+      objectPosition,
+      ...props.style,
+    },
+    // Add fetchpriority for modern browsers
+    ...(priority ? { fetchpriority: 'high' as 'high' | 'low' | 'auto' } : {}),
+    decoding: 'async' as const,
+  };
+
+  // Use picture element for multiple format support
+  if (pictureElements.length > 0) {
+    return (
+      <div className="relative overflow-hidden">
+        {/* Loading placeholder */}
+        {!isLoaded && (
+          <div 
+            className={cn(
+              'absolute inset-0 bg-muted animate-pulse',
+              blurDataURL && 'bg-transparent'
+            )}
+            style={{ width, height }}
+          />
         )}
+        
+        <picture>
+          {pictureElements.map((source, index) => (
+            <source
+              key={index}
+              type={source.type}
+              srcSet={source.srcSet}
+              sizes={responsive ? sizes : undefined}
+            />
+          ))}
+          <img
+            {...imageProps}
+            src={currentSrc}
+            srcSet={responsive ? optimizedSrcSet : undefined}
+            sizes={responsive ? sizes : undefined}
+          />
+        </picture>
+      </div>
+    );
+  }
+
+  // Standard img element
+  return (
+    <div className="relative overflow-hidden">
+      {/* Loading placeholder */}
+      {!isLoaded && !hasError && (
+        <div 
+          className={cn(
+            'absolute inset-0 bg-muted animate-pulse',
+            blurDataURL && 'bg-transparent'
+          )}
+          style={{ width, height }}
+        />
+      )}
+      
+      <img
+        {...imageProps}
+        src={currentSrc}
+        srcSet={responsive ? optimizedSrcSet : undefined}
+        sizes={responsive ? sizes : undefined}
       />
     </div>
   );
