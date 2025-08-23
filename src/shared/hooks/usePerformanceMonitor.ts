@@ -1,96 +1,182 @@
-import { useEffect, useCallback } from 'react';
-import { logPerformanceWarnings } from '@/utils/performanceBudget';
-import type { PerformanceEventTiming, LayoutShift, WebVitalsMetrics } from '@/types/performance';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { performanceMonitor, PerformanceMetrics, UserInteractionMetrics, PerformanceAlert } from '@/shared/utils/performanceMonitor';
 
-export const usePerformanceMonitor: () => void = () => {
-  const reportWebVital: (metric: string, value: number) => void = useCallback((metric: string, value: number) => {
-    // Only log in development, send to analytics in production
-    if (process.env.NODE_ENV === 'development') {
-      // Reduce logging frequency for CLS to avoid spam
-      if (metric === 'CLS' && value === 0) {
-        return; // Skip logging zero CLS values
+export interface UsePerformanceMonitorOptions {
+  autoStart?: boolean;
+  trackUserInteractions?: boolean;
+  alertThreshold?: 'good' | 'poor';
+  enableReporting?: boolean;
+}
+
+export interface UsePerformanceMonitorReturn {
+  metrics: PerformanceMetrics;
+  userMetrics: UserInteractionMetrics;
+  alerts: PerformanceAlert[];
+  isMonitoring: boolean;
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  clearAlerts: () => void;
+  logReport: () => void;
+  getPerformanceScore: () => number;
+}
+
+/**
+ * React hook for performance monitoring
+ * Provides real-time access to performance metrics and controls
+ */
+export const usePerformanceMonitor = (
+  options: UsePerformanceMonitorOptions = {}
+): UsePerformanceMonitorReturn => {
+  const {
+    autoStart = true,
+    trackUserInteractions = true,
+    alertThreshold = 'poor',
+    enableReporting = import.meta.env.MODE === 'development',
+  } = options;
+
+  const [metrics, setMetrics] = useState<PerformanceMetrics>(() => performanceMonitor.getMetrics());
+  const [userMetrics, setUserMetrics] = useState<UserInteractionMetrics>(() => performanceMonitor.getUserMetrics());
+  const [alerts, setAlerts] = useState<PerformanceAlert[]>(() => performanceMonitor.getAlerts());
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const reportIntervalRef = useRef<number | null>(null);
+
+  // Subscribe to performance metric updates
+  useEffect(() => {
+    const handleMetricsUpdate = (updatedMetrics: PerformanceMetrics) => {
+      setMetrics(updatedMetrics);
+      setUserMetrics(performanceMonitor.getUserMetrics());
+      setAlerts(performanceMonitor.getAlerts());
+    };
+
+    unsubscribeRef.current = performanceMonitor.subscribe(handleMetricsUpdate);
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
       }
-      console.log(`${metric}:`, value);
-    } else {
-      // Here you would send to your analytics service
-      // Example: analytics.track('web_vital', { metric, value });
+    };
+  }, []);
+
+  // Auto-start monitoring
+  useEffect(() => {
+    if (autoStart && typeof window !== 'undefined') {
+      startMonitoring();
+    }
+
+    return () => {
+      if (reportIntervalRef.current) {
+        clearInterval(reportIntervalRef.current);
+      }
+    };
+  }, [autoStart, startMonitoring]);
+
+  const startMonitoring = useCallback(() => {
+    performanceMonitor.startMonitoring();
+    setIsMonitoring(true);
+  }, []);
+
+  const stopMonitoring = useCallback(() => {
+    performanceMonitor.stopMonitoring();
+    setIsMonitoring(false);
+
+    if (reportIntervalRef.current) {
+      clearInterval(reportIntervalRef.current);
+      reportIntervalRef.current = null;
     }
   }, []);
 
-  useEffect(() => {
-    const observers: PerformanceObserver[] = [];
-    const metrics: WebVitalsMetrics = {
-      fcp: null,
-      lcp: null,
-      fid: null,
-      cls: 0
+  const clearAlerts = useCallback(() => {
+    performanceMonitor.clearAlerts();
+    setAlerts([]);
+  }, []);
+
+  const logReport = useCallback(() => {
+    performanceMonitor.logReport();
+  }, []);
+
+  // Calculate overall performance score (0-100)
+  const getPerformanceScore = useCallback((): number => {
+    const scores = {
+      lcp: metrics.lcp ? Math.max(0, 100 - (metrics.lcp / 2500) * 100) : null,
+      fid: metrics.fid ? Math.max(0, 100 - (metrics.fid / 100) * 100) : null,
+      cls: metrics.cls ? Math.max(0, 100 - (metrics.cls / 0.1) * 100) : null,
+      fcp: metrics.fcp ? Math.max(0, 100 - (metrics.fcp / 1800) * 100) : null,
+      ttfb: metrics.ttfb ? Math.max(0, 100 - (metrics.ttfb / 600) * 100) : null,
     };
 
-    // First Contentful Paint (FCP)
-    const fcpObserver: PerformanceObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        if (entry.name === 'first-contentful-paint') {
-          metrics.fcp = entry.startTime;
-          reportWebVital('FCP', entry.startTime);
-        }
-      }
-    });
-    fcpObserver.observe({ type: 'paint', buffered: true });
-    observers.push(fcpObserver);
+    const validScores = Object.values(scores).filter(score => score !== null) as number[];
+    
+    if (validScores.length === 0) return 0;
+    
+    return Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length);
+  }, [metrics]);
 
-    // Largest Contentful Paint (LCP)
-    const lcpObserver: PerformanceObserver = new PerformanceObserver((entryList) => {
-      const entries: PerformanceEntry[] = entryList.getEntries();
-      const lastEntry: PerformanceEntry | undefined = entries[entries.length - 1];
-      if (lastEntry) {
-        metrics.lcp = lastEntry.startTime;
-        reportWebVital('LCP', lastEntry.startTime);
-      }
-    });
-    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-    observers.push(lcpObserver);
+  return {
+    metrics,
+    userMetrics,
+    alerts,
+    isMonitoring,
+    startMonitoring,
+    stopMonitoring,
+    clearAlerts,
+    logReport,
+    getPerformanceScore,
+  };
+};
 
-    // First Input Delay (FID)
-    const fidObserver: PerformanceObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        const fidEntry: PerformanceEventTiming = entry as unknown as PerformanceEventTiming;
-        if (fidEntry.processingStart) {
-          const inputDelay: number = fidEntry.processingStart - fidEntry.startTime;
-          metrics.fid = inputDelay;
-          reportWebVital('FID', inputDelay);
-        }
-      }
-    });
-    fidObserver.observe({ type: 'first-input', buffered: true });
-    observers.push(fidObserver);
+/**
+ * Hook for tracking specific performance metrics
+ */
+export const useWebVitals = () => {
+  const { metrics, getPerformanceScore } = usePerformanceMonitor({
+    autoStart: true,
+    enableReporting: false,
+  });
 
-    // Cumulative Layout Shift (CLS)
-    const clsObserver: PerformanceObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        const clsEntry: LayoutShift = entry as unknown as LayoutShift;
-        if (!clsEntry.hadRecentInput) {
-          metrics.cls += clsEntry.value;
-        }
-      }
-      // Only report CLS if it's greater than 0 to reduce console spam
-      if (metrics.cls > 0) {
-        reportWebVital('CLS', metrics.cls);
-      }
-    });
-    clsObserver.observe({ type: 'layout-shift', buffered: true });
-    observers.push(clsObserver);
+  const webVitals = {
+    lcp: metrics.lcp,
+    fid: metrics.fid,
+    cls: metrics.cls,
+    fcp: metrics.fcp,
+    ttfb: metrics.ttfb,
+  };
 
-    // Check performance budgets after metrics are captured
-    const timeoutId: NodeJS.Timeout = setTimeout(() => {
-      logPerformanceWarnings();
-    }, 3000);
+  const vitalsStatus = {
+    lcp: metrics.lcp ? (metrics.lcp <= 2500 ? 'good' : metrics.lcp <= 4000 ? 'needs-improvement' : 'poor') : null,
+    fid: metrics.fid ? (metrics.fid <= 100 ? 'good' : metrics.fid <= 300 ? 'needs-improvement' : 'poor') : null,
+    cls: metrics.cls ? (metrics.cls <= 0.1 ? 'good' : metrics.cls <= 0.25 ? 'needs-improvement' : 'poor') : null,
+    fcp: metrics.fcp ? (metrics.fcp <= 1800 ? 'good' : metrics.fcp <= 3000 ? 'needs-improvement' : 'poor') : null,
+    ttfb: metrics.ttfb ? (metrics.ttfb <= 600 ? 'good' : metrics.ttfb <= 1500 ? 'needs-improvement' : 'poor') : null,
+  };
 
-    return () => {
-      // Cleanup observers
-      observers.forEach((observer: PerformanceObserver) => observer.disconnect());
-      clearTimeout(timeoutId);
-    };
-  }, [reportWebVital]);
+  return {
+    webVitals,
+    vitalsStatus,
+    performanceScore: getPerformanceScore(),
+    isLoading: Object.values(webVitals).every(value => value === null),
+  };
+};
+
+/**
+ * Hook for user interaction tracking
+ */
+export const useUserEngagement = () => {
+  const { userMetrics } = usePerformanceMonitor({
+    trackUserInteractions: true,
+    enableReporting: false,
+  });
+
+  const engagementLevel = userMetrics.engagementScore >= 0.7 ? 'high' : 
+                          userMetrics.engagementScore >= 0.4 ? 'medium' : 'low';
+
+  return {
+    ...userMetrics,
+    engagementLevel,
+    isEngaged: userMetrics.engagementScore > 0.5,
+    timeOnPageFormatted: `${Math.floor(userMetrics.timeOnPage / 60000)}:${Math.floor((userMetrics.timeOnPage % 60000) / 1000).toString().padStart(2, '0')}`,
+  };
 };
 
 export default usePerformanceMonitor;
