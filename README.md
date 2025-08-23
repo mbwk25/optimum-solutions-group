@@ -71,3 +71,97 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Testing
+
+This project uses Jest with React Testing Library for comprehensive testing. The testing setup is configured for long-term maintainability and follows best practices.
+
+### Test Configuration
+
+- **Jest**: JavaScript testing framework
+- **ts-jest**: TypeScript support for Jest
+- **@testing-library/react**: React component testing utilities
+- **@testing-library/jest-dom**: Custom Jest matchers for DOM testing
+- **jest-environment-jsdom**: DOM environment for testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Structure
+
+- Tests are located in `__tests__` directories alongside the components they test
+- Test files follow the naming convention: `*.test.tsx` or `*.spec.tsx`
+- Global test setup is configured in `src/setupTests.ts`
+
+### Configuration Files
+
+- `jest.config.js`: Main Jest configuration
+- `tsconfig.jest.json`: TypeScript configuration for Jest
+- `src/setupTests.ts`: Global test setup and mocks
+
+### Key Features
+
+- **TypeScript Support**: Full TypeScript support with proper type checking
+- **Path Aliases**: Support for `@/` path aliases matching your Vite configuration
+- **Asset Mocking**: Static assets (images, fonts, etc.) are properly mocked
+- **CSS Mocking**: CSS/SCSS files are mocked for testing
+- **Global Mocks**: Common browser APIs (matchMedia, ResizeObserver, etc.) are mocked
+- **Coverage Reporting**: Comprehensive coverage reporting with exclusions for setup files
+
+### Writing Tests
+
+Example test structure:
+
+```tsx
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { Button } from '../button';
+
+describe('Button', () => {
+  it('renders with default props', () => {
+    render(<Button>Click me</Button>);
+    const button = screen.getByRole('button', { name: /click me/i });
+    
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass('bg-primary');
+  });
+
+  it('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    const button = screen.getByRole('button', { name: /click me/i });
+    fireEvent.click(button);
+    
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+### Best Practices
+
+1. **Use semantic queries**: Prefer `getByRole`, `getByLabelText`, etc. over `getByTestId`
+2. **Test user behavior**: Focus on testing what users see and do, not implementation details
+3. **Keep tests simple**: Each test should verify one specific behavior
+4. **Use descriptive test names**: Test names should clearly describe what is being tested
+5. **Mock external dependencies**: Use Jest mocks for external APIs and services
+
+### Troubleshooting
+
+If you encounter issues:
+
+1. **Multiple config files**: Ensure only `jest.config.js` exists (not `jest.config.cjs`)
+2. **Module resolution**: Check that path aliases in `tsconfig.jest.json` match your main `tsconfig.json`
+3. **Type errors**: Verify that `@types/jest` and `@types/testing-library__jest-dom` are installed
+4. **Coverage issues**: Check that files are not excluded in `collectCoverageFrom` configuration

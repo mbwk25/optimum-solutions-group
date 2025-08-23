@@ -23,8 +23,27 @@
     <link rel="dns-prefetch" href="https://cdn.gpteng.co">
     
     <!-- Preload critical assets -->
-    <link rel="preload" as="font" href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" type="font/woff2" crossorigin>
-    <link rel="preload" as="font" href="https://fonts.gstatic.com/s/playfairdisplay/v30/nuFRD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xNzj5c.woff2" type="font/woff2" crossorigin>
+    <link rel="preload" href="/src/assets/hero-background-optimized.jpg" as="image" imagesrcset="">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"></noscript>
+    
+    <!-- Inline critical CSS -->
+    <style>
+      /* Critical CSS for above-the-fold content */
+      .hero-section {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+      }
+      .hero-background {
+        position: absolute;
+        inset: 0;
+        z-index: -20;
+      }
+    </style>
+
   </head>
 
   <body>

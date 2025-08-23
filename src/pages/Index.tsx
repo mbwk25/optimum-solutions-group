@@ -1,23 +1,33 @@
-import React from 'react';
-import {
-  Navigation,
-  HeroSection,
-  AboutSection,
-  ServicesSection,
-  IoTSection,
-  ProjectEstimator,
-  TestimonialsSection,
-  PortfolioSection,
-  FAQSection,
-  ContactSection,
-  Footer,
-  BackToTop,
-  CustomCursor,
-  LoadingScreen
-} from '@/components';
-import { usePageLoad } from '@/components/LoadingScreen';
-import SEOHead from '@/components/optimized/SEOHead';
-import { generateStructuredData } from '@/utils/seo';
+import React, { lazy, Suspense } from 'react';
+import Navigation from '@/features/navigation/Navigation';
+import HeroSection from '@/features/hero/HeroSection';
+import CustomCursor from '@/shared/components/CustomCursor';
+import { LoadingScreen } from '@/shared/components/LoadingScreen';
+import { usePageLoad } from '@/shared/components/LoadingScreen';
+import SEOHead from '@/shared/components/optimized/SEOHead';
+import { generateStructuredData } from '@/shared/utils/seo';
+
+// Critical sections (above the fold) - loaded immediately
+// Navigation and HeroSection are already imported above
+
+// Below-the-fold sections - lazy loaded for better performance
+const AboutSection = lazy(() => import('@/features/about/AboutSection'));
+const ServicesSection = lazy(() => import('@/features/services/ServicesSection'));
+const IoTSection = lazy(() => import('@/features/iot-solutions/IoTSection'));
+const ProjectEstimator = lazy(() => import('@/shared/components/ProjectEstimator'));
+const TestimonialsSection = lazy(() => import('@/features/testimonials/TestimonialsSection'));
+const PortfolioSection = lazy(() => import('@/features/portfolio/PortfolioSection'));
+const FAQSection = lazy(() => import('@/shared/components/FAQSection'));
+const ContactSection = lazy(() => import('@/features/contact/ContactSection'));
+const Footer = lazy(() => import('@/shared/components/Footer'));
+const BackToTop = lazy(() => import('@/shared/components/BackToTop'));
+
+// Loading fallback for sections
+const SectionFallback = () => (
+  <div className="flex justify-center items-center h-32">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const Index = () => {
   const isLoading = usePageLoad();
@@ -38,16 +48,47 @@ const Index = () => {
       <div className="min-h-screen">
         <Navigation />
         <HeroSection />
-        <AboutSection />
-        <ServicesSection />
-        <IoTSection />
-        <ProjectEstimator />
-        <PortfolioSection />
-        <TestimonialsSection />
-        <FAQSection />
-        <ContactSection />
-        <Footer />
-        <BackToTop />
+        
+        {/* Below-the-fold sections with lazy loading */}
+        <Suspense fallback={<SectionFallback />}>
+          <AboutSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <ServicesSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <IoTSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <ProjectEstimator />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <PortfolioSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <TestimonialsSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <FAQSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <ContactSection />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <Footer />
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <BackToTop />
+        </Suspense>
       </div>
     </>
   );

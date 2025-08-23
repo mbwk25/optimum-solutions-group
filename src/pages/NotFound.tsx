@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { analytics } from "@/utils/analytics";
+import { analytics } from "@/shared/utils/analytics";
 
 const NotFound = () => {
   const location = useLocation();
