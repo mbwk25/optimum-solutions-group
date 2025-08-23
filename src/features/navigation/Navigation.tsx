@@ -141,7 +141,7 @@ const Navigation = memo(() => {
             }}
             role="button"
             tabIndex={0}
-            aria-label="Optimum Solutions Group - Return to top"
+            aria-label="Optimum Solutions Group"
           >
             <div className="relative overflow-hidden">
               <img 

@@ -84,7 +84,7 @@ const TestimonialsSection = () => {
               <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
+                    <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
                     <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                     <p className="text-sm text-muted-foreground">{testimonial.company}</p>
                   </div>
@@ -98,9 +98,9 @@ const TestimonialsSection = () => {
         </div>
 
         <div className="bg-primary p-12 rounded-3xl text-center text-primary-foreground">
-          <h3 className="text-3xl font-bold mb-4">
+          <h4 className="text-3xl font-bold mb-4">
             Ready to Join Our Success Stories?
-          </h3>
+          </h4>
           <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
             Every great digital transformation starts with a conversation. Let's discuss how we can help your business achieve similar results.
           </p>

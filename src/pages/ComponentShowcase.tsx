@@ -64,7 +64,7 @@ export default function ComponentShowcase() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <main className="min-h-screen bg-background p-8" role="main">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -94,36 +94,36 @@ export default function ComponentShowcase() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4 flex-wrap">
-              <Button data-testid="btn-primary" variant="default">
+              <Button data-testid="btn-primary" variant="default" type="button">
                 Primary Button
               </Button>
-              <Button data-testid="btn-secondary" variant="secondary">
+              <Button data-testid="btn-secondary" variant="secondary" type="button">
                 Secondary Button
               </Button>
-              <Button data-testid="btn-outline" variant="outline">
+              <Button data-testid="btn-outline" variant="outline" type="button">
                 Outline Button
               </Button>
-              <Button data-testid="btn-destructive" variant="destructive" onClick={showErrorAlert}>
+              <Button data-testid="btn-destructive" variant="destructive" type="button" onClick={showErrorAlert}>
                 Show Error Alert
               </Button>
-              <Button data-testid="btn-ghost" variant="ghost">
+              <Button data-testid="btn-ghost" variant="ghost" type="button">
                 Ghost Button
               </Button>
-              <Button data-testid="btn-link" variant="link">
+              <Button data-testid="btn-link" variant="link" type="button">
                 Link Button
               </Button>
             </div>
             <div className="flex gap-4 flex-wrap">
-              <Button data-testid="btn-disabled" disabled>
+              <Button data-testid="btn-disabled" disabled type="button">
                 Disabled Button
               </Button>
-              <Button data-testid="btn-loading" disabled>
+              <Button data-testid="btn-loading" disabled type="button">
                 Loading...
               </Button>
-              <Button data-testid="btn-small" size="sm">
+              <Button data-testid="btn-small" size="sm" type="button">
                 Small Button
               </Button>
-              <Button data-testid="btn-large" size="lg">
+              <Button data-testid="btn-large" size="lg" type="button">
                 Large Button
               </Button>
             </div>
@@ -210,9 +210,13 @@ export default function ComponentShowcase() {
                 data-testid="btn-submit"
                 className="w-full md:w-auto"
                 disabled={!formData.name || !formData.email || !formData.message}
+                aria-describedby="form-validation-info"
               >
                 Submit Form
               </Button>
+              <div id="form-validation-info" className="sr-only">
+                All required fields must be filled to submit the form
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -250,7 +254,7 @@ export default function ComponentShowcase() {
               <div className="text-sm text-muted-foreground">per month</div>
             </CardContent>
             <CardFooter>
-              <Button data-testid="btn-select-basic" className="w-full">Select Plan</Button>
+              <Button data-testid="btn-select-basic" className="w-full" type="button">Select Plan</Button>
             </CardFooter>
           </Card>
 
@@ -267,7 +271,7 @@ export default function ComponentShowcase() {
               <div className="text-sm text-muted-foreground">per month</div>
             </CardContent>
             <CardFooter>
-              <Button data-testid="btn-select-pro" className="w-full">Select Plan</Button>
+              <Button data-testid="btn-select-pro" className="w-full" type="button">Select Plan</Button>
             </CardFooter>
           </Card>
 
@@ -281,7 +285,7 @@ export default function ComponentShowcase() {
               <div className="text-sm text-muted-foreground">Custom pricing</div>
             </CardContent>
             <CardFooter>
-              <Button data-testid="btn-contact-enterprise" variant="outline" className="w-full">
+              <Button data-testid="btn-contact-enterprise" variant="outline" className="w-full" type="button">
                 Contact Sales
               </Button>
             </CardFooter>
@@ -309,9 +313,9 @@ export default function ComponentShowcase() {
                 <div className="space-y-2">
                   <Label>Button States</Label>
                   <div className="space-y-2">
-                    <Button data-testid="btn-hover-test" className="w-full">Hover Me</Button>
-                    <Button data-testid="btn-focus-test" className="w-full">Focus Test</Button>
-                    <Button data-testid="btn-active-test" className="w-full">Active Test</Button>
+                    <Button data-testid="btn-hover-test" className="w-full" type="button">Hover Me</Button>
+                    <Button data-testid="btn-focus-test" className="w-full" type="button">Focus Test</Button>
+                    <Button data-testid="btn-active-test" className="w-full" type="button">Active Test</Button>
                   </div>
                 </div>
               </div>
@@ -326,6 +330,6 @@ export default function ComponentShowcase() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

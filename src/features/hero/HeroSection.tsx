@@ -107,7 +107,7 @@ const HeroSection: React.FC = memo(() => {
                 onClick={scrollToContact}
                 size="lg"
                 className="btn-hero text-lg px-12 py-6 h-auto font-medium tracking-wide"
-                aria-label="Start your business transformation - contact us"
+                aria-label="Start Your Transformation"
               >
                 Start Your Transformation
               </Button>
@@ -117,7 +117,7 @@ const HeroSection: React.FC = memo(() => {
                 variant="outline" 
                 size="lg"
                 className="text-lg px-12 py-6 h-auto border-foreground/20 text-foreground hover:bg-foreground/10 hover:border-foreground/40 backdrop-blur-sm font-medium tracking-wide"
-                aria-label="Learn about our solutions and services"
+                aria-label="Explore Solutions"
               >
                 Explore Solutions
               </Button>

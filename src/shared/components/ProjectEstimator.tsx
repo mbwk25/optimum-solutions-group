@@ -150,14 +150,14 @@ const ProjectEstimator = () => {
                   {featureOptions.map((feature) => (
                     <div key={feature.id} className="flex items-center space-x-2">
                       <Checkbox
-                        id={feature.id}
+                        id={`estimator-${feature.id}`}
                         checked={features.includes(feature.id)}
                         onCheckedChange={(checked) => 
                           handleFeatureChange(feature.id, checked as boolean)
                         }
                       />
                       <label
-                        htmlFor={feature.id}
+                        htmlFor={`estimator-${feature.id}`}
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         {feature.label}

@@ -15,6 +15,7 @@ const BackToTop = () => {
       onClick={scrollToTop}
       className="fixed bottom-8 right-8 z-50 rounded-full p-3 shadow-lg"
       size="sm"
+      aria-label="Back to top"
     >
       <ChevronUp className="h-4 w-4" />
     </Button>

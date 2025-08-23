@@ -85,15 +85,27 @@ const Footer = () => {
 
             {/* Enhanced Social Links */}
             <div className="flex gap-3 mt-6">
-              <a href="#" className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden">
+              <a 
+                href="#" 
+                className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden"
+                aria-label="Visit our LinkedIn profile"
+              >
                 <LinkedinIcon className="h-5 w-5 group-hover:text-primary-foreground transition-colors duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </a>
-              <a href="#" className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden">
+              <a 
+                href="#" 
+                className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden"
+                aria-label="Follow us on Twitter"
+              >
                 <TwitterIcon className="h-5 w-5 group-hover:text-primary-foreground transition-colors duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </a>
-              <a href="#" className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden">
+              <a 
+                href="#" 
+                className="group relative w-11 h-11 bg-primary-foreground/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all duration-300 overflow-hidden"
+                aria-label="Check out our GitHub projects"
+              >
                 <GithubIcon className="h-5 w-5 group-hover:text-primary-foreground transition-colors duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </a>

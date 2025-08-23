@@ -125,6 +125,7 @@ const App: React.FC = () => {
                 <ResourcePrefetcher />
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/component-showcase" element={<ComponentShowcase />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <Toaster />
