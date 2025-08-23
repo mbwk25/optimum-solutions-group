@@ -18,13 +18,13 @@
     --popover: 220 13% 12%;
     --popover-foreground: 0 0% 95%;
 
-    /* Primary Brand - Vibrant Red */
-    --primary: 0 84% 60%;
+    /* Primary Brand - Vibrant Red (Darker for better contrast) */
+    --primary: 0 84% 50%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 0 84% 70%;
 
-    /* Secondary - Darker Red/Orange */
-    --secondary: 15 100% 55%;
+    /* Secondary - Darker Red/Orange (Darker for better contrast) */
+    --secondary: 15 100% 42%;
     --secondary-foreground: 0 0% 100%;
 
     /* Neutral Grays - Dark Theme */

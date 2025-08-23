@@ -203,7 +203,9 @@ export const useAutomatedPerformanceTesting = (
     // Custom regression handler
     // Note: Using 'any' here is necessary because we're accessing private/internal methods
     // of the AutomatedPerformanceTesting class that aren't part of its public interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const originalOnRegressionDetected = (automatedTesting.current as any).onRegressionDetected;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (automatedTesting.current as any).onRegressionDetected = (comparison: ComparisonResult) => {
       setLastRegressionAlert(comparison);
       if (onRegressionDetected) {
