@@ -125,7 +125,8 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --prefer-offline --no-audit
-          npm install -g lighthouse chrome-launcher commander chalk ora
+          # Global packages already included in our script dependencies
+          npm install -g lighthouse chrome-launcher
 
       - name: Install Chrome dependencies
         run: |
@@ -187,8 +188,12 @@ jobs:
           # Create reports directory
           mkdir -p reports
           
-          # Set benchmark parameters
-          RUNS="${{ github.event.inputs.runs || '3' }}"
+          # Set benchmark parameters (reduced runs for PRs)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RUNS="${{ github.event.inputs.runs || '1' }}"  # Only 1 run for PRs
+          else
+            RUNS="${{ github.event.inputs.runs || '3' }}"  # 3 runs for main branch
+          fi
           URL="${{ steps.url.outputs.benchmark_url }}"
           SCENARIO="${{ matrix.scenario.name }}"
           
@@ -249,7 +254,7 @@ jobs:
           retention-days: 30
 
       - name: Generate HTML report
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: |
           if [ -f "reports/performance-report-${{ matrix.scenario.name }}.json" ]; then
             node scripts/performance-benchmark.js audit \
