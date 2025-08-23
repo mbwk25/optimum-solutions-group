@@ -9,7 +9,11 @@ import CriticalCSS from "@/shared/components/CriticalCSS";
 import PerformanceOptimizer from "@/shared/components/PerformanceOptimizer";
 import ResourcePrefetcher from "@/shared/components/ResourcePrefetcher";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
+import { AccessibilityProvider } from "@/shared/components/AccessibilityProvider";
 import errorHandler from "@/shared/utils/errorHandler";
+import { serviceWorkerManager } from "@/shared/utils/serviceWorkerManager";
+// Import accessibility styles
+import "@/shared/styles/accessibility.css";
 
 // Remove Vercel analytics if not needed, or install the package
 // import { Analytics } from '@vercel/analytics/react';
@@ -45,38 +49,48 @@ if (typeof window !== "undefined" && typeof errorHandler === "function") {
   };
 }
 
-// Lazy load pages with preloading
-const lazyWithRetry = (componentImport: () => Promise<{ default: React.ComponentType }>) =>
-  lazy(async () => {
-    try {
-      return await componentImport();
-    } catch (error) {
-      console.error('Lazy loading failed:', error);
-      // Retry once after a small delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return componentImport();
-    }
-  });
+// Import enhanced lazy loading utilities
+import { lazyWithRetry, lazyWithPreload, preloadComponent } from '@/shared/utils/dynamicImports';
 
-// Preload function for critical routes
-const preloadComponent = (component: () => Promise<{ default: React.ComponentType }>) => {
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'script';
-  link.href = component().then(module => {
-    // This will trigger the preload
-    return '';
-  }) as unknown as string;
-  document.head.appendChild(link);
-};
+// Lazy load pages with enhanced retry mechanism and preloading
+const Index = lazyWithPreload(
+  () => import("./pages/Index"),
+  () => true // Preload immediately for main page
+);
 
-// Lazy load pages with retry mechanism
-const Index = lazyWithRetry(() => import("./pages/Index"));
-const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const NotFound = lazyWithRetry(
+  () => import("./pages/NotFound"),
+  2, // 2 retries
+  1000 // 1s delay
+);
 
-// Preload critical components
+// Preload critical routes on app initialization
 if (typeof window !== 'undefined') {
-  preloadComponent(() => import("./pages/Index"));
+  // Preload Index immediately
+  if ('preload' in Index && typeof Index.preload === 'function') {
+    Index.preload();
+  }
+  
+  // Register service worker in production
+  if (import.meta.env.MODE === 'production') {
+    window.addEventListener('load', () => {
+      serviceWorkerManager.register().then((status) => {
+        if (status.isRegistered) {
+          console.log('✅ Service worker registered successfully');
+        }
+      }).catch((error) => {
+        console.error('❌ Service worker registration failed:', error);
+      });
+    });
+  }
+  
+  // Preload other routes based on user interaction patterns
+  setTimeout(() => {
+    // Preload NotFound after 5 seconds (low priority)
+    import("./pages/NotFound").catch(() => {
+      // Silently fail if preload fails
+    });
+  }, 5000);
 }
 
 // Enhanced loading fallback with better UX
@@ -95,23 +109,25 @@ const queryClient: QueryClient = new QueryClient();
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <BrowserRouter>
-              <PerformanceOptimizer />
-              <CriticalCSS />
-              <ResourcePrefetcher />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-              <Sonner />
-            </BrowserRouter>
-          </Suspense>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <AccessibilityProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <BrowserRouter>
+                <PerformanceOptimizer />
+                <CriticalCSS />
+                <ResourcePrefetcher />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+                <Sonner />
+              </BrowserRouter>
+            </Suspense>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </AccessibilityProvider>
     </ErrorBoundary>
   );
 };

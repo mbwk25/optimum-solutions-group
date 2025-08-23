@@ -1,6 +1,6 @@
 interface AnalyticsEvent {
   name: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp?: number;
 }
 
@@ -12,10 +12,10 @@ interface PerformanceMetric {
 }
 
 class Analytics {
-  private isProduction = process.env.NODE_ENV === 'production';
+  private isProduction = import.meta.env.MODE === 'production';
   private queue: AnalyticsEvent[] = [];
 
-  track(eventName: string, properties?: Record<string, any>) {
+  track(eventName: string, properties?: Record<string, unknown>) {
     const event: AnalyticsEvent = {
       name: eventName,
       properties,
@@ -35,7 +35,7 @@ class Analytics {
     this.track('performance_metric', metric);
   }
 
-  trackError(error: Error, context?: Record<string, any>) {
+  trackError(error: Error, context?: Record<string, unknown>) {
     this.track('error', {
       message: error.message,
       stack: error.stack,
