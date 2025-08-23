@@ -16,7 +16,7 @@ import ora from 'ora';
 // ========== CONFIGURATION ==========
 
 const DEFAULT_CONFIG = {
-  url: 'http://localhost:5173',
+  url: 'http://localhost:4173',
   runs: 3,
   throttling: {
     cpu: 4,
@@ -56,19 +56,48 @@ const runLighthouseAudit = async (config) => {
   try {
     // Launch Chrome
     const chrome = await chromeLauncher.launch({
-      chromeFlags: ['--headless', '--no-sandbox', '--disable-gpu']
+      chromeFlags: ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
     });
+
+    // Configure network throttling based on setting
+    let throttlingConfig;
+    switch (config.throttling.network.toLowerCase()) {
+      case 'mobile3g':
+      case 'slow3g':
+        throttlingConfig = {
+          rttMs: 300,
+          throughputKbps: 400,
+          cpuSlowdownMultiplier: config.throttling.cpu
+        };
+        break;
+      case 'fast3g':
+        throttlingConfig = {
+          rttMs: 150,
+          throughputKbps: 1600,
+          cpuSlowdownMultiplier: config.throttling.cpu
+        };
+        break;
+      case 'desktop':
+        throttlingConfig = {
+          rttMs: 40,
+          throughputKbps: 10240,
+          cpuSlowdownMultiplier: config.throttling.cpu
+        };
+        break;
+      default:
+        throttlingConfig = {
+          rttMs: 150,
+          throughputKbps: 1600,
+          cpuSlowdownMultiplier: config.throttling.cpu
+        };
+    }
 
     const options = {
       logLevel: 'error',
       output: 'json',
       onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       port: chrome.port,
-      throttling: {
-        rttMs: config.throttling.network === 'Fast3G' ? 150 : 40,
-        throughputKbps: config.throttling.network === 'Fast3G' ? 1600 : 10240,
-        cpuSlowdownMultiplier: config.throttling.cpu
-      }
+      throttling: throttlingConfig
     };
 
     const results = [];
@@ -79,7 +108,16 @@ const runLighthouseAudit = async (config) => {
       const runnerResult = await lighthouse(config.url, options);
       
       if (runnerResult && runnerResult.lhr) {
-        results.push(processLighthouseResult(runnerResult.lhr));
+        // Check if we got valid scores
+        const lhr = runnerResult.lhr;
+        if (lhr.runtimeError) {
+          console.warn(`Run ${i + 1} failed:`, lhr.runtimeError.message);
+          continue;
+        }
+        
+        results.push(processLighthouseResult(lhr));
+      } else {
+        console.warn(`Run ${i + 1} returned no results`);
       }
     }
 
@@ -611,6 +649,11 @@ program
       if (options.format) config.output.format = options.format;
       if (options.output) config.output.file = options.output;
       if (options.console === false) config.output.console = false;
+
+      // Validate URL
+      if (!config.url || config.url.trim() === '') {
+        throw new Error('URL is required');
+      }
 
       console.log(chalk.blue.bold('🚀 Starting Performance Benchmark\n'));
       console.log(`${chalk.gray('URL:')} ${config.url}`);
