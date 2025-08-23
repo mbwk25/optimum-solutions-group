@@ -30,7 +30,13 @@ describe('Select Component', () => {
   const performanceThreshold = 50; // ms
 
   // Default Select setup for testing
-  const DefaultSelect = ({ onValueChange, value, defaultValue, disabled, ...props }: any = {}) => (
+  const DefaultSelect = ({ onValueChange, value, defaultValue, disabled, ...props }: {
+    onValueChange?: (value: string) => void;
+    value?: string;
+    defaultValue?: string;
+    disabled?: boolean;
+    [key: string]: unknown;
+  } = {}) => (
     <Select onValueChange={onValueChange} value={value} defaultValue={defaultValue} disabled={disabled} {...props}>
       <SelectTrigger data-testid="select-trigger" aria-label="Select option">
         <SelectValue placeholder="Select a fruit" />
@@ -45,7 +51,10 @@ describe('Select Component', () => {
   );
 
   // Complex Select setup with groups and separators
-  const GroupedSelect = ({ onValueChange, ...props }: any = {}) => (
+  const GroupedSelect = ({ onValueChange, ...props }: {
+    onValueChange?: (value: string) => void;
+    [key: string]: unknown;
+  } = {}) => (
     <Select onValueChange={onValueChange} {...props}>
       <SelectTrigger data-testid="grouped-trigger">
         <SelectValue placeholder="Select a fruit or vegetable" />

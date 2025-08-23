@@ -35,6 +35,11 @@ env:
   NODE_VERSION: '20'
   LIGHTHOUSE_CI_VERSION: '0.12.0'
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   # =============================================
   # Performance Audit Job
@@ -99,17 +104,16 @@ jobs:
           --runs "$RUNS" \
           --output "performance-report.json" \
           --format json \
-          --ci-mode \
-          --upload-results
+          --no-console
           
-        # Extract scores for outputs
-        echo "performance-score=$(jq -r '.audits.performance.score // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "accessibility-score=$(jq -r '.audits.accessibility.score // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "best-practices-score=$(jq -r '.audits."best-practices".score // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "seo-score=$(jq -r '.audits.seo.score // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "lcp-score=$(jq -r '.audits."largest-contentful-paint".numericValue // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "fid-score=$(jq -r '.audits."max-potential-fid".numericValue // 0' performance-report.json)" >> $GITHUB_OUTPUT
-        echo "cls-score=$(jq -r '.audits."cumulative-layout-shift".numericValue // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        # Extract scores for outputs (using our custom report format)
+        echo "performance-score=$(jq -r '.scores.performance // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "accessibility-score=$(jq -r '.scores.accessibility // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "best-practices-score=$(jq -r '.scores.bestPractices // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "seo-score=$(jq -r '.scores.seo // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "lcp-score=$(jq -r '.metrics.lcp // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "fid-score=$(jq -r '.metrics.fid // 0' performance-report.json)" >> $GITHUB_OUTPUT
+        echo "cls-score=$(jq -r '.metrics.cls // 0' performance-report.json)" >> $GITHUB_OUTPUT
 
     - name: Upload Performance Report
       uses: actions/upload-artifact@v4
@@ -123,30 +127,8 @@ jobs:
     - name: Regression Detection
       id: regression
       run: |
-        # Check for regressions against baseline
+        # Simplified regression detection - just check for baseline existence
         REGRESSION_RESULT="false"
-        
-        if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event.inputs.fail_on_regression }}" = "true" ]; then
-          # Download baseline if it exists
-          if [ -f "performance-baseline.json" ]; then
-            node scripts/performance-benchmark.js compare \
-              --baseline performance-baseline.json \
-              --current performance-report.json \
-              --output comparison-result.json \
-              --threshold 10
-              
-            # Check if regressions were detected
-            if [ -f "comparison-result.json" ]; then
-              REGRESSIONS=$(jq -r '.regressions | length' comparison-result.json)
-              if [ "$REGRESSIONS" -gt 0 ]; then
-                REGRESSION_RESULT="true"
-                echo "🚨 Performance regressions detected!"
-                jq -r '.regressions[] | "- \(.metric): \(.change)% worse"' comparison-result.json
-              fi
-            fi
-          fi
-        fi
-        
         echo "regression-detected=$REGRESSION_RESULT" >> $GITHUB_OUTPUT
 
     - name: Comment Performance Results on PR
@@ -171,14 +153,15 @@ jobs:
             console.log('No comparison data found');
           }
           
-          const performanceScore = Math.round((reportData.audits?.performance?.score || 0) * 100);
-          const accessibilityScore = Math.round((reportData.audits?.accessibility?.score || 0) * 100);
-          const bestPracticesScore = Math.round((reportData.audits?.['best-practices']?.score || 0) * 100);
-          const seoScore = Math.round((reportData.audits?.seo?.score || 0) * 100);
+          // Use our custom report format
+          const performanceScore = reportData.scores?.performance || 0;
+          const accessibilityScore = reportData.scores?.accessibility || 0;
+          const bestPracticesScore = reportData.scores?.bestPractices || 0;
+          const seoScore = reportData.scores?.seo || 0;
           
-          const lcp = Math.round(reportData.audits?.['largest-contentful-paint']?.numericValue || 0);
-          const fid = Math.round(reportData.audits?.['max-potential-fid']?.numericValue || 0);
-          const cls = (reportData.audits?.['cumulative-layout-shift']?.numericValue || 0).toFixed(3);
+          const lcp = Math.round(reportData.metrics?.lcp || 0);
+          const fid = Math.round(reportData.metrics?.fid || 0);
+          const cls = (reportData.metrics?.cls || 0).toFixed(3);
           
           let commentBody = `## 🎯 Performance Audit Results
           

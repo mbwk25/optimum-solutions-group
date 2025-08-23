@@ -9,6 +9,32 @@ import { getCLS, getFCP, getFID, getLCP, getTTFB } from 'web-vitals';
 
 // ========== TYPES AND INTERFACES ==========
 
+interface PerformanceResourceTiming extends PerformanceEntry {
+  transferSize?: number;
+  decodedBodySize?: number;
+  responseEnd: number;
+}
+
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+interface NetworkInformation {
+  type?: string;
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+}
+
+type ComparisonEntry = {
+  metric: string;
+  baseline: number;
+  current: number;
+  change: number;
+};
+
 export interface PerformanceBenchmark {
   id: string;
   name: string;
@@ -183,7 +209,7 @@ export class PerformanceBenchmarkSuite {
   /**
    * Collect Web Vitals metrics
    */
-  private async collectWebVitals(metrics: any): Promise<void> {
+  private async collectWebVitals(metrics: PerformanceBenchmark['metrics']): Promise<void> {
     return new Promise((resolve) => {
       let collected = 0;
       const total = 5; // CLS, FCP, FID, LCP, TTFB
@@ -227,7 +253,7 @@ export class PerformanceBenchmarkSuite {
   /**
    * Collect Navigation Timing metrics
    */
-  private collectNavigationTiming(metrics: any): void {
+  private collectNavigationTiming(metrics: PerformanceBenchmark['metrics']): void {
     if (!performance.timing) return;
 
     const timing = performance.timing;
@@ -256,43 +282,50 @@ export class PerformanceBenchmarkSuite {
   /**
    * Collect Resource Timing metrics
    */
-  private collectResourceTiming(metrics: any): void {
+  private collectResourceTiming(metrics: PerformanceBenchmark['metrics']): void {
     if (!performance.getEntriesByType) return;
 
     const resources = performance.getEntriesByType('resource');
     
     metrics.totalResourceCount = resources.length;
-    metrics.totalResourceSize = resources.reduce((total, resource: any) => {
-      return total + (resource.transferSize || 0);
+    metrics.totalResourceSize = resources.reduce((total, resource) => {
+      const resourceTiming = resource as PerformanceResourceTiming;
+      return total + (resourceTiming.transferSize || 0);
     }, 0);
 
     // Calculate critical resource load time
-    const criticalResources = resources.filter((resource: any) => {
+    const criticalResources = resources.filter((resource) => {
       return resource.name.includes('.css') || 
              resource.name.includes('.js') ||
              resource.name.includes('font');
     });
 
     metrics.criticalResourceLoadTime = Math.max(
-      ...criticalResources.map((resource: any) => resource.responseEnd)
+      ...criticalResources.map((resource) => (resource as PerformanceResourceTiming).responseEnd)
     );
 
     // Calculate JS and CSS sizes
     metrics.totalJavaScriptSize = resources
-      .filter((resource: any) => resource.name.includes('.js'))
-      .reduce((total, resource: any) => total + (resource.transferSize || 0), 0);
+      .filter((resource) => resource.name.includes('.js'))
+      .reduce((total, resource) => {
+        const resourceTiming = resource as PerformanceResourceTiming;
+        return total + (resourceTiming.transferSize || 0);
+      }, 0);
 
     metrics.totalCSSSize = resources
-      .filter((resource: any) => resource.name.includes('.css'))
-      .reduce((total, resource: any) => total + (resource.transferSize || 0), 0);
+      .filter((resource) => resource.name.includes('.css'))
+      .reduce((total, resource) => {
+        const resourceTiming = resource as PerformanceResourceTiming;
+        return total + (resourceTiming.transferSize || 0);
+      }, 0);
   }
 
   /**
    * Collect Memory information
    */
-  private collectMemoryInfo(metrics: any): void {
+  private collectMemoryInfo(metrics: PerformanceBenchmark['metrics']): void {
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as Performance & { memory: PerformanceMemory }).memory;
       metrics.usedJSHeapSize = memory.usedJSHeapSize;
       metrics.totalJSHeapSize = memory.totalJSHeapSize;
       metrics.jsHeapSizeLimit = memory.jsHeapSizeLimit;
@@ -302,23 +335,24 @@ export class PerformanceBenchmarkSuite {
   /**
    * Collect Bundle Analysis data
    */
-  private async collectBundleAnalysis(metrics: any): Promise<void> {
+  private async collectBundleAnalysis(metrics: PerformanceBenchmark['metrics']): Promise<void> {
     try {
       // This would typically integrate with build tools to get actual bundle sizes
       // For now, we'll estimate based on resource timing
       const jsResources = performance.getEntriesByType('resource')
-        .filter((resource: any) => resource.name.includes('.js'));
+        .filter((resource) => resource.name.includes('.js'));
 
       let totalSize = 0;
       const chunks: Array<{ name: string; size: number; gzippedSize: number }> = [];
 
-      jsResources.forEach((resource: any) => {
-        const size = resource.transferSize || 0;
+      jsResources.forEach((resource) => {
+        const resourceTiming = resource as PerformanceResourceTiming;
+        const size = resourceTiming.transferSize || 0;
         totalSize += size;
         
         chunks.push({
           name: resource.name.split('/').pop() || 'unknown',
-          size: resource.decodedBodySize || size,
+          size: resourceTiming.decodedBodySize || size,
           gzippedSize: size
         });
       });
@@ -353,9 +387,21 @@ export class PerformanceBenchmarkSuite {
    * Get connection information
    */
   private getConnectionInfo(): PerformanceBenchmark['connection'] {
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
+    const connection = (navigator as Navigator & {
+      connection?: NetworkInformation;
+      mozConnection?: NetworkInformation;
+      webkitConnection?: NetworkInformation;
+    }).connection || 
+    (navigator as Navigator & {
+      connection?: NetworkInformation;
+      mozConnection?: NetworkInformation;
+      webkitConnection?: NetworkInformation;
+    }).mozConnection || 
+    (navigator as Navigator & {
+      connection?: NetworkInformation;
+      mozConnection?: NetworkInformation;
+      webkitConnection?: NetworkInformation;
+    }).webkitConnection;
 
     return {
       type: connection?.type || 'unknown',
@@ -383,8 +429,8 @@ export class PerformanceBenchmarkSuite {
     improvements: Array<{ metric: string; baseline: number; current: number; change: number }>;
     summary: string;
   } {
-    const regressions: any[] = [];
-    const improvements: any[] = [];
+    const regressions: ComparisonEntry[] = [];
+    const improvements: ComparisonEntry[] = [];
 
     const metricsToCompare = [
       'cls', 'fcp', 'fid', 'lcp', 'ttfb', 
@@ -440,7 +486,7 @@ export class PerformanceBenchmarkSuite {
   /**
    * Generate summary of comparison results
    */
-  private generateComparisonSummary(regressions: any[], improvements: any[]): string {
+  private generateComparisonSummary(regressions: ComparisonEntry[], improvements: ComparisonEntry[]): string {
     if (regressions.length === 0 && improvements.length === 0) {
       return 'No significant performance changes detected.';
     }
@@ -611,7 +657,11 @@ export class AutomatedPerformanceTesting {
   /**
    * Handle regression detection
    */
-  private onRegressionDetected(comparison: any): void {
+  private onRegressionDetected(comparison: {
+    regressions: ComparisonEntry[];
+    improvements: ComparisonEntry[];
+    summary: string;
+  }): void {
     // This could trigger alerts, notifications, or CI/CD failures
     console.group('🚨 Performance Regression Alert');
     console.log('Summary:', comparison.summary);
@@ -640,7 +690,7 @@ export class AutomatedPerformanceTesting {
  */
 export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['metrics']>> => {
   return new Promise((resolve) => {
-    const snapshot: any = {};
+    const snapshot: Partial<PerformanceBenchmark['metrics']> = {};
     
     // Get basic timing info
     if (performance.timing) {
@@ -653,9 +703,10 @@ export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['
 
     // Get memory info
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as Performance & { memory: PerformanceMemory }).memory;
       snapshot.usedJSHeapSize = memory.usedJSHeapSize;
       snapshot.totalJSHeapSize = memory.totalJSHeapSize;
+      snapshot.jsHeapSizeLimit = memory.jsHeapSizeLimit;
     }
 
     resolve(snapshot);

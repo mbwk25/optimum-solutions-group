@@ -653,7 +653,7 @@ describe('Badge Component', () => {
         <div>
           <Badge>String children</Badge>
           <Badge>{42}</Badge>
-          <Badge>{true && 'Conditional'}</Badge>
+          <Badge>{'Conditional'}</Badge>
           <Badge>
             <span>JSX children</span>
           </Badge>

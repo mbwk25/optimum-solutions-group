@@ -293,26 +293,36 @@ class PerformanceMonitor {
   }
 
   private initializeUserTracking(): void {
-    // Click tracking
+    // Click tracking - throttled
+    let clickThrottle = false;
     document.addEventListener('click', () => {
-      this.userMetrics.clickCount++;
-      this.updateEngagementScore();
+      if (!clickThrottle) {
+        this.userMetrics.clickCount++;
+        this.updateEngagementScore();
+        clickThrottle = true;
+        setTimeout(() => { clickThrottle = false; }, 100);
+      }
     });
 
-    // Scroll tracking
+    // Scroll tracking - throttled
     let maxScrollY = 0;
+    let scrollThrottle = false;
     document.addEventListener('scroll', () => {
-      maxScrollY = Math.max(maxScrollY, window.scrollY);
-      this.userMetrics.scrollDistance = maxScrollY;
-      this.updateEngagementScore();
+      if (!scrollThrottle) {
+        maxScrollY = Math.max(maxScrollY, window.scrollY);
+        this.userMetrics.scrollDistance = maxScrollY;
+        this.updateEngagementScore();
+        scrollThrottle = true;
+        setTimeout(() => { scrollThrottle = false; }, 250);
+      }
     });
 
-    // Time tracking
+    // Time tracking - less frequent updates
     setInterval(() => {
       if (document.visibilityState === 'visible') {
         this.userMetrics.timeOnPage = Date.now() - this.startTime;
       }
-    }, 1000);
+    }, 5000); // Reduced from 1 second to 5 seconds
 
     // Page visibility
     document.addEventListener('visibilitychange', () => {

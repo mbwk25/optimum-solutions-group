@@ -9,6 +9,40 @@ import {
   monitorCoreWebVitals
 } from '../utils/performanceBenchmark';
 
+// ========== TYPE DEFINITIONS ==========
+
+interface ComparisonEntry {
+  metric: string;
+  baseline: number;
+  current: number;
+  change: number;
+}
+
+interface ComparisonResult {
+  regressions: ComparisonEntry[];
+  improvements: ComparisonEntry[];
+  summary: string;
+}
+
+interface TrendAnalysis {
+  trends: Record<string, 'improving' | 'degrading' | 'stable'>;
+  recommendations: string[];
+}
+
+interface PerformanceSnapshot {
+  domContentLoaded: number;
+  windowLoaded: number;
+  usedJSHeapSize?: number;
+  totalJSHeapSize?: number;
+  jsHeapSizeLimit?: number;
+}
+
+interface RegressionAlert {
+  summary: string;
+  regressions: ComparisonEntry[];
+  improvements: ComparisonEntry[];
+}
+
 // ========== PERFORMANCE BENCHMARK HOOK ==========
 
 interface UsePerformanceBenchmarkOptions {
@@ -26,7 +60,7 @@ export const usePerformanceBenchmark = (options: UsePerformanceBenchmarkOptions 
 
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<PerformanceBenchmark[]>([]);
-  const [currentSnapshot, setCurrentSnapshot] = useState<any>(null);
+  const [currentSnapshot, setCurrentSnapshot] = useState<PerformanceSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const benchmarkSuite = useRef<PerformanceBenchmarkSuite>();
@@ -45,7 +79,7 @@ export const usePerformanceBenchmark = (options: UsePerformanceBenchmarkOptions 
         runs: 1
       });
     }
-  }, [autoStart]);
+  }, [autoStart, startBenchmarking]);
 
   // Periodic snapshot collection
   useEffect(() => {
@@ -134,7 +168,7 @@ export const usePerformanceBenchmark = (options: UsePerformanceBenchmarkOptions 
 interface UseAutomatedPerformanceTestingOptions {
   thresholds?: Partial<BenchmarkThresholds>;
   intervalMs?: number;
-  onRegressionDetected?: (comparison: any) => void;
+  onRegressionDetected?: (comparison: ComparisonResult) => void;
 }
 
 export const useAutomatedPerformanceTesting = (
@@ -148,7 +182,7 @@ export const useAutomatedPerformanceTesting = (
 
   const [isScheduled, setIsScheduled] = useState(false);
   const [testResults, setTestResults] = useState<PerformanceBenchmark[]>([]);
-  const [lastRegressionAlert, setLastRegressionAlert] = useState<any>(null);
+  const [lastRegressionAlert, setLastRegressionAlert] = useState<RegressionAlert | null>(null);
 
   const automatedTesting = useRef<AutomatedPerformanceTesting>();
 
@@ -167,8 +201,10 @@ export const useAutomatedPerformanceTesting = (
     if (!automatedTesting.current) return;
 
     // Custom regression handler
+    // Note: Using 'any' here is necessary because we're accessing private/internal methods
+    // of the AutomatedPerformanceTesting class that aren't part of its public interface
     const originalOnRegressionDetected = (automatedTesting.current as any).onRegressionDetected;
-    (automatedTesting.current as any).onRegressionDetected = (comparison: any) => {
+    (automatedTesting.current as any).onRegressionDetected = (comparison: ComparisonResult) => {
       setLastRegressionAlert(comparison);
       if (onRegressionDetected) {
         onRegressionDetected(comparison);
@@ -259,7 +295,7 @@ export const useCoreWebVitalsMonitor = () => {
   useEffect(() => {
     startMonitoring();
     return () => stopMonitoring();
-  }, []);
+  }, [startMonitoring, stopMonitoring]);
 
   const getVitalStatus = useCallback((vital: keyof CoreWebVitalsData) => {
     const value = vitals[vital];
@@ -303,8 +339,8 @@ export const useCoreWebVitalsMonitor = () => {
 interface UsePerformanceRegressionDetectorOptions {
   threshold?: number; // Percentage change to consider a regression
   metrics?: string[];
-  onRegressionDetected?: (regressions: any[]) => void;
-  onImprovementDetected?: (improvements: any[]) => void;
+  onRegressionDetected?: (regressions: ComparisonEntry[]) => void;
+  onImprovementDetected?: (improvements: ComparisonEntry[]) => void;
 }
 
 export const usePerformanceRegressionDetector = (
@@ -318,8 +354,8 @@ export const usePerformanceRegressionDetector = (
   } = options;
 
   const [baseline, setBaseline] = useState<PerformanceBenchmark | null>(null);
-  const [regressions, setRegressions] = useState<any[]>([]);
-  const [improvements, setImprovements] = useState<any[]>([]);
+  const [regressions, setRegressions] = useState<ComparisonEntry[]>([]);
+  const [improvements, setImprovements] = useState<ComparisonEntry[]>([]);
 
   const benchmarkSuite = useRef<PerformanceBenchmarkSuite>(new PerformanceBenchmarkSuite());
 
@@ -390,7 +426,7 @@ export const usePerformanceRegressionDetector = (
 // ========== PERFORMANCE METRICS HOOK ==========
 
 export const usePerformanceMetrics = () => {
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<PerformanceSnapshot | null>(null);
   const [isCollecting, setIsCollecting] = useState(false);
 
   const collectMetrics = useCallback(async () => {
@@ -411,7 +447,7 @@ export const usePerformanceMetrics = () => {
   // Auto-collect on mount
   useEffect(() => {
     collectMetrics();
-  }, []);
+  }, [collectMetrics]);
 
   return {
     // State

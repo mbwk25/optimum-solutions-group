@@ -224,16 +224,25 @@ class BundleAnalyzer {
     // Log stats after initial page load
     setTimeout(() => {
       this.logStats();
-    }, 2000);
+    }, 3000); // Increased delay to reduce initial load impact
 
-    // Log stats periodically in development
+    // Log stats periodically in development - reduced frequency
     if (import.meta.env.MODE === 'development') {
       setInterval(() => {
-        const stats = this.getStats();
-        if (stats.totalChunks > 0) {
-          console.log(`📊 Bundle Update: ${stats.totalChunks} chunks, ${(stats.totalSize / 1024).toFixed(2)}KB total`);
+        // Use requestIdleCallback if available to avoid blocking the main thread
+        const logUpdate = () => {
+          const stats = this.getStats();
+          if (stats.totalChunks > 0) {
+            console.log(`📊 Bundle Update: ${stats.totalChunks} chunks, ${(stats.totalSize / 1024).toFixed(2)}KB total`);
+          }
+        };
+
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          window.requestIdleCallback(logUpdate, { timeout: 5000 });
+        } else {
+          logUpdate();
         }
-      }, 30000); // Every 30 seconds
+      }, 60000); // Increased from 30s to 60s
     }
   }
 

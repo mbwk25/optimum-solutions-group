@@ -49,7 +49,7 @@ export { renderWithProviders } from './reactTestUtils';
  * Follows the performance monitoring standards from the coding guidelines
  */
 export const measureRenderPerformance = async (
-  renderComponent: () => any
+  renderComponent: () => HTMLElement | DocumentFragment
 ): Promise<PerformanceMetrics> => {
   const startTime = performance.now();
   
@@ -83,7 +83,7 @@ export const measureRenderPerformance = async (
  * Integrates axe-core for comprehensive accessibility testing
  */
 export const testAccessibility = async (
-  component: any
+  component: HTMLElement | DocumentFragment
 ): Promise<AccessibilityTestResult> => {
   const results = await axe(component);
   
@@ -125,7 +125,7 @@ export const createMockApiResponse = <T>(data: T): { data: T; status: number; me
  * Tests if component meets performance standards (less than 16ms render time for 60fps)
  */
 export const benchmarkComponent = async (
-  renderFn: () => any,
+  renderFn: () => HTMLElement | DocumentFragment,
   expectedMaxRenderTime = 16
 ): Promise<{ passed: boolean; metrics: PerformanceMetrics }> => {
   const metrics = await measureRenderPerformance(renderFn);

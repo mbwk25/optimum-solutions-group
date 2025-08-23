@@ -53,6 +53,11 @@ env:
   NODE_VERSION: '20'
   BASELINE_BRANCH: 'main'
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   build-and-deploy-preview:
     name: Build and Deploy Preview
@@ -138,14 +143,12 @@ jobs:
             libxss1 \
             libxtst6
 
-      - name: Build application (if not PR)
-        if: github.event_name != 'pull_request'
+      - name: Build application
         run: npm run build
         env:
           NODE_ENV: production
 
-      - name: Start local server (if not PR)
-        if: github.event_name != 'pull_request'
+      - name: Start local server
         run: |
           npm run preview &
           sleep 10
@@ -154,9 +157,9 @@ jobs:
       - name: Determine benchmark URL
         id: url
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            URL="${{ needs.build-and-deploy-preview.outputs.preview_url }}"
-          elif [ "${{ github.event.inputs.url }}" != "" ]; then
+          # For now, always use localhost since we don't have real preview deployments
+          # TODO: Replace with actual preview URL when deployment is configured
+          if [ "${{ github.event.inputs.url }}" != "" ]; then
             URL="${{ github.event.inputs.url }}"
           else
             URL="http://localhost:4173"

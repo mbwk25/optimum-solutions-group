@@ -25,11 +25,51 @@ import {
 
 // ========== TYPES ==========
 
+interface ComparisonEntry {
+  metric: string;
+  baseline: number;
+  current: number;
+  change: number;
+}
+
+interface WebVitalsData {
+  lcp?: number;
+  fcp?: number;
+  cls?: number;
+  fid?: number;
+  ttfb?: number;
+}
+
+interface PerformanceSnapshot {
+  domContentLoaded: number;
+  windowLoaded: number;
+  usedJSHeapSize?: number;
+  totalJSHeapSize?: number;
+  jsHeapSizeLimit?: number;
+}
+
+interface ComparisonResult {
+  regressions: ComparisonEntry[];
+  improvements: ComparisonEntry[];
+  summary: string;
+}
+
+interface TrendAnalysis {
+  trends: Record<string, 'improving' | 'degrading' | 'stable'>;
+  recommendations: string[];
+}
+
+interface RegressionAlert {
+  summary: string;
+  regressions: ComparisonEntry[];
+  improvements: ComparisonEntry[];
+}
+
 interface PerformanceDashboardProps {
   showAutomatedTesting?: boolean;
   showRegressionDetection?: boolean;
   defaultConfig?: Partial<BenchmarkConfig>;
-  onRegressionAlert?: (regressions: any[]) => void;
+  onRegressionAlert?: (regressions: ComparisonEntry[]) => void;
 }
 
 // ========== MAIN COMPONENT ==========
@@ -179,7 +219,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 // ========== SUB-COMPONENTS ==========
 
 const WebVitalsOverview: React.FC<{
-  vitals: any;
+  vitals: WebVitalsData;
   getVitalStatus: (vital: string) => string;
 }> = ({ vitals, getVitalStatus }) => {
   const vitalMetrics = [
@@ -236,7 +276,7 @@ const VitalStatusBadge: React.FC<{ status: string }> = ({ status }) => {
 };
 
 const CurrentMetricsTab: React.FC<{
-  snapshot: any;
+  snapshot: PerformanceSnapshot | null;
   latestResult: PerformanceBenchmark | null;
   isRunning: boolean;
 }> = ({ snapshot, latestResult, isRunning }) => {
@@ -332,11 +372,11 @@ const CurrentMetricsTab: React.FC<{
 
 const BenchmarkHistoryTab: React.FC<{
   results: PerformanceBenchmark[];
-  onCompare: (baseline: PerformanceBenchmark, current: PerformanceBenchmark) => any;
-  getTrendAnalysis: () => any;
+  onCompare: (baseline: PerformanceBenchmark, current: PerformanceBenchmark) => ComparisonResult;
+  getTrendAnalysis: () => TrendAnalysis;
 }> = ({ results, onCompare, getTrendAnalysis }) => {
   const [selectedResults, setSelectedResults] = useState<string[]>([]);
-  const [comparison, setComparison] = useState<any>(null);
+  const [comparison, setComparison] = useState<ComparisonResult | null>(null);
 
   const handleCompare = useCallback(() => {
     if (selectedResults.length === 2) {
@@ -459,7 +499,7 @@ const BenchmarkHistoryTab: React.FC<{
               <div>
                 <h4 className="font-medium text-red-600 mb-2">Regressions</h4>
                 <div className="space-y-1">
-                  {comparison.regressions.map((reg: any, index: number) => (
+                  {comparison.regressions.map((reg: ComparisonEntry, index: number) => (
                     <div key={index} className="text-sm">
                       <span className="font-mono">{reg.metric}:</span> {reg.change}% worse
                     </div>
@@ -472,7 +512,7 @@ const BenchmarkHistoryTab: React.FC<{
               <div>
                 <h4 className="font-medium text-green-600 mb-2">Improvements</h4>
                 <div className="space-y-1">
-                  {comparison.improvements.map((imp: any, index: number) => (
+                  {comparison.improvements.map((imp: ComparisonEntry, index: number) => (
                     <div key={index} className="text-sm">
                       <span className="font-mono">{imp.metric}:</span> {Math.abs(imp.change)}% better
                     </div>
@@ -492,7 +532,7 @@ const AutomatedTestingTab: React.FC<{
   testResults: PerformanceBenchmark[];
   onStart: () => void;
   onStop: () => void;
-  lastRegressionAlert: any;
+  lastRegressionAlert: RegressionAlert | null;
 }> = ({ isScheduled, testResults, onStart, onStop, lastRegressionAlert }) => {
   return (
     <div className="space-y-6">
@@ -567,7 +607,7 @@ const AutomatedTestingTab: React.FC<{
               <div>
                 <h4 className="font-medium mb-2">Detected Regressions:</h4>
                 <div className="space-y-1">
-                  {lastRegressionAlert.regressions.map((reg: any, index: number) => (
+                  {lastRegressionAlert.regressions.map((reg: ComparisonEntry, index: number) => (
                     <div key={index} className="text-sm text-red-600">
                       • {reg.metric}: {reg.change}% worse
                     </div>
@@ -584,8 +624,8 @@ const AutomatedTestingTab: React.FC<{
 
 const RegressionAnalysisTab: React.FC<{
   baseline: PerformanceBenchmark | null;
-  regressions: any[];
-  improvements: any[];
+  regressions: ComparisonEntry[];
+  improvements: ComparisonEntry[];
   onSetBaseline: (benchmark: PerformanceBenchmark) => void;
   hasResults: boolean;
   latestResult: PerformanceBenchmark | null;

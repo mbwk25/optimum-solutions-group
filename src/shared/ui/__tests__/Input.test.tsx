@@ -416,13 +416,13 @@ describe('Input Component', () => {
       const button = screen.getByTestId('rerender-button');
       
       // Get initial handler reference
-      const initialOnChange = (input as any).onChange;
+      const initialOnChange = (input as HTMLInputElement).onchange;
       
       // Force rerender
       fireEvent.click(button);
       
       // Handler should be memoized (same reference)
-      expect((input as any).onChange).toBe(initialOnChange);
+      expect((input as HTMLInputElement).onchange).toBe(initialOnChange);
     });
   });
 
