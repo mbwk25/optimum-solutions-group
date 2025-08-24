@@ -37,8 +37,11 @@ env:
 
 permissions:
   contents: write  # Need write permission for baseline commits
+  actions: read    # Need read permission for artifacts
   issues: write
   pull-requests: write
+  pages: write     # Need write permission for GitHub Pages deployment
+  id-token: write  # Required for GitHub Pages deployment
 
 jobs:
   # =============================================
@@ -340,14 +343,38 @@ jobs:
     - name: Update Baseline
       run: |
         # Copy current report as new baseline
-        cp performance-report.json performance-baseline.json
+        mkdir -p .github/performance-baselines
+        cp performance-report.json .github/performance-baselines/performance-baseline.json
         
-        # Commit and push baseline update
+        # Only commit if there are changes
+        if git diff --quiet .github/performance-baselines/performance-baseline.json; then
+          echo "No changes to performance baseline"
+          exit 0
+        fi
+        
+        # Configure git
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add performance-baseline.json
-        git commit -m "chore: update performance baseline [skip ci]" || exit 0
-        git push
+        
+        # Add and commit changes
+        git add .github/performance-baselines/performance-baseline.json
+        
+        # Commit with error handling
+        if git commit -m "chore: update performance baseline [skip ci]"; then
+          echo "Baseline committed successfully"
+          
+          # Try to push with better error handling
+          if git push; then
+            echo "Baseline pushed successfully"
+          else
+            echo "Warning: Failed to push baseline update. This may be due to repository permissions."
+            echo "The baseline was generated but could not be stored in the repository."
+            exit 0  # Don't fail the workflow
+          fi
+        else
+          echo "No changes to commit or commit failed"
+          exit 0
+        fi
 
   # =============================================
   # Performance Dashboard Deployment
@@ -371,6 +398,8 @@ jobs:
       run: |
         # Install required dependencies
         npm ci || npm install
+        # Install glob package which is required by the dashboard generator
+        npm install glob --legacy-peer-deps || npm install glob
         
         # Check if the script exists and try to run it
         if [ -f "scripts/generate-dashboard-data.js" ]; then
@@ -414,7 +443,7 @@ jobs:
     
     steps:
     - name: Notify Slack on Regression
-      if: needs.performance-audit.outputs.regression-detected == 'true'
+      if: needs.performance-audit.outputs.regression-detected == 'true' && secrets.SLACK_WEBHOOK_URL != ''
       uses: 8398a7/action-slack@v3
       with:
         status: failure
@@ -432,7 +461,7 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     - name: Notify Slack on Success
-      if: success() && github.event_name == 'schedule'
+      if: success() && github.event_name == 'schedule' && secrets.SLACK_WEBHOOK_URL != ''
       uses: 8398a7/action-slack@v3
       with:
         status: success
@@ -446,6 +475,15 @@ jobs:
           All metrics within acceptable thresholds.
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: Log Notification Status
+      run: |
+        if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          echo "ℹ️ Slack webhook not configured - notifications skipped"
+          echo "To enable Slack notifications, add SLACK_WEBHOOK_URL to repository secrets"
+        else
+          echo "✅ Slack notifications are configured"
+        fi
 
   # =============================================
   # Cleanup Job

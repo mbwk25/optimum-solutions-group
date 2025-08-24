@@ -46,7 +46,9 @@
     "test:e2e:visual": "cypress run --spec 'cypress/e2e/visual/**/*'",
     "test:e2e:journeys": "cypress run --spec 'cypress/e2e/user-journeys/**/*'",
     "test:all": "npm run test && npm run test:e2e",
-    "test:workflow": "node scripts/test-workflow.js"
+    "test:workflow": "node scripts/test-workflow.js",
+    "test:workflow:local": "node scripts/test-local-workflow.js",
+    "deploy:workflow": "node deploy-workflow.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

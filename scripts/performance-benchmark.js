@@ -113,19 +113,22 @@ const runLighthouseAudit = async (config) => {
         };
     }
 
+    // Determine if we're running mobile or desktop scenario
+    const isMobileScenario = config.throttling.network.toLowerCase().includes('mobile');
+    
     const options = {
       logLevel: 'info',  // More verbose logging for debugging
       output: 'json',
       onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       port: chrome.port,
       throttling: throttlingConfig,
-      // Additional options for better CI compatibility
-      emulatedFormFactor: config.throttling.network.toLowerCase().includes('mobile') ? 'mobile' : 'desktop',
+      // Fix emulation configuration to match formFactor with screenEmulation
+      formFactor: isMobileScenario ? 'mobile' : 'desktop',
       screenEmulation: {
-        mobile: config.throttling.network.toLowerCase().includes('mobile'),
-        width: config.throttling.network.toLowerCase().includes('mobile') ? 375 : 1350,
-        height: config.throttling.network.toLowerCase().includes('mobile') ? 812 : 940,
-        deviceScaleFactor: config.throttling.network.toLowerCase().includes('mobile') ? 2 : 1,
+        mobile: isMobileScenario,
+        width: isMobileScenario ? 375 : 1350,
+        height: isMobileScenario ? 812 : 940,
+        deviceScaleFactor: isMobileScenario ? 2 : 1,
         disabled: false,
       },
       // Increase timeouts for CI environment
