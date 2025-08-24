@@ -75,7 +75,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        npm ci
+        # Use legacy peer deps to handle dependency conflicts
+        npm ci --legacy-peer-deps || npm ci --force
         npm install -g @lhci/cli@${{ env.LIGHTHOUSE_CI_VERSION }}
 
     - name: Build Application
@@ -241,7 +242,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        npm ci
+        # Use legacy peer deps to handle dependency conflicts
+        npm ci --legacy-peer-deps || npm ci --force
         npm install -g @axe-core/cli pa11y-ci
 
     - name: Build Application
@@ -298,7 +300,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        npm ci
+        # Use legacy peer deps to handle dependency conflicts
+        npm ci --legacy-peer-deps || npm ci --force
         npm install --save-dev glob --legacy-peer-deps
 
     - name: Build and Analyze Bundle
@@ -396,8 +399,8 @@ jobs:
 
     - name: Generate Dashboard Data
       run: |
-        # Install required dependencies
-        npm ci || npm install
+        # Install required dependencies with legacy peer deps support
+        npm ci --legacy-peer-deps || npm ci --force || npm install
         # Install glob package which is required by the dashboard generator
         npm install glob --legacy-peer-deps || npm install glob
         
