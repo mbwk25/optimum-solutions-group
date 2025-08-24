@@ -216,6 +216,21 @@ jobs:
             body: commentBody
           });
 
+    - name: Enforce Performance Budgets
+      run: |
+        # Run performance budget enforcement
+        node scripts/enforce-performance-budgets.js
+        
+    - name: Upload Budget Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-budget-report-${{ github.sha }}
+        path: |
+          performance-budget-report.json
+          pr-budget-comment.md
+        retention-days: 30
+
     - name: Fail on Regression
       if: steps.regression.outputs.regression-detected == 'true' && (github.event.inputs.fail_on_regression == 'true' || github.event_name == 'pull_request')
       run: |

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Performance Budgets Configuration",
+  "description": "Defines performance thresholds that must not be exceeded",
+  "budgets": {
+    "lighthouse": {
+      "performance": {
+        "min": 90,
+        "target": 95,
+        "description": "Overall Lighthouse performance score"
+      },
+      "accessibility": {
+        "min": 95,
+        "target": 100,
+        "description": "Accessibility compliance score"
+      },
+      "bestPractices": {
+        "min": 90,
+        "target": 100,
+        "description": "Best practices adherence score"
+      },
+      "seo": {
+        "min": 85,
+        "target": 95,
+        "description": "SEO optimization score"
+      }
+    },
+    "coreWebVitals": {
+      "lcp": {
+        "max": 2500,
+        "target": 2000,
+        "unit": "ms",
+        "description": "Largest Contentful Paint - loading performance"
+      },
+      "fid": {
+        "max": 100,
+        "target": 50,
+        "unit": "ms",
+        "description": "First Input Delay - interactivity"
+      },
+      "cls": {
+        "max": 0.1,
+        "target": 0.05,
+        "unit": "score",
+        "description": "Cumulative Layout Shift - visual stability"
+      },
+      "fcp": {
+        "max": 1800,
+        "target": 1200,
+        "unit": "ms",
+        "description": "First Contentful Paint"
+      },
+      "speedIndex": {
+        "max": 3000,
+        "target": 2000,
+        "unit": "ms",
+        "description": "Speed Index - visual loading progress"
+      },
+      "tti": {
+        "max": 3800,
+        "target": 3000,
+        "unit": "ms",
+        "description": "Time to Interactive"
+      }
+    },
+    "resources": {
+      "totalBundle": {
+        "max": 300000,
+        "target": 250000,
+        "unit": "bytes",
+        "description": "Total JavaScript bundle size (gzipped)"
+      },
+      "initialBundle": {
+        "max": 200000,
+        "target": 150000,
+        "unit": "bytes",
+        "description": "Initial JavaScript bundle size (gzipped)"
+      },
+      "css": {
+        "max": 50000,
+        "target": 30000,
+        "unit": "bytes",
+        "description": "Total CSS size (gzipped)"
+      },
+      "images": {
+        "max": 500000,
+        "target": 300000,
+        "unit": "bytes",
+        "description": "Total image assets size"
+      },
+      "fonts": {
+        "max": 100000,
+        "target": 50000,
+        "unit": "bytes",
+        "description": "Total font files size"
+      }
+    },
+    "network": {
+      "requests": {
+        "max": 50,
+        "target": 30,
+        "unit": "count",
+        "description": "Total number of network requests"
+      },
+      "criticalRequests": {
+        "max": 10,
+        "target": 6,
+        "unit": "count",
+        "description": "Number of critical path requests"
+      }
+    }
+  },
+  "rules": {
+    "failOn": {
+      "budgetExceeded": true,
+      "regressionThreshold": 10,
+      "description": "Fail build if budget exceeded or regression > 10%"
+    },
+    "warningThreshold": {
+      "percentage": 80,
+      "description": "Warn when approaching budget (80% of limit)"
+    },
+    "notifications": {
+      "pr_comment": true,
+      "slack": false,
+      "email": false
+    }
+  },
+  "environments": {
+    "development": {
+      "enabled": false,
+      "description": "Performance budgets disabled in development"
+    },
+    "staging": {
+      "enabled": true,
+      "multiplier": 1.2,
+      "description": "Relaxed budgets for staging (20% more lenient)"
+    },
+    "production": {
+      "enabled": true,
+      "multiplier": 1.0,
+      "description": "Strict budgets for production"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-08-24T23:27:05Z",
+    "updatedBy": "Performance Team"
+  }
+}

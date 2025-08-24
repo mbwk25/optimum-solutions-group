@@ -1,0 +1,111 @@
+{
+  "name": "Optimum Solutions Group - Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "uid": "1000",
+      "gid": "1000"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens",
+        "gruntfuggly.todo-tree",
+        "ms-vscode.vscode-thunder-client",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "hediet.vscode-drawio"
+      ],
+      "settings": {
+        "typescript.preferences.quoteStyle": "single",
+        "javascript.preferences.quoteStyle": "single",
+        "prettier.singleQuote": true,
+        "prettier.trailingComma": "es5",
+        "prettier.semi": true,
+        "prettier.tabWidth": 2,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true,
+          "source.organizeImports": true
+        },
+        "files.associations": {
+          "*.css": "tailwindcss"
+        },
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
+        },
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        },
+        "tailwindCSS.experimental.classRegex": [
+          "tw`([^`]*)",
+          "tw=\"([^\"]*)",
+          "tw={\"([^\"}]*)",
+          "tw\\.\\w+`([^`]*)",
+          "tw\\(.*?\\)`([^`]*)"
+        ],
+        "git.autofetch": true,
+        "git.enableSmartCommit": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "workbench.startupEditor": "readme"
+      }
+    }
+  },
+  "forwardPorts": [3000, 4173, 8080],
+  "portsAttributes": {
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "notify"
+    },
+    "4173": {
+      "label": "Preview Server",
+      "onAutoForward": "ignore"
+    },
+    "8080": {
+      "label": "Test Server",
+      "onAutoForward": "ignore"
+    }
+  },
+  "postCreateCommand": "npm install && npm run prepare:dev",
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/welcome.md,target=/usr/local/share/welcome.md,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "DEVELOPMENT_CONTAINER": "true"
+  },
+  "runArgs": ["--init"],
+  "shutdownAction": "stopContainer"
+}

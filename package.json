@@ -49,7 +49,9 @@
     "test:workflow": "node scripts/test-workflow.js",
     "test:workflow:local": "node scripts/test-local-workflow.js",
     "deploy:workflow": "node deploy-workflow.js",
-    "badges:generate": "node scripts/generate-status-badges.js"
+    "badges:generate": "node scripts/generate-status-badges.js",
+    "budgets:check": "node scripts/enforce-performance-budgets.js",
+    "prepare:dev": "npm run type-check && echo '✅ Development environment ready!'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
