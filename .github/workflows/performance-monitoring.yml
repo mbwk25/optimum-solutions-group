@@ -426,6 +426,26 @@ jobs:
         if [ ! -f "dashboard-data.json" ]; then
           echo '{"lastUpdated":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'\"\,\"summary\":{\"message\":\"Fallback dashboard data\"},\"reports\":[]}' > dashboard-data.json
         fi
+        
+        # Copy dashboard-data.json to dashboard folder
+        if [ ! -d "dashboard" ]; then
+          mkdir -p dashboard
+        fi
+        cp dashboard-data.json dashboard/
+        
+        # Verify the dashboard folder has the required files
+        echo "📂 Dashboard folder contents:"
+        ls -la dashboard/
+        
+        if [ ! -f "dashboard/index.html" ]; then
+          echo "⚠️ Warning: dashboard/index.html not found!"
+        fi
+        
+        if [ ! -f "dashboard/dashboard-data.json" ]; then
+          echo "⚠️ Warning: dashboard/dashboard-data.json not found!"
+        else
+          echo "✅ Dashboard data file is ready for deployment"
+        fi
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
