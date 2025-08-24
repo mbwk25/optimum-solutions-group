@@ -34,9 +34,6 @@ export default defineConfig({
       format: {
         comments: false,
       },
-      output: {
-        comments: false,
-      },
     },
     
     // Optimize for production
@@ -51,13 +48,7 @@ export default defineConfig({
     
     rollupOptions: {
       output: {
-        // Simplified manual chunking to avoid empty chunks
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-router': ['react-router-dom'],
-          'vendor-ui': ['@radix-ui/react-accordion', '@radix-ui/react-checkbox', '@radix-ui/react-select', '@radix-ui/react-tooltip'],
-          'vendor-utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-        },
+        // Let Vite handle chunking automatically - no manual chunking to avoid empty chunks
         
         // Optimize file names for caching
         entryFileNames: 'js/[name]-[hash].js',
