@@ -28,3 +28,22 @@ cypress/screenshots
 cypress/videos
 cypress/reports
 cypress/downloads
+
+# Performance monitoring artifacts
+performance-report.json
+performance-baseline.json
+bundle-analyzer-report.json
+dashboard-data.json
+dashboard-data.min.json
+axe-report.json
+axe-live-report.json
+pa11y-report.json
+lighthouse-report.html
+comparison-result.json
+
+# Performance reports directory
+reports/
+
+# Dashboard build output
+dashboard/data.json
+dashboard/data.min.json
