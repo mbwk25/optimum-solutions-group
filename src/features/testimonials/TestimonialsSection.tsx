@@ -1,4 +1,5 @@
-import { Star, Quote } from 'lucide-react';
+import Star from 'lucide-react/dist/esm/icons/star';
+import Quote from 'lucide-react/dist/esm/icons/quote';
 
 const TestimonialsSection = () => {
   const testimonials = [
@@ -101,7 +102,7 @@ const TestimonialsSection = () => {
           <h4 className="text-3xl font-bold mb-4">
             Ready to Join Our Success Stories?
           </h4>
-          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-foreground font-light mb-8 max-w-2xl mx-auto">
             Every great digital transformation starts with a conversation. Let's discuss how we can help your business achieve similar results.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -111,12 +112,12 @@ const TestimonialsSection = () => {
                   <div key={i} className="w-10 h-10 bg-primary-foreground/20 rounded-full border-2 border-primary-foreground"></div>
                 ))}
               </div>
-              <span className="text-primary-foreground/90">Join 50+ happy clients</span>
+              <span className="text-primary-foreground font-medium">Join 50+ happy clients</span>
             </div>
-            <div className="text-primary-foreground/70">•</div>
-            <div className="text-primary-foreground/90">Free consultation</div>
-            <div className="text-primary-foreground/70">•</div>
-            <div className="text-primary-foreground/90">No commitments</div>
+            <div className="text-primary-foreground font-bold">•</div>
+            <div className="text-primary-foreground font-medium">Free consultation</div>
+            <div className="text-primary-foreground font-bold">•</div>
+            <div className="text-primary-foreground font-medium">No commitments</div>
           </div>
         </div>
       </div>

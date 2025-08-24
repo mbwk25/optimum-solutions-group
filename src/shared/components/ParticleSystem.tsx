@@ -39,7 +39,8 @@ const ParticleSystem = memo(() => {
 
     const createParticles = () => {
       const particles: Particle[] = [];
-      const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
+      // Reduce particle count for better performance
+      const particleCount = Math.min(20, Math.floor(window.innerWidth / 60));
 
       for (let i = 0; i < particleCount; i++) {
         particles.push({

@@ -1,5 +1,9 @@
 import { Button } from '@/shared/ui/button';
-import { ExternalLink, ArrowRight, Users, TrendingUp, Clock } from 'lucide-react';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Users from 'lucide-react/dist/esm/icons/users';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Clock from 'lucide-react/dist/esm/icons/clock';
 import portfolioPreview from '@/assets/portfolio-preview.jpg';
 import LazyImage from '@/shared/components/LazyImage';
 

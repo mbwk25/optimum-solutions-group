@@ -33,13 +33,27 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
   },
   build: {
     sourcemap: mode === 'development',
-    minify: 'esbuild',
+    minify: mode === 'production' ? 'terser' : 'esbuild',
+    terserOptions: mode === 'production' ? {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn', 'console.info'],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
+      },
+    } : undefined,
     cssMinify: true,
-    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+    target: 'es2020',
     // Advanced build optimizations
     cssCodeSplit: true,
-    assetsInlineLimit: 4096, // Inline assets smaller than 4kb
-    chunkSizeWarningLimit: 1000, // Warn for chunks larger than 1MB
+    assetsInlineLimit: 2048, // Reduced to 2kb for better HTTP/2 optimization
+    chunkSizeWarningLimit: 500, // Stricter warning for better performance
     rollupOptions: {
       // Optimize external dependencies
       external: (id) => {

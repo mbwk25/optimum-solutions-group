@@ -1,4 +1,13 @@
-import { Code, Workflow, Users, BarChart, Palette, Headphones, TrendingUp, Database, Cpu, Wifi, Shield } from 'lucide-react';
+import Code from 'lucide-react/dist/esm/icons/code';
+import Workflow from 'lucide-react/dist/esm/icons/workflow';
+import Users from 'lucide-react/dist/esm/icons/users';
+import BarChart from 'lucide-react/dist/esm/icons/bar-chart';
+import Palette from 'lucide-react/dist/esm/icons/palette';
+import Headphones from 'lucide-react/dist/esm/icons/headphones';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Database from 'lucide-react/dist/esm/icons/database';
+import Cpu from 'lucide-react/dist/esm/icons/cpu';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 import { Button } from '@/shared/ui/button';
 import useScrollAnimation from '@/shared/hooks/useScrollAnimation';
 
@@ -109,54 +118,51 @@ const ServicesSection = () => {
           </p>
         </header>
 
-        <div ref={gridRef} className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 animate-out stagger-children">
-          {services.map((service, index) => (
-            <div key={index} className={`service-card group relative overflow-hidden bg-gradient-to-br ${service.gradient}`}>
-              <div className="relative z-10">
-                <div className="mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-xl mb-4 group-hover:scale-110 transition-transform duration-300 relative">
-                    <service.icon className="h-8 w-8" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary opacity-0 group-hover:opacity-20 rounded-xl transition-opacity duration-300"></div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3 font-playfair">{service.title}</h3>
-                  <p className="text-muted-foreground mb-4 font-light leading-relaxed">{service.description}</p>
-                </div>
-
-                <div className="space-y-2 mb-6">
-                  {service.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center gap-2 text-sm">
-                      <div className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></div>
-                      <span className="text-muted-foreground font-light">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <Button 
-                  onClick={scrollToContact}
-                  variant="outline" 
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300 font-medium"
-                >
-                  {service.cta}
-                </Button>
-              </div>
-              
-              {/* Enhanced hover glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </div>
+        <div ref={gridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 animate-out stagger-children">
+          {services.slice(0, 6).map((service, index) => (
+            <article key={index} className="service-card p-6 rounded-xl border border-border hover:border-primary/20 bg-card transition-all duration-300">
+              <service.icon className="h-8 w-8 text-primary mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-3">{service.title}</h3>
+              <p className="text-muted-foreground mb-4 leading-relaxed text-sm">{service.description}</p>
+              <Button 
+                onClick={scrollToContact}
+                variant="outline" 
+                size="sm"
+                className="w-full hover:bg-primary hover:text-primary-foreground"
+              >
+                {service.cta}
+              </Button>
+            </article>
+          ))}
+        </div>
+        
+        {/* Additional Services - Ultra Simplified */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+          {services.slice(6).map((service, index) => (
+            <article key={index} className="bg-card p-4 rounded-lg border border-border hover:shadow-sm transition-shadow">
+              <service.icon className="h-6 w-6 text-primary mb-2" />
+              <h4 className="font-medium text-foreground mb-2 text-sm">{service.title}</h4>
+              <p className="text-xs text-muted-foreground mb-2">{service.description}</p>
+              <button 
+                onClick={scrollToContact}
+                className="text-primary text-xs font-medium hover:underline"
+              >
+                Learn More
+              </button>
+            </article>
           ))}
         </div>
 
-        <div className="text-center bg-gradient-subtle p-12 rounded-3xl">
-          <h3 className="text-3xl font-bold text-foreground mb-4">
+        <div className="text-center bg-gradient-subtle p-8 rounded-2xl">
+          <h3 className="text-2xl font-bold text-foreground mb-3">
             Not Sure Which Service You Need?
           </h3>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto">
             Every business is unique. Let's discuss your challenges and goals to find the perfect solution for your specific needs.
           </p>
           <Button 
             onClick={scrollToContact}
-            size="lg"
-            className="btn-hero text-lg px-8 py-4 h-auto"
+            className="btn-hero"
           >
             Schedule Strategy Call
           </Button>

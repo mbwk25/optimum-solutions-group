@@ -1,4 +1,7 @@
-import { CheckCircle, Target, Users, Zap } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Target from 'lucide-react/dist/esm/icons/target';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Zap from 'lucide-react/dist/esm/icons/zap';
 
 const AboutSection = () => {
   const features = [
@@ -82,10 +85,10 @@ const AboutSection = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">Ready to Get Started?</h3>
-                  <p className="opacity-90">Free consultation • No commitments</p>
+                  <p className="text-primary-foreground font-medium">Free consultation • No commitments</p>
                 </div>
               </div>
-              <p className="text-primary-foreground/90">
+              <p className="text-primary-foreground font-light">
                 Book a 30-minute strategy call where we'll analyze your current processes and show you exactly how custom software can transform your business.
               </p>
             </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
-import { Menu, X } from 'lucide-react';
-import logo from '@/assets/optimum-logo.png';
+import Menu from 'lucide-react/dist/esm/icons/menu';
+import X from 'lucide-react/dist/esm/icons/x';
+import logo from '@/assets/logo.png';
+import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
 import { useAccessibility, useRovingTabIndex } from '@/shared/hooks/useAccessibility';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
@@ -143,22 +145,19 @@ const Navigation = memo(() => {
             tabIndex={0}
             aria-label="Optimum Solutions Group"
           >
-            <div className="relative overflow-hidden">
-              <img 
-                src={logo} 
-                alt="Optimum Solutions Group logo"
-                className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 drop-shadow-lg"
-                role="img"
-              />
-              {/* Multi-layered glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-primary opacity-0 group-hover:opacity-70 transition-all duration-500 rounded-xl blur-lg scale-150 animate-pulse"></div>
-              <div className="absolute inset-0 bg-gradient-to-tr from-secondary via-primary to-secondary opacity-0 group-hover:opacity-40 transition-all duration-700 rounded-xl blur-md scale-125"></div>
-              <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-20 transition-all duration-300 rounded-lg blur-sm"></div>
-              {/* Orbiting particles */}
-              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:animate-ping" style={{ transform: 'translate(-50%, -50%) rotate(0deg) translateX(20px)' }}></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-secondary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700" style={{ transform: 'translate(-50%, -50%) rotate(120deg) translateX(25px)', animationDelay: '0.2s' }}></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-all duration-600" style={{ transform: 'translate(-50%, -50%) rotate(240deg) translateX(22px)', animationDelay: '0.4s' }}></div>
-            </div>
+            <OptimizedImage 
+              src={logo} 
+              alt="Optimum Solutions Group logo"
+              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
+              role="img"
+              width={32}
+              height={32}
+              quality={75}
+              format="webp"
+              loading="eager"
+              priority
+              responsive={false}
+            />
             <div className="font-bold text-xl tracking-tight">
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Optimum
@@ -175,7 +174,7 @@ const Navigation = memo(() => {
           {/* Desktop Navigation */}
           <div 
             className="hidden md:flex items-center space-x-8"
-            role="menubar"
+            role="navigation"
             aria-label="Main navigation menu"
             id="nav-menu"
           >
@@ -184,7 +183,6 @@ const Navigation = memo(() => {
                 key={item.label}
                 onClick={() => scrollToSection(item.href, item.label)}
                 className="text-foreground hover:text-primary transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
-                role="menuitem"
                 tabIndex={0}
                 aria-label={`Navigate to ${item.label} section`}
               >

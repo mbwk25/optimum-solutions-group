@@ -154,32 +154,32 @@ describe('Form Components E2E Tests', () => {
   describe('Checkbox Component', () => {
     it('should toggle correctly', () => {
       cy.get('[data-testid="checkbox-subscribe"]')
-        .should('not.be.checked')
+        .should('have.attr', 'aria-checked', 'false')
         .click()
-        .should('be.checked')
+        .should('have.attr', 'aria-checked', 'true')
         .click()
-        .should('not.be.checked')
+        .should('have.attr', 'aria-checked', 'false')
     })
 
     it('should work with label clicks', () => {
       cy.get('label[for="subscribe"]')
         .click()
       
-      cy.get('[data-testid="checkbox-subscribe"]').should('be.checked')
+      cy.get('[data-testid="checkbox-subscribe"]').should('have.attr', 'aria-checked', 'true')
       
       cy.get('label[for="subscribe"]')
         .click()
       
-      cy.get('[data-testid="checkbox-subscribe"]').should('not.be.checked')
+      cy.get('[data-testid="checkbox-subscribe"]').should('have.attr', 'aria-checked', 'false')
     })
 
     it('should support keyboard interaction', () => {
       cy.get('[data-testid="checkbox-subscribe"]')
         .focus()
         .type(' ')
-        .should('be.checked')
+        .should('have.attr', 'aria-checked', 'true')
         .type(' ')
-        .should('not.be.checked')
+        .should('have.attr', 'aria-checked', 'false')
     })
   })
 
@@ -196,7 +196,7 @@ describe('Form Components E2E Tests', () => {
         // Optional fields
         cy.get('[data-testid="select-category"]').click()
         cy.get('[data-testid="option-support"]').click()
-        cy.get('[data-testid="checkbox-subscribe"]').check()
+        cy.get('[data-testid="checkbox-subscribe"]').click()
         
         // Submit form
         cy.get('[data-testid="btn-submit"]').click()

@@ -12,7 +12,22 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.{cy,spec}.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/e2e.ts',
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      // Better error handling and task registration
+      on('task', {
+        log(message) {
+          console.log(message)
+          return null
+        },
+      })
+      
+      // Handle uncaught exceptions more gracefully
+      on('uncaught:exception', (err, runnable) => {
+        // Don't fail tests on certain expected errors
+        if (err.message.includes('ResizeObserver loop limit exceeded')) {
+          return false
+        }
+        return true
+      })
     },
   },
   component: {

@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/150</span>
+                <span class='fraction'>0/160</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/65</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>0/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/140</span>
+                <span class='fraction'>0/148</span>
             </div>
         
             
@@ -492,7 +492,17 @@
 <a name='L427'></a><a href='#L427'>427</a>
 <a name='L428'></a><a href='#L428'>428</a>
 <a name='L429'></a><a href='#L429'>429</a>
-<a name='L430'></a><a href='#L430'>430</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a>
+<a name='L435'></a><a href='#L435'>435</a>
+<a name='L436'></a><a href='#L436'>436</a>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a>
+<a name='L440'></a><a href='#L440'>440</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -791,6 +801,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -799,6 +814,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1216,26 +1236,36 @@ class PerformanceMonitor {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >initializeUserTracking(</span>): void {
-    // Click tracking
+    // Click tracking - throttled
+    let clickThrottle = <span class="cstat-no" title="statement not covered" >false;</span>
 <span class="cstat-no" title="statement not covered" >    document.addEventListener('click', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      this.userMetrics.clickCount++;</span>
-<span class="cstat-no" title="statement not covered" >      this.updateEngagementScore();</span>
+<span class="cstat-no" title="statement not covered" >      if (!clickThrottle) {</span>
+<span class="cstat-no" title="statement not covered" >        this.userMetrics.clickCount++;</span>
+<span class="cstat-no" title="statement not covered" >        this.updateEngagementScore();</span>
+<span class="cstat-no" title="statement not covered" >        clickThrottle = true;</span>
+<span class="cstat-no" title="statement not covered" >        setTimeout(<span class="fstat-no" title="function not covered" >() =</span>&gt; { <span class="cstat-no" title="statement not covered" >clickThrottle = false; </span>}, 100);</span>
+      }
     });
 &nbsp;
-    // Scroll tracking
+    // Scroll tracking - throttled
     let maxScrollY = <span class="cstat-no" title="statement not covered" >0;</span>
+    let scrollThrottle = <span class="cstat-no" title="statement not covered" >false;</span>
 <span class="cstat-no" title="statement not covered" >    document.addEventListener('scroll', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      maxScrollY = Math.max(maxScrollY, window.scrollY);</span>
-<span class="cstat-no" title="statement not covered" >      this.userMetrics.scrollDistance = maxScrollY;</span>
-<span class="cstat-no" title="statement not covered" >      this.updateEngagementScore();</span>
+<span class="cstat-no" title="statement not covered" >      if (!scrollThrottle) {</span>
+<span class="cstat-no" title="statement not covered" >        maxScrollY = Math.max(maxScrollY, window.scrollY);</span>
+<span class="cstat-no" title="statement not covered" >        this.userMetrics.scrollDistance = maxScrollY;</span>
+<span class="cstat-no" title="statement not covered" >        this.updateEngagementScore();</span>
+<span class="cstat-no" title="statement not covered" >        scrollThrottle = true;</span>
+<span class="cstat-no" title="statement not covered" >        setTimeout(<span class="fstat-no" title="function not covered" >() =</span>&gt; { <span class="cstat-no" title="statement not covered" >scrollThrottle = false; </span>}, 250);</span>
+      }
     });
 &nbsp;
-    // Time tracking
+    // Time tracking - less frequent updates
 <span class="cstat-no" title="statement not covered" >    setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (document.visibilityState === 'visible') {</span>
 <span class="cstat-no" title="statement not covered" >        this.userMetrics.timeOnPage = Date.now() - this.startTime;</span>
       }
-    }, 1000);
+    }, 5000); // Reduced from 1 second to 5 seconds
 &nbsp;
     // Page visibility
 <span class="cstat-no" title="statement not covered" >    document.addEventListener('visibilitychange', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
@@ -1357,7 +1387,7 @@ export const <span class="cstat-no" title="statement not covered" >performanceMo
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-23T20:37:15.965Z
+                at 2025-08-24T01:34:45.277Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

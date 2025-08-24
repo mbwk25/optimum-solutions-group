@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { 
-  Wifi, 
-  Database, 
-  Cloud, 
-  Smartphone, 
-  BarChart3, 
-  Shield, 
-  Zap, 
-  Globe,
-  Cpu,
-  Activity,
-  Car,
-  Home
-} from 'lucide-react';
+import Wifi from 'lucide-react/dist/esm/icons/wifi';
+import Database from 'lucide-react/dist/esm/icons/database';
+import Cloud from 'lucide-react/dist/esm/icons/cloud';
+import Smartphone from 'lucide-react/dist/esm/icons/smartphone';
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Zap from 'lucide-react/dist/esm/icons/zap';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import Cpu from 'lucide-react/dist/esm/icons/cpu';
+import Activity from 'lucide-react/dist/esm/icons/activity';
+import Car from 'lucide-react/dist/esm/icons/car';
+import Home from 'lucide-react/dist/esm/icons/home';
 import useScrollAnimation from '@/shared/hooks/useScrollAnimation';
 
 const IoTSection = () => {

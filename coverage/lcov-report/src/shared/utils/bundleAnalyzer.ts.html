@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/99</span>
+                <span class='fraction'>0/103</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/64</span>
+                <span class='fraction'>0/68</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/29</span>
+                <span class='fraction'>0/30</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/92</span>
+                <span class='fraction'>0/96</span>
             </div>
         
             
@@ -318,7 +318,16 @@
 <a name='L253'></a><a href='#L253'>253</a>
 <a name='L254'></a><a href='#L254'>254</a>
 <a name='L255'></a><a href='#L255'>255</a>
-<a name='L256'></a><a href='#L256'>256</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -549,8 +558,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -799,16 +817,25 @@ class BundleAnalyzer {
     // Log stats after initial page load
 <span class="cstat-no" title="statement not covered" >    setTimeout(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      this.logStats();</span>
-    }, 2000);
+    }, 3000); // Increased delay to reduce initial load impact
 &nbsp;
-    // Log stats periodically in development
+    // Log stats periodically in development - reduced frequency
 <span class="cstat-no" title="statement not covered" >    if (import.meta.env.MODE === 'development') {</span>
 <span class="cstat-no" title="statement not covered" >      setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-        const stats = <span class="cstat-no" title="statement not covered" >this.getStats();</span>
-<span class="cstat-no" title="statement not covered" >        if (stats.totalChunks &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >          console.log(`📊 Bundle Update: ${stats.totalChunks} chunks, ${(stats.totalSize / 1024).toFixed(2)}KB total`);</span>
+        // Use requestIdleCallback if available to avoid blocking the main thread
+        const logUpdate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
+          const stats = <span class="cstat-no" title="statement not covered" >this.getStats();</span>
+<span class="cstat-no" title="statement not covered" >          if (stats.totalChunks &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`📊 Bundle Update: ${stats.totalChunks} chunks, ${(stats.totalSize / 1024).toFixed(2)}KB total`);</span>
+          }
+        };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (typeof window !== 'undefined' &amp;&amp; 'requestIdleCallback' in window) {</span>
+<span class="cstat-no" title="statement not covered" >          window.requestIdleCallback(logUpdate, { timeout: 5000 });</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >          logUpdate();</span>
         }
-      }, 30000); // Every 30 seconds
+      }, 60000); // Increased from 30s to 60s
     }
   }
 &nbsp;
@@ -835,7 +862,7 @@ export const <span class="cstat-no" title="statement not covered" >bundleAnalyze
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-23T20:37:15.965Z
+                at 2025-08-24T01:34:45.277Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -67,12 +67,15 @@ describe('Accessibility E2E Tests', () => {
     it('should handle keyboard navigation in form elements', () => {
       // Tab to form elements and interact with keyboard
       cy.get('[data-testid="input-name"]').focus()
-      cy.focused().type('Keyboard User{tab}')
+      cy.focused().type('Keyboard User')
       
+      // Use tab navigation properly
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'input-email')
-      cy.focused().type('keyboard@test.com{tab}')
+      cy.focused().type('keyboard@test.com')
       
-      // Select component keyboard navigation
+      // Navigate to select
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'select-category')
       cy.focused().type('{enter}')
       
@@ -82,13 +85,15 @@ describe('Accessibility E2E Tests', () => {
       // Continue to textarea
       cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'textarea-message')
-      cy.focused().type('Testing keyboard navigation in forms{tab}')
+      cy.focused().type('Testing keyboard navigation in forms')
       
-      // Checkbox
+      // Navigate to checkbox and activate with space
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'checkbox-subscribe')
-      cy.focused().type(' {tab}') // Space to toggle checkbox
+      cy.focused().type(' ') // Space to toggle checkbox
       
-      // Submit button
+      // Navigate to submit button
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'btn-submit')
       cy.focused().type('{enter}')
       

@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
 import { Button } from '@/shared/ui/button';
-import { HelpCircle, Clock, DollarSign, Users, Shield, Zap } from 'lucide-react';
+import HelpCircle from 'lucide-react/dist/esm/icons/help-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Zap from 'lucide-react/dist/esm/icons/zap';
 
 const FAQSection = () => {
   const [activeCategory, setActiveCategory] = useState('general');
@@ -123,77 +128,56 @@ const FAQSection = () => {
           </p>
         </div>
 
-        {/* Category Navigation */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        {/* Category Navigation - Simplified */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
           {categories.map((category) => (
-            <Button
+            <button
               key={category.id}
-              variant={activeCategory === category.id ? "default" : "outline"}
               onClick={() => setActiveCategory(category.id)}
-              className="flex items-center gap-2"
+              className={`px-4 py-2 text-sm rounded-md font-medium transition-colors ${
+                activeCategory === category.id 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-card text-foreground hover:bg-muted'
+              }`}
             >
-              <category.icon className="h-4 w-4" />
               {category.label}
-            </Button>
+            </button>
           ))}
         </div>
 
-        {/* FAQ Content */}
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {categories.find(c => c.id === activeCategory)?.icon && (
-                <span className="text-primary">
-                  {React.createElement(categories.find(c => c.id === activeCategory)!.icon, { className: "h-5 w-5" })}
-                </span>
-              )}
-              {categories.find(c => c.id === activeCategory)?.label} Questions
-            </CardTitle>
-            <CardDescription>
-              Everything you need to know about {categories.find(c => c.id === activeCategory)?.label.toLowerCase()}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {faqs[activeCategory as keyof typeof faqs].map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
+        {/* FAQ Content - Simplified */}
+        <div className="bg-card rounded-xl border border-border p-6 mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {categories.find(c => c.id === activeCategory)?.label} Questions
+          </h3>
+          <Accordion type="single" collapsible className="w-full">
+            {faqs[activeCategory as keyof typeof faqs].map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left py-3">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-3">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
 
-        {/* CTA Section */}
-        <div className="text-center bg-gradient-subtle p-12 rounded-3xl">
-          <h3 className="text-2xl font-bold text-foreground mb-4">
+        {/* CTA Section - Simplified */}
+        <div className="text-center bg-gradient-subtle p-8 rounded-2xl">
+          <h3 className="text-xl font-bold text-foreground mb-3">
             Still Have Questions?
           </h3>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            We're here to help! Schedule a free consultation to discuss your specific needs and get personalized answers to your questions.
+          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            We're here to help! Schedule a free consultation to discuss your specific needs.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={scrollToContact}
-              size="lg"
-              className="btn-hero text-lg px-8 py-4 h-auto"
-            >
-              Schedule Free Consultation
-            </Button>
-            <Button 
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-4 h-auto"
-              onClick={() => window.open('mailto:hello@optimumsolutions.com', '_blank')}
-            >
-              Email Us Directly
-            </Button>
-          </div>
+          <Button 
+            onClick={scrollToContact}
+            className="btn-hero"
+          >
+            Schedule Free Consultation
+          </Button>
         </div>
       </div>
     </section>

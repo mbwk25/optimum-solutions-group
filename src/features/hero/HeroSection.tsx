@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from '@/shared/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 import heroBackground from '@/assets/hero-background-optimized.jpg';
 import ParticleSystem from '@/shared/components/ParticleSystem';
 import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
@@ -56,13 +56,14 @@ const HeroSection: React.FC = memo(() => {
             className="w-full h-full object-cover opacity-20 transition-opacity duration-700 ease-in-out"
             priority
             loading="eager"
-            quality={75}
-            width={1920}
-            height={1080}
+            quality={85}
+            width={1600}
+            height={900}
+            responsive={true}
+            responsiveSizes={[400, 768, 1024, 1600]}
+            sizes="100vw"
+            format="auto"
             style={{
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
               backgroundColor: '#1a1a1a',
             }}
           />

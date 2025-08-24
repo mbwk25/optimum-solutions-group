@@ -20,9 +20,26 @@ Cypress.Commands.add('submitForm', (selector: string, data: Record<string, any>)
     Object.entries(data).forEach(([field, value]) => {
       if (typeof value === 'boolean') {
         if (value) {
-          cy.get(`[data-testid="${field}"], [name="${field}"]`).check()
+          // Handle both native checkboxes and Radix UI checkboxes
+          cy.get(`[data-testid="${field}"], [name="${field}"]`).then($el => {
+            if ($el.attr('type') === 'checkbox') {
+              cy.wrap($el).check()
+            } else {
+              // Radix UI checkbox - use click
+              cy.wrap($el).click()
+            }
+          })
         } else {
-          cy.get(`[data-testid="${field}"], [name="${field}"]`).uncheck()
+          cy.get(`[data-testid="${field}"], [name="${field}"]`).then($el => {
+            if ($el.attr('type') === 'checkbox') {
+              cy.wrap($el).uncheck()
+            } else {
+              // For Radix UI, check current state and click if needed
+              if ($el.attr('data-state') === 'checked' || $el.attr('aria-checked') === 'true') {
+                cy.wrap($el).click()
+              }
+            }
+          })
         }
       } else {
         cy.get(`[data-testid="${field}"], [name="${field}"]`).clear().type(String(value))
@@ -180,18 +197,22 @@ Cypress.Commands.add('shouldContainTextWithRetry', { prevSubject: true }, (subje
  * Tab navigation command
  */
 Cypress.Commands.add('tab', { prevSubject: 'optional' }, (subject, options: { shift?: boolean } = {}) => {
+  const tabEvent = {
+    key: 'Tab',
+    keyCode: 9,
+    which: 9,
+    shiftKey: options.shift || false,
+    bubbles: true
+  }
+  
   if (subject) {
-    if (options.shift) {
-      return cy.wrap(subject).trigger('keydown', { key: 'Tab', shiftKey: true })
-    } else {
-      return cy.wrap(subject).trigger('keydown', { key: 'Tab' })
-    }
+    return cy.wrap(subject)
+      .trigger('keydown', tabEvent)
+      .trigger('keyup', tabEvent)
   } else {
-    if (options.shift) {
-      return cy.get('body').trigger('keydown', { key: 'Tab', shiftKey: true })
-    } else {
-      return cy.get('body').trigger('keydown', { key: 'Tab' })
-    }
+    return cy.get('body')
+      .trigger('keydown', tabEvent)
+      .trigger('keyup', tabEvent)
   }
 })
 
@@ -316,6 +337,29 @@ Cypress.Commands.add('checkAnnouncement', (triggerSelector: string, expectedText
   })
 })
 
+/**
+ * Check or uncheck Radix UI checkbox
+ */
+Cypress.Commands.add('checkRadixCheckbox', { prevSubject: true }, (subject, shouldBeChecked: boolean = true) => {
+  return cy.wrap(subject).then($checkbox => {
+    const currentState = $checkbox.attr('data-state') || $checkbox.attr('aria-checked')
+    const isCurrentlyChecked = currentState === 'checked' || currentState === 'true'
+    
+    if (isCurrentlyChecked !== shouldBeChecked) {
+      cy.wrap($checkbox).click()
+    }
+    
+    return cy.wrap($checkbox)
+  })
+})
+
+/**
+ * Toggle Radix UI checkbox
+ */
+Cypress.Commands.add('toggleRadixCheckbox', { prevSubject: true }, (subject) => {
+  return cy.wrap(subject).click()
+})
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
@@ -401,6 +445,16 @@ declare global {
        * Test screen reader announcements
        */
       checkAnnouncement(triggerSelector: string, expectedText: string): Chainable<void>
+      
+      /**
+       * Check or uncheck Radix UI checkbox
+       */
+      checkRadixCheckbox(shouldBeChecked?: boolean): Chainable<Element>
+      
+      /**
+       * Toggle Radix UI checkbox
+       */
+      toggleRadixCheckbox(): Chainable<Element>
     }
   }
 }
