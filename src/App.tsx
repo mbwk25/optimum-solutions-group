@@ -49,14 +49,11 @@ if (typeof window !== "undefined" && typeof errorHandler === "function") {
   };
 }
 
-// Import enhanced lazy loading utilities
-import { lazyWithRetry, lazyWithPreload, preloadComponent } from '@/shared/utils/dynamicImports';
+// Direct import for main page to ensure React app bundles properly
+import Index from './pages/Index';
 
-// Lazy load pages with enhanced retry mechanism and preloading
-const Index = lazyWithPreload(
-  () => import("./pages/Index"),
-  () => true // Preload immediately for main page
-);
+// Import enhanced lazy loading utilities for other pages
+import { lazyWithRetry } from '@/shared/utils/dynamicImports';
 
 const ComponentShowcase = lazyWithRetry(
   () => import("./pages/ComponentShowcase"),

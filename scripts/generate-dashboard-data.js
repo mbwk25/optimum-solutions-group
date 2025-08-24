@@ -9,7 +9,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import glob from 'glob';
+import { glob } from 'glob';
 
 class DashboardDataGenerator {
   constructor(options = {}) {
@@ -697,7 +697,12 @@ async function main() {
 }
 
 // Run if called directly (ES module equivalent)
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === new URL(process.argv[1], 'file:').href) {
+  main();
+}
+
+// Also run if the script name matches
+if (process.argv[1] && process.argv[1].endsWith('generate-dashboard-data.js')) {
   main();
 }
 

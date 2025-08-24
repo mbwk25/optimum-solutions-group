@@ -305,12 +305,14 @@ jobs:
         
     - name: Upload Bundle Analysis
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: bundle-analysis-${{ github.sha }}
         path: |
           dist/stats.html
           bundle-analyzer-report.json
         retention-days: 30
+        if-no-files-found: ignore
 
     - name: Check Bundle Size
       run: |
@@ -367,19 +369,30 @@ jobs:
 
     - name: Generate Dashboard Data
       run: |
-        # Install glob dependency if not present
-        npm install glob --legacy-peer-deps || true
+        # Install required dependencies
+        npm ci || npm install
         
-        # Check if the script exists, if not create a simple fallback
-        if [ ! -f "scripts/generate-dashboard-data.js" ]; then
-          echo "⚠️ Dashboard data generator not found, creating simple data file"
-          echo '{"lastUpdated":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'\"\,\"summary\":{\"message\":\"Dashboard data generated\"},\"reports\":[]}' > dashboard-data.json
-        else
-          node scripts/generate-dashboard-data.js \
+        # Check if the script exists and try to run it
+        if [ -f "scripts/generate-dashboard-data.js" ]; then
+          echo "📊 Running dashboard data generator..."
+          if node scripts/generate-dashboard-data.js \
             --performance ./reports/performance-report-*/performance-report.json \
             --accessibility ./reports/accessibility-reports-*/axe-report.json \
             --bundle ./reports/bundle-analysis-*/bundle-analyzer-report.json \
-            --output dashboard-data.json
+            --output dashboard-data.json; then
+            echo "✅ Dashboard data generated successfully"
+          else
+            echo "⚠️ Dashboard generator failed, creating fallback data"
+            echo '{"lastUpdated":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'\"\,\"summary\":{\"message\":\"Dashboard data generated with fallback\"},\"reports\":[]}' > dashboard-data.json
+          fi
+        else
+          echo "⚠️ Dashboard data generator not found, creating simple data file"
+          echo '{"lastUpdated":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'\"\,\"summary\":{\"message\":\"Dashboard data generated\"},\"reports\":[]}' > dashboard-data.json
+        fi
+        
+        # Ensure dashboard-data.json exists
+        if [ ! -f "dashboard-data.json" ]; then
+          echo '{"lastUpdated":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'\"\,\"summary\":{\"message\":\"Fallback dashboard data\"},\"reports\":[]}' > dashboard-data.json
         fi
 
     - name: Deploy to GitHub Pages
@@ -415,7 +428,8 @@ jobs:
           Performance Score: ${{ needs.performance-audit.outputs.performance-score }}/100
           
           Please review the performance report for details.
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     - name: Notify Slack on Success
       if: success() && github.event_name == 'schedule'
@@ -430,7 +444,8 @@ jobs:
           Accessibility Score: ${{ needs.performance-audit.outputs.accessibility-score }}/100
           
           All metrics within acceptable thresholds.
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # =============================================
   # Cleanup Job

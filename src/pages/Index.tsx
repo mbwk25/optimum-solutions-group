@@ -1,6 +1,8 @@
 import React, { lazy, Suspense } from 'react';
+// Direct imports for critical components to ensure proper bundling
 import Navigation from '@/features/navigation/Navigation';
 import HeroSection from '@/features/hero/HeroSection';
+import AboutSection from '@/features/about/AboutSection';
 import CustomCursor from '@/shared/components/CustomCursor';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { usePageLoad } from '@/shared/components/LoadingScreen';
@@ -8,17 +10,8 @@ import SEOHead from '@/shared/components/optimized/SEOHead';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
 
-// Critical sections (above the fold) - loaded immediately
-// Navigation and HeroSection are already imported above
-
-// Import enhanced lazy loading utilities
-import { lazyWithMetrics, lazyWithPreload } from '@/shared/utils/dynamicImports';
-
-// Below-the-fold sections - enhanced lazy loaded with metrics
-const AboutSection = lazyWithPreload(
-  () => import('@/features/about/AboutSection'),
-  () => window.innerHeight > 600 // Preload on larger screens
-);
+// Import enhanced lazy loading utilities for below-fold content
+import { lazyWithMetrics } from '@/shared/utils/dynamicImports';
 
 const ServicesSection = lazyWithMetrics(
   () => import('@/features/services/ServicesSection'),
@@ -100,9 +93,7 @@ const Index = () => {
         
         {/* Main content area with proper landmark structure */}
         <main id="main" role="main">
-          <Suspense fallback={<SectionFallback />}>
-            <AboutSection />
-          </Suspense>
+          <AboutSection />
           
           <Suspense fallback={<SectionFallback />}>
             <ServicesSection />

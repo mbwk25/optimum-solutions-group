@@ -28,7 +28,8 @@
     "test:debug": "jest --no-cache --verbose",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
-    "analyze:bundle": "vite build --mode production",
+    "analyze:bundle": "vite build --mode production && npm run bundle:analyze",
+    "bundle:analyze": "node scripts/analyze-bundle.js",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:verify": "cypress verify",
@@ -96,7 +97,8 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
     "web-vitals": "^5.1.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "glob": "^11.0.3"
   },
   "overrides": {
     "esbuild": "^0.25.9"
@@ -126,14 +128,13 @@
     "chalk": "^5.3.0",
     "chrome-launcher": "^1.1.0",
     "commander": "^12.1.0",
-    "cypress": "^15.0.0",
+    "cypress": "^14.5.0",
     "cypress-axe": "^1.6.0",
     "esbuild": "^0.25.9",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "filesize": "^10.1.6",
-    "glob": "^11.0.3",
     "globals": "^15.9.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^30.0.5",

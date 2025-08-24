@@ -75,17 +75,17 @@ export default defineConfig({
         generatedCode: 'es2015',
       },
       
-      // Enhanced tree shaking
+      // Enhanced but conservative tree shaking
       treeshake: {
         preset: 'recommended',
         moduleSideEffects: (id) => {
-          // Only preserve side effects for specific modules
-          return id.endsWith('.css') || 
-                 id.includes('web-vitals') ||
-                 id.includes('serviceWorker');
+          // Be conservative - preserve side effects for most modules except pure utilities
+          if (id.includes('node_modules')) {
+            // Only allow tree-shaking for specific known-safe libraries
+            return !id.includes('lodash') && !id.includes('date-fns');
+          }
+          return true; // Preserve side effects for our own modules
         },
-        unknownGlobalSideEffects: false,
-        propertyReadSideEffects: false,
       },
     },
   },
