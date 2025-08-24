@@ -445,8 +445,17 @@ jobs:
     if: always()
     
     steps:
+    - name: Check Slack Configuration
+      id: slack-check
+      run: |
+        if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          echo "slack_configured=true" >> $GITHUB_OUTPUT
+        else
+          echo "slack_configured=false" >> $GITHUB_OUTPUT
+        fi
+    
     - name: Notify Slack on Regression
-      if: needs.performance-audit.outputs.regression-detected == 'true' && secrets.SLACK_WEBHOOK_URL != ''
+      if: needs.performance-audit.outputs.regression-detected == 'true' && steps.slack-check.outputs.slack_configured == 'true'
       uses: 8398a7/action-slack@v3
       with:
         status: failure
@@ -464,7 +473,7 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     - name: Notify Slack on Success
-      if: success() && github.event_name == 'schedule' && secrets.SLACK_WEBHOOK_URL != ''
+      if: success() && github.event_name == 'schedule' && steps.slack-check.outputs.slack_configured == 'true'
       uses: 8398a7/action-slack@v3
       with:
         status: success
