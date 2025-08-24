@@ -55,62 +55,16 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
     assetsInlineLimit: 2048, // Reduced to 2kb for better HTTP/2 optimization
     chunkSizeWarningLimit: 500, // Stricter warning for better performance
     rollupOptions: {
-      // Optimize external dependencies
+      // Only externalize specific development/testing dependencies
       external: (id) => {
-        // Keep development dependencies out of bundle
-        return id.includes('node_modules') && 
-               (id.includes('@testing-library') || 
-                id.includes('vitest') ||
-                id.includes('jsdom'));
+        // Only exclude specific development dependencies, not all node_modules
+        return id.includes('@testing-library') || 
+               id.includes('vitest') ||
+               id.includes('jsdom') ||
+               id.includes('cypress');
       },
       output: {
-        // Optimized manual chunking strategy
-        manualChunks: {
-          // Core React dependencies
-          'react-core': ['react', 'react-dom'],
-          
-          // Router and navigation
-          'router': ['react-router-dom'],
-          
-          // State management and data fetching
-          'state-management': ['@tanstack/react-query'],
-          
-          // UI component libraries
-          'ui-primitives': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-navigation-menu',
-            '@radix-ui/react-menubar'
-          ],
-          
-          // Form handling
-          'form-utilities': [
-            'react-hook-form',
-            '@hookform/resolvers', 
-            'zod'
-          ],
-          
-          // Utility libraries
-          'utilities': [
-            'date-fns',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority'
-          ],
-          
-          // Icons - separate due to size
-          'icons': ['lucide-react'],
-          
-          // Charts and visualizations
-          'charts': ['recharts', 'embla-carousel-react'],
-          
-          // Performance monitoring
-          'performance': ['web-vitals']
-        },
+        // Automatic chunking - let Vite decide optimal chunks
         
         // Optimized file naming for better caching
         entryFileNames: 'assets/[name]-[hash].js',
