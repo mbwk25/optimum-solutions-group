@@ -48,7 +48,8 @@
     "test:all": "npm run test && npm run test:e2e",
     "test:workflow": "node scripts/test-workflow.js",
     "test:workflow:local": "node scripts/test-local-workflow.js",
-    "deploy:workflow": "node deploy-workflow.js"
+    "deploy:workflow": "node deploy-workflow.js",
+    "badges:generate": "node scripts/generate-status-badges.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

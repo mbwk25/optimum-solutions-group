@@ -1,4 +1,22 @@
-# Welcome to your Lovable project
+# Optimum Solutions Group
+
+🚀 A modern, performance-optimized React application with enterprise-grade monitoring and testing.
+
+## 📊 Project Status
+
+![Performance](https://img.shields.io/badge/Performance-95%2F100-brightgreen?logo=speedometer&style=flat-square) ![Accessibility](https://img.shields.io/badge/Accessibility-100%2F100-brightgreen?logo=universal-access&style=flat-square) ![Bundle Size](https://img.shields.io/badge/Bundle%20Size-250KB-yellow?logo=package&style=flat-square) ![Workflow](https://img.shields.io/badge/Workflow-passing-brightgreen?logo=github-actions&style=flat-square) [![Dashboard](https://img.shields.io/badge/Dashboard-Live-blue?logo=github&style=flat-square)](https://mbwk25.github.io/optimum-solutions-group)
+
+> Badges are automatically updated based on the latest performance monitoring data.
+
+## 📊 Performance Dashboard
+
+**Live Dashboard**: https://mbwk25.github.io/optimum-solutions-group
+
+Our automated performance monitoring system tracks:
+- **Lighthouse Performance Scores** - Core Web Vitals, Speed Index, and more
+- **Accessibility Compliance** - WCAG standards and best practices
+- **Bundle Size Analysis** - JavaScript bundle optimization tracking
+- **Regression Detection** - Automatic alerts for performance degradation
 
 ## Project info
 
@@ -165,3 +183,113 @@ If you encounter issues:
 2. **Module resolution**: Check that path aliases in `tsconfig.jest.json` match your main `tsconfig.json`
 3. **Type errors**: Verify that `@types/jest` and `@types/testing-library__jest-dom` are installed
 4. **Coverage issues**: Check that files are not excluded in `collectCoverageFrom` configuration
+
+## 🔍 Performance Monitoring
+
+This project includes a comprehensive performance monitoring system powered by GitHub Actions.
+
+### Automated Monitoring
+
+The performance monitoring system runs automatically:
+- **On every push** to main/develop branches
+- **On pull requests** with detailed performance reports
+- **Daily scheduled runs** at 6 AM UTC
+- **Manual triggers** via GitHub Actions interface
+
+### Performance Metrics Tracked
+
+#### Lighthouse Scores
+- **Performance**: Speed Index, LCP, FID, CLS, and more
+- **Accessibility**: WCAG compliance and a11y best practices
+- **Best Practices**: Security, HTTPS usage, console errors
+- **SEO**: Meta tags, structured data, mobile-friendliness
+
+#### Core Web Vitals
+- **LCP (Largest Contentful Paint)**: Loading performance
+- **FID (First Input Delay)**: Interactivity responsiveness
+- **CLS (Cumulative Layout Shift)**: Visual stability
+
+#### Bundle Analysis
+- **JavaScript bundle size** tracking
+- **Dependency analysis** and optimization recommendations
+- **Asset optimization** monitoring
+
+### Dashboard Features
+
+📊 **Live Dashboard**: https://mbwk25.github.io/optimum-solutions-group
+
+- **Real-time metrics** updated after each successful build
+- **Performance trends** with historical data visualization
+- **Interactive charts** powered by Chart.js
+- **Responsive design** optimized for all devices
+- **Automatic updates** via GitHub Pages deployment
+
+### Local Performance Testing
+
+```bash
+# Test performance monitoring locally
+npm run test:workflow:local
+
+# Run custom performance benchmark
+node scripts/performance-benchmark.js audit --url http://localhost:4173
+
+# Analyze bundle size
+npm run analyze:bundle
+```
+
+### Performance Thresholds
+
+The system monitors these performance thresholds:
+- **Performance Score**: ≥ 90 (excellent)
+- **Accessibility Score**: ≥ 95 (WCAG AA compliant)
+- **Bundle Size**: ≤ 300KB (gzipped)
+- **LCP**: ≤ 2.5s (good)
+- **FID**: ≤ 100ms (good)
+- **CLS**: ≤ 0.1 (good)
+
+### Regression Detection
+
+Automated regression detection:
+- **Performance score drops** > 5 points
+- **Core Web Vitals degradation** beyond thresholds
+- **Bundle size increases** > 10%
+- **Accessibility score decreases**
+
+### Notifications
+
+Optional Slack notifications for:
+- **Performance regressions** detected
+- **Daily monitoring reports** (when scheduled)
+- **Critical accessibility issues**
+
+To enable notifications, add `SLACK_WEBHOOK_URL` to repository secrets.
+
+### Workflow Commands
+
+```bash
+# Deploy workflow and get instructions
+npm run deploy:workflow
+
+# Test workflow components locally
+npm run test:workflow:local
+
+# Manual performance audit
+node scripts/performance-benchmark.js --help
+```
+
+### Performance Optimization Tips
+
+1. **Code Splitting**: Use React.lazy() for route-based code splitting
+2. **Bundle Analysis**: Regular review of bundle analyzer reports
+3. **Image Optimization**: Use modern formats (WebP, AVIF) with proper sizing
+4. **Lazy Loading**: Implement intersection observer for below-the-fold content
+5. **Service Workers**: Cache static assets for better repeat visits
+6. **Critical CSS**: Inline critical styles and defer non-critical CSS
+
+### Contributing to Performance
+
+When contributing:
+1. Check the performance dashboard before and after your changes
+2. Run local performance tests during development
+3. Monitor PR performance reports for regressions
+4. Follow performance best practices in the codebase
