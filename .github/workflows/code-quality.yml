@@ -1,0 +1,305 @@
+name: Code Quality & Standards Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  actions: read
+
+jobs:
+  # =============================================
+  # Code Quality Analysis
+  # =============================================
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: |
+        npm ci --legacy-peer-deps || npm ci --force
+
+    - name: TypeScript Type Check
+      run: |
+        echo "🔍 Running TypeScript type checking..."
+        npm run type-check 2>&1 | tee typescript-results.txt
+        
+        # Create TypeScript report
+        echo "# 📝 TypeScript Analysis" > typescript-report.md
+        echo "" >> typescript-report.md
+        
+        if [ ${PIPESTATUS[0]} -eq 0 ]; then
+          echo "✅ **Status**: All types are valid" >> typescript-report.md
+          echo "" >> typescript-report.md
+          echo "🎉 No TypeScript errors found! Your code is type-safe." >> typescript-report.md
+        else
+          echo "❌ **Status**: Type errors detected" >> typescript-report.md
+          echo "" >> typescript-report.md
+          echo "## 🐛 Type Errors" >> typescript-report.md
+          echo "" >> typescript-report.md
+          echo "\`\`\`" >> typescript-report.md
+          cat typescript-results.txt >> typescript-report.md
+          echo "\`\`\`" >> typescript-report.md
+        fi
+        
+    - name: ESLint Analysis
+      run: |
+        echo "🔍 Running ESLint analysis..."
+        npx eslint . --ext .js,.jsx,.ts,.tsx --format json --output-file eslint-results.json || true
+        npx eslint . --ext .js,.jsx,.ts,.tsx --format unix > eslint-results.txt || true
+        
+        # Create ESLint report
+        echo "# 🔧 ESLint Analysis" > eslint-report.md
+        echo "" >> eslint-report.md
+        
+        # Count errors and warnings
+        ERROR_COUNT=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+        WARNING_COUNT=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+        
+        echo "## 📊 Summary" >> eslint-report.md
+        echo "" >> eslint-report.md
+        echo "| Type | Count |" >> eslint-report.md
+        echo "|------|-------|" >> eslint-report.md
+        echo "| Errors | $ERROR_COUNT |" >> eslint-report.md
+        echo "| Warnings | $WARNING_COUNT |" >> eslint-report.md
+        echo "" >> eslint-report.md
+        
+        if [ "$ERROR_COUNT" -gt 0 ]; then
+          echo "❌ **Status**: ESLint errors found" >> eslint-report.md
+          echo "" >> eslint-report.md
+          echo "## 🚨 Errors" >> eslint-report.md
+          echo "" >> eslint-report.md
+          echo "\`\`\`" >> eslint-report.md
+          jq -r '.[] | select(.messages[] | .severity == 2) | "\(.filePath): \(.messages[] | select(.severity == 2) | .message)"' eslint-results.json >> eslint-report.md
+          echo "\`\`\`" >> eslint-report.md
+        else
+          echo "✅ **Status**: No ESLint errors" >> eslint-report.md
+        fi
+        
+        if [ "$WARNING_COUNT" -gt 0 ]; then
+          echo "" >> eslint-report.md
+          echo "## ⚠️ Warnings" >> eslint-report.md
+          echo "" >> eslint-report.md
+          echo "\`\`\`" >> eslint-report.md
+          jq -r '.[] | select(.messages[] | .severity == 1) | "\(.filePath): \(.messages[] | select(.severity == 1) | .message)"' eslint-results.json >> eslint-report.md
+          echo "\`\`\`" >> eslint-report.md
+        fi
+
+    - name: Prettier Format Check
+      run: |
+        echo "💅 Checking code formatting..."
+        npx prettier --check . 2>&1 | tee prettier-results.txt || PRETTIER_EXIT=$?
+        
+        # Create Prettier report
+        echo "# 💅 Prettier Format Check" > prettier-report.md
+        echo "" >> prettier-report.md
+        
+        if [ ${PIPESTATUS[0]} -eq 0 ]; then
+          echo "✅ **Status**: All files are properly formatted" >> prettier-report.md
+          echo "" >> prettier-report.md
+          echo "🎨 Your code formatting is consistent!" >> prettier-report.md
+        else
+          echo "❌ **Status**: Formatting issues found" >> prettier-report.md
+          echo "" >> prettier-report.md
+          echo "## 📝 Files needing formatting:" >> prettier-report.md
+          echo "" >> prettier-report.md
+          echo "\`\`\`" >> prettier-report.md
+          cat prettier-results.txt >> prettier-report.md
+          echo "\`\`\`" >> prettier-report.md
+          echo "" >> prettier-report.md
+          echo "**Fix command**: \`npm run lint:fix\`" >> prettier-report.md
+        fi
+
+    - name: Test Coverage Analysis
+      run: |
+        echo "📊 Running test coverage analysis..."
+        npm run test:ci 2>&1 | tee coverage-results.txt || true
+        
+        # Create coverage report
+        echo "# 📊 Test Coverage Analysis" > coverage-report.md
+        echo "" >> coverage-report.md
+        
+        if [ -f "coverage/coverage-summary.json" ]; then
+          LINES_PERCENT=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+          STATEMENTS_PERCENT=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
+          FUNCTIONS_PERCENT=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
+          BRANCHES_PERCENT=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
+          
+          echo "## 📈 Coverage Summary" >> coverage-report.md
+          echo "" >> coverage-report.md
+          echo "| Metric | Coverage | Status |" >> coverage-report.md
+          echo "|--------|----------|---------|" >> coverage-report.md
+          echo "| Lines | ${LINES_PERCENT}% | $([ ${LINES_PERCENT%.*} -ge 80 ] && echo "✅ Good" || echo "⚠️ Below target") |" >> coverage-report.md
+          echo "| Statements | ${STATEMENTS_PERCENT}% | $([ ${STATEMENTS_PERCENT%.*} -ge 80 ] && echo "✅ Good" || echo "⚠️ Below target") |" >> coverage-report.md
+          echo "| Functions | ${FUNCTIONS_PERCENT}% | $([ ${FUNCTIONS_PERCENT%.*} -ge 80 ] && echo "✅ Good" || echo "⚠️ Below target") |" >> coverage-report.md
+          echo "| Branches | ${BRANCHES_PERCENT}% | $([ ${BRANCHES_PERCENT%.*} -ge 80 ] && echo "✅ Good" || echo "⚠️ Below target") |" >> coverage-report.md
+          echo "" >> coverage-report.md
+          
+          # Overall status
+          OVERALL_PASS=true
+          for pct in $LINES_PERCENT $STATEMENTS_PERCENT $FUNCTIONS_PERCENT $BRANCHES_PERCENT; do
+            if [ ${pct%.*} -lt 80 ]; then
+              OVERALL_PASS=false
+              break
+            fi
+          done
+          
+          if [ "$OVERALL_PASS" = true ]; then
+            echo "✅ **Overall Status**: Coverage targets met" >> coverage-report.md
+          else
+            echo "⚠️ **Overall Status**: Some coverage targets below 80%" >> coverage-report.md
+          fi
+        else
+          echo "❌ **Status**: Coverage data not available" >> coverage-report.md
+          echo "" >> coverage-report.md
+          echo "Coverage analysis could not be completed. Check test execution." >> coverage-report.md
+        fi
+
+    - name: Dependency Analysis
+      run: |
+        echo "📦 Analyzing dependencies..."
+        
+        # Check for unused dependencies
+        npx depcheck --json > depcheck-results.json || true
+        
+        # Create dependency report
+        echo "# 📦 Dependency Analysis" > dependency-report.md
+        echo "" >> dependency-report.md
+        
+        UNUSED_DEPS=$(jq -r '.dependencies | length' depcheck-results.json 2>/dev/null || echo "0")
+        UNUSED_DEV_DEPS=$(jq -r '.devDependencies | length' depcheck-results.json 2>/dev/null || echo "0")
+        MISSING_DEPS=$(jq -r '.missing | length' depcheck-results.json 2>/dev/null || echo "0")
+        
+        echo "## 📊 Dependency Summary" >> dependency-report.md
+        echo "" >> dependency-report.md
+        echo "| Type | Count | Status |" >> dependency-report.md
+        echo "|------|-------|--------|" >> dependency-report.md
+        echo "| Unused Dependencies | $UNUSED_DEPS | $([ $UNUSED_DEPS -eq 0 ] && echo "✅ Clean" || echo "⚠️ Review needed") |" >> dependency-report.md
+        echo "| Unused Dev Dependencies | $UNUSED_DEV_DEPS | $([ $UNUSED_DEV_DEPS -eq 0 ] && echo "✅ Clean" || echo "⚠️ Review needed") |" >> dependency-report.md
+        echo "| Missing Dependencies | $MISSING_DEPS | $([ $MISSING_DEPS -eq 0 ] && echo "✅ All good" || echo "❌ Issues found") |" >> dependency-report.md
+        echo "" >> dependency-report.md
+        
+        if [ $UNUSED_DEPS -gt 0 ]; then
+          echo "## 🗑️ Unused Dependencies" >> dependency-report.md
+          echo "" >> dependency-report.md
+          jq -r '.dependencies[]' depcheck-results.json >> dependency-report.md
+          echo "" >> dependency-report.md
+        fi
+        
+        if [ $MISSING_DEPS -gt 0 ]; then
+          echo "## ❌ Missing Dependencies" >> dependency-report.md
+          echo "" >> dependency-report.md
+          jq -r '.missing | keys[]' depcheck-results.json >> dependency-report.md
+          echo "" >> dependency-report.md
+        fi
+
+    - name: Generate Combined Quality Report
+      if: always()
+      run: |
+        echo "# 🏆 Code Quality Report" > quality-report.md
+        echo "" >> quality-report.md
+        echo "**Generated**: $(date)" >> quality-report.md
+        echo "**Commit**: ${{ github.sha }}" >> quality-report.md
+        echo "" >> quality-report.md
+        
+        # Combine all reports
+        cat typescript-report.md >> quality-report.md
+        echo "" >> quality-report.md
+        cat eslint-report.md >> quality-report.md
+        echo "" >> quality-report.md
+        cat prettier-report.md >> quality-report.md
+        echo "" >> quality-report.md
+        cat coverage-report.md >> quality-report.md
+        echo "" >> quality-report.md
+        cat dependency-report.md >> quality-report.md
+        echo "" >> quality-report.md
+        
+        # Add recommendations
+        echo "## 💡 Recommendations" >> quality-report.md
+        echo "" >> quality-report.md
+        echo "1. **Maintain type safety** - Fix TypeScript errors promptly" >> quality-report.md
+        echo "2. **Code consistency** - Run \`npm run lint:fix\` before committing" >> quality-report.md
+        echo "3. **Test coverage** - Aim for >80% coverage on all metrics" >> quality-report.md
+        echo "4. **Dependency hygiene** - Remove unused dependencies regularly" >> quality-report.md
+        echo "5. **Automation** - Consider pre-commit hooks for quality checks" >> quality-report.md
+
+    - name: Upload Quality Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-quality-reports-${{ github.sha }}
+        path: |
+          *-report.md
+          *-results.json
+          *-results.txt
+          coverage/
+        retention-days: 30
+
+    - name: Comment Quality Report on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          if (fs.existsSync('quality-report.md')) {
+            const report = fs.readFileSync('quality-report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+          }
+
+    - name: Set Quality Gates Status
+      if: always()
+      run: |
+        # Check if critical quality gates pass
+        TYPESCRIPT_PASS=true
+        ESLINT_PASS=true
+        
+        # Check TypeScript
+        if ! npm run type-check; then
+          TYPESCRIPT_PASS=false
+        fi
+        
+        # Check ESLint errors (warnings are allowed)
+        ERROR_COUNT=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+        if [ "$ERROR_COUNT" -gt 0 ]; then
+          ESLINT_PASS=false
+        fi
+        
+        echo "TypeScript: $TYPESCRIPT_PASS"
+        echo "ESLint: $ESLINT_PASS"
+        
+        if [ "$TYPESCRIPT_PASS" = true ] && [ "$ESLINT_PASS" = true ]; then
+          echo "✅ All critical quality gates passed"
+          exit 0
+        else
+          echo "❌ Critical quality gates failed"
+          exit 1
+        fi

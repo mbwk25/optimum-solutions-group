@@ -51,7 +51,11 @@
     "deploy:workflow": "node deploy-workflow.js",
     "badges:generate": "node scripts/generate-status-badges.js",
     "budgets:check": "node scripts/enforce-performance-budgets.js",
-    "prepare:dev": "npm run type-check && echo '✅ Development environment ready!'"
+    "prepare:dev": "npm run type-check && echo '✅ Development environment ready!'",
+    "test:visual": "playwright test --config=playwright.visual.config.js",
+    "test:visual:update": "playwright test --config=playwright.visual.config.js --update-snapshots",
+    "test:visual:report": "playwright show-report playwright-report",
+    "test:visual:ui": "playwright test --config=playwright.visual.config.js --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -135,6 +139,7 @@
     "chrome-launcher": "^1.1.0",
     "commander": "^12.1.0",
     "cypress": "^15.0.0",
+    "depcheck": "^1.4.7",
     "cypress-axe": "^1.6.0",
     "esbuild": "^0.25.9",
     "eslint": "^9.9.0",
@@ -153,6 +158,7 @@
     "mochawesome-merge": "^4.4.1",
     "mochawesome-report-generator": "^6.2.0",
     "ora": "^8.0.1",
+    "@playwright/test": "^1.40.0",
     "postcss": "^8.4.47",
     "start-server-and-test": "^2.0.13",
     "tailwindcss": "^3.4.11",

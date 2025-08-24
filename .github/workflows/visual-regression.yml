@@ -1,0 +1,183 @@
+name: Visual Regression Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Update visual snapshots'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+jobs:
+  # =============================================
+  # Visual Regression Testing
+  # =============================================
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: |
+        npm ci --legacy-peer-deps || npm ci --force
+        npx playwright install chromium firefox webkit
+
+    - name: Build Application
+      run: |
+        npm run build
+
+    - name: Start Test Server
+      run: |
+        npm run preview &
+        npx wait-on http://localhost:4173 -t 30000
+
+    - name: Download Previous Visual Snapshots
+      if: github.event_name == 'pull_request'
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: visual-snapshots
+        path: ./tests/visual/screenshots
+
+    - name: Run Visual Regression Tests
+      run: |
+        # Run visual tests with Playwright
+        npx playwright test --config=playwright.visual.config.js
+      env:
+        UPDATE_SNAPSHOTS: ${{ github.event.inputs.update_snapshots == 'true' }}
+
+    - name: Upload Visual Snapshots
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-snapshots
+        path: |
+          ./tests/visual/screenshots
+          ./test-results
+        retention-days: 30
+
+    - name: Upload Visual Test Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-test-report
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Generate Visual Regression Report
+      if: failure()
+      run: |
+        echo "# 🎨 Visual Regression Test Results" > visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        echo "**Status:** ❌ Visual regressions detected" >> visual-regression-report.md
+        echo "**Generated:** $(date)" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        
+        # Count test results
+        if [ -f "test-results/results.json" ]; then
+          TOTAL_TESTS=$(jq '.suites[].tests | length' test-results/results.json | awk '{sum += $1} END {print sum}')
+          FAILED_TESTS=$(jq '.suites[].tests[] | select(.outcome == "failed") | length' test-results/results.json | wc -l)
+          
+          echo "## 📊 Test Summary" >> visual-regression-report.md
+          echo "" >> visual-regression-report.md
+          echo "| Status | Count |" >> visual-regression-report.md
+          echo "|--------|-------|" >> visual-regression-report.md
+          echo "| Total Tests | $TOTAL_TESTS |" >> visual-regression-report.md
+          echo "| Failed Tests | $FAILED_TESTS |" >> visual-regression-report.md
+          echo "" >> visual-regression-report.md
+        fi
+        
+        echo "## 🔍 What are Visual Regressions?" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        echo "Visual regressions are unintended changes to the user interface that can occur when:" >> visual-regression-report.md
+        echo "- CSS styles are modified" >> visual-regression-report.md
+        echo "- Components are updated" >> visual-regression-report.md
+        echo "- Layout changes are introduced" >> visual-regression-report.md
+        echo "- Dependencies are updated" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        
+        echo "## 📋 Next Steps" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        echo "1. **Review the visual differences** in the test report artifacts" >> visual-regression-report.md
+        echo "2. **If changes are intentional**, update the snapshots by re-running with \`update_snapshots: true\`" >> visual-regression-report.md
+        echo "3. **If changes are unintentional**, fix the underlying issue" >> visual-regression-report.md
+        echo "4. **Check the Playwright report** for detailed comparisons" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        
+        echo "## 🖼️ Visual Test Coverage" >> visual-regression-report.md
+        echo "" >> visual-regression-report.md
+        echo "Our visual tests cover:" >> visual-regression-report.md
+        echo "- 🏠 **Home page** - Hero section, navigation, footer" >> visual-regression-report.md
+        echo "- 📄 **Service pages** - Layout and content presentation" >> visual-regression-report.md
+        echo "- 📱 **Responsive design** - Mobile, tablet, desktop views" >> visual-regression-report.md
+        echo "- 🎨 **Component library** - Buttons, forms, cards, modals" >> visual-regression-report.md
+        echo "- 🌙 **Theme variations** - Light and dark modes" >> visual-regression-report.md
+        
+    - name: Comment Visual Regression Results on PR
+      if: github.event_name == 'pull_request' && failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          if (fs.existsSync('visual-regression-report.md')) {
+            const report = fs.readFileSync('visual-regression-report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+          }
+
+    - name: Create Success Report
+      if: success()
+      run: |
+        echo "# ✅ Visual Regression Test Results" > visual-success-report.md
+        echo "" >> visual-success-report.md
+        echo "**Status:** ✅ All visual tests passed" >> visual-success-report.md
+        echo "**Generated:** $(date)" >> visual-success-report.md
+        echo "" >> visual-success-report.md
+        echo "🎉 No visual regressions detected! All UI components are rendering as expected." >> visual-success-report.md
+
+    - name: Comment Success on PR
+      if: github.event_name == 'pull_request' && success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          if (fs.existsSync('visual-success-report.md')) {
+            const report = fs.readFileSync('visual-success-report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+          }
