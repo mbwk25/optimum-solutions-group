@@ -90,8 +90,8 @@ describe('Form Components E2E Tests', () => {
       cy.get('[data-testid="option-sales"]').should('be.visible')
       cy.get('[data-testid="option-feedback"]').should('be.visible')
       
-      // Click outside to close
-      cy.get('body').click(0, 0)
+      // Use Escape key instead of clicking outside for Radix UI Select
+      cy.get('body').type('{esc}')
       cy.get('[data-testid="option-general"]').should('not.exist')
     })
 
@@ -180,12 +180,20 @@ describe('Form Components E2E Tests', () => {
     })
 
     it('should support keyboard interaction', () => {
+      // Focus and check initial state
       cy.get('[data-testid="checkbox-subscribe"]')
         .focus()
-        .type(' ')
+        .should('have.attr', 'aria-checked', 'false')
+      
+      // First space press to check
+      cy.focused().type(' ')
+      cy.get('[data-testid="checkbox-subscribe"]')
         .should('have.attr', 'aria-checked', 'true')
         .should('have.attr', 'data-state', 'checked')
-        .type(' ')
+      
+      // Second space press to uncheck
+      cy.focused().type(' ')
+      cy.get('[data-testid="checkbox-subscribe"]')
         .should('have.attr', 'aria-checked', 'false')
         .should('have.attr', 'data-state', 'unchecked')
     })
@@ -248,6 +256,8 @@ describe('Form Components E2E Tests', () => {
 
   describe('Form Accessibility', () => {
     it('should have no accessibility violations', () => {
+      // Ensure axe is loaded before running tests
+      cy.injectAxe()
       cy.get('[data-testid="form-card"]').within(() => {
         cy.testA11y()
       })
@@ -268,21 +278,22 @@ describe('Form Components E2E Tests', () => {
     })
 
     it('should support keyboard navigation through form', () => {
-      // Tab through all form elements
+      // Tab through all form elements using custom tab command
       cy.get('[data-testid="input-name"]').focus()
-      cy.focused().type('{tab}')
+      
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'input-email')
       
-      cy.focused().type('{tab}')
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'select-category')
       
-      cy.focused().type('{tab}')
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'textarea-message')
       
-      cy.focused().type('{tab}')
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'checkbox-subscribe')
       
-      cy.focused().type('{tab}')
+      cy.focused().tab()
       cy.focused().should('have.attr', 'data-testid', 'btn-submit')
     })
 
