@@ -46,7 +46,7 @@ interface SEODashboardProps {
   showAdvanced?: boolean;
   compact?: boolean;
   onScoreChange?: (score: number) => void;
-  onIssuesDetected?: (issues: any[]) => void;
+  onIssuesDetected?: (issues: Array<{ category: string; type: string; message: string; recommendation: string; impact: string }>) => void;
 }
 
 interface MetricCardProps {
@@ -200,10 +200,10 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
   }, [score, onScoreChange]);
 
   useEffect(() => {
-    if (onIssuesDetected && analysis) {
+    if (onIssuesDetected && analysis && analysis.issues) {
       onIssuesDetected(analysis.issues);
     }
-  }, [analysis?.issues, onIssuesDetected]);
+  }, [onIssuesDetected, analysis]);
 
   // ====================================================
   // Computed Values

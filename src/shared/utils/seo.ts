@@ -65,6 +65,12 @@ export interface SEOConfig {
   organization: Organization;
 }
 
+export interface StructuredDataItem {
+  '@context'?: string;
+  '@type'?: string;
+  [key: string]: unknown;
+}
+
 // ====================================================
 // SEO Configuration
 // ====================================================
@@ -198,11 +204,11 @@ export const validateStructuredData = (document: Document): {
   valid: boolean;
   schemas: string[];
   errors: string[];
-  data: any[];
+  data: StructuredDataItem[];
 } => {
   const schemas: string[] = [];
   const errors: string[] = [];
-  const data: any[] = [];
+  const data: StructuredDataItem[] = [];
   let valid = true;
 
   // Find all JSON-LD scripts

@@ -671,33 +671,7 @@ export const WithSchema: React.FC<WithSchemaProps> = ({
   );
 };
 
-// ====================================================
-// Custom Hook for Dynamic Schema Management
-// ====================================================
-
-export const useStructuredData = () => {
-  const addSchema = (data: WithContext<Thing>, id?: string) => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    if (id) script.id = id;
-    script.textContent = JSON.stringify(data, null, 2);
-    document.head.appendChild(script);
-    
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  };
-
-  const removeSchema = (id: string) => {
-    const script = document.getElementById(id);
-    if (script && document.head.contains(script)) {
-      document.head.removeChild(script);
-    }
-  };
-
-  return { addSchema, removeSchema };
-};
+// Note: The useStructuredData hook has been moved to src/shared/hooks/useStructuredData.ts
+// to fix React Fast Refresh warnings.
 
 export default BaseStructuredData;

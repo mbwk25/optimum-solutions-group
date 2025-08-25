@@ -1,52 +1,16 @@
+/**
+ * Core Web Vitals Custom Hook
+ * Separated from components to fix React Fast Refresh warnings
+ */
+
 import { useEffect, useCallback, useState } from 'react';
 import { getCLS, getFID, getFCP, getLCP, getTTFB, onINP, Metric } from 'web-vitals';
-
-// Core Web Vitals thresholds (Google recommended values)
-const CWV_THRESHOLDS = {
-  LCP: { good: 2500, needsImprovement: 4000 }, // Largest Contentful Paint
-  FID: { good: 100, needsImprovement: 300 },   // First Input Delay
-  CLS: { good: 0.1, needsImprovement: 0.25 },  // Cumulative Layout Shift
-  FCP: { good: 1800, needsImprovement: 3000 }, // First Contentful Paint
-  TTFB: { good: 800, needsImprovement: 1800 }, // Time to First Byte
-  INP: { good: 200, needsImprovement: 500 },   // Interaction to Next Paint
-};
-
-export interface WebVitalsMetric {
-  name: string;
-  value: number;
-  delta: number;
-  id: string;
-  rating: 'good' | 'needs-improvement' | 'poor';
-  navigationType: 'navigate' | 'reload' | 'back_forward' | 'prerender';
-  timestamp: number;
-  entries?: PerformanceEntry[];
-}
-
-export interface CoreWebVitalsData {
-  lcp: WebVitalsMetric | null;
-  fid: WebVitalsMetric | null;
-  cls: WebVitalsMetric | null;
-  fcp: WebVitalsMetric | null;
-  ttfb: WebVitalsMetric | null;
-  inp: WebVitalsMetric | null;
-  timestamp: number;
-  url: string;
-  userAgent: string;
-  connectionType?: string;
-  deviceMemory?: number;
-  isLowEndDevice: boolean;
-  pageLoadTime: number;
-}
-
-export interface CoreWebVitalsOptions {
-  reportAllChanges?: boolean;
-  enableAnalytics?: boolean;
-  enableConsoleLogging?: boolean;
-  threshold?: 'good' | 'needs-improvement' | 'poor';
-  onMetric?: (metric: WebVitalsMetric) => void;
-  onReport?: (data: CoreWebVitalsData) => void;
-  analyticsEndpoint?: string;
-}
+import { 
+  CWV_THRESHOLDS, 
+  WebVitalsMetric, 
+  CoreWebVitalsData, 
+  CoreWebVitalsOptions 
+} from '../types/coreWebVitals';
 
 /**
  * Custom hook for monitoring Core Web Vitals performance metrics
@@ -74,9 +38,9 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
   const detectDeviceCapabilities = useCallback(() => {
     if (typeof navigator === 'undefined') return { isLowEndDevice: false };
     
-    // @ts-ignore - DeviceMemory is experimental but widely supported
+    // @ts-expect-error - DeviceMemory is experimental but widely supported
     const deviceMemory = navigator.deviceMemory || 4;
-    // @ts-ignore - Connection API
+    // @ts-expect-error - Connection API
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     
     const isLowEndDevice = deviceMemory <= 1 || 
@@ -306,76 +270,3 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     },
   };
 }
-
-/**
- * Higher-order component for automatic Core Web Vitals monitoring
- */
-export function withCoreWebVitals<T extends object>(
-  WrappedComponent: React.ComponentType<T>,
-  options: CoreWebVitalsOptions = {}
-) {
-  const WithCoreWebVitalsComponent = (props: T) => {
-    const webVitals = useCoreWebVitals(options);
-    
-    return <WrappedComponent {...props} webVitals={webVitals} />;
-  };
-
-  WithCoreWebVitalsComponent.displayName = 
-    `withCoreWebVitals(${WrappedComponent.displayName || WrappedComponent.name})`;
-
-  return WithCoreWebVitalsComponent;
-}
-
-/**
- * Core Web Vitals Provider for app-wide monitoring
- */
-export interface CoreWebVitalsContextType {
-  metrics: CoreWebVitalsData;
-  performanceScore: number;
-  summary: ReturnType<typeof useCoreWebVitals>['summary'];
-  collectMetrics: () => void;
-  isSupported: boolean;
-}
-
-export const CoreWebVitalsContext = React.createContext<CoreWebVitalsContextType | null>(null);
-
-export function CoreWebVitalsProvider({
-  children,
-  options = {},
-}: {
-  children: React.ReactNode;
-  options?: CoreWebVitalsOptions;
-}) {
-  const webVitals = useCoreWebVitals(options);
-  
-  const contextValue: CoreWebVitalsContextType = {
-    metrics: webVitals.metrics,
-    performanceScore: webVitals.performanceScore,
-    summary: webVitals.summary,
-    collectMetrics: webVitals.collectMetrics,
-    isSupported: webVitals.isSupported,
-  };
-
-  return (
-    <CoreWebVitalsContext.Provider value={contextValue}>
-      {children}
-    </CoreWebVitalsContext.Provider>
-  );
-}
-
-/**
- * Hook to use Core Web Vitals context
- */
-export function useCoreWebVitalsContext() {
-  const context = useContext(CoreWebVitalsContext);
-  if (!context) {
-    throw new Error('useCoreWebVitalsContext must be used within a CoreWebVitalsProvider');
-  }
-  return context;
-}
-
-// Export thresholds for external use
-export { CWV_THRESHOLDS };
-
-// React import
-import React, { useContext } from 'react';

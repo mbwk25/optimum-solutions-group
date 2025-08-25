@@ -40,7 +40,7 @@ export interface SEOMetadata {
   twitterCreator?: string;
   canonicalUrl?: string;
   robots?: string;
-  structuredData?: any;
+  structuredData?: Record<string, unknown>;
 }
 
 export interface SEOHookOptions {
@@ -180,7 +180,7 @@ export const useSEO = (
     if (enableAnalysis) {
       setTimeout(() => runAnalysis(), 100); // Slight delay for DOM updates
     }
-  }, [currentMetadata, seoConfig, location.pathname, enableAnalysis]);
+  }, [currentMetadata, seoConfig, location.pathname, enableAnalysis, runAnalysis]);
 
   const resetSEO = useCallback(() => {
     setCurrentMetadata(initialMetadata);
@@ -297,7 +297,7 @@ export const useSEO = (
     if (enableAnalysis) {
       setTimeout(() => runAnalysis(), 500); // Delay for route transition
     }
-  }, [location.pathname]);
+  }, [location.pathname, currentMetadata, enableAnalysis, runAnalysis, seoConfig]);
 
   // ====================================================
   // Computed Values

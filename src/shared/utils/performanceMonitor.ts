@@ -307,20 +307,20 @@ class PerformanceMonitor {
 
     // Memory API
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }).memory;
       this.metrics.jsHeapSize = memory.usedJSHeapSize;
       this.metrics.memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
     }
 
     // Device Memory API
     if ('deviceMemory' in navigator) {
-      this.metrics.deviceMemory = (navigator as any).deviceMemory || 4;
+      this.metrics.deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory || 4;
       this.metrics.isLowEndDevice = this.metrics.deviceMemory <= 1;
     }
 
     // Network Information API
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string; downlink?: number; rtt?: number } }).connection;
       this.metrics.connectionType = connection?.type || 'unknown';
       this.metrics.effectiveType = connection?.effectiveType || 'unknown';
       this.metrics.downlink = connection?.downlink || 0;
@@ -392,7 +392,7 @@ class PerformanceMonitor {
       delta: metric.delta,
       id: metric.id,
       rating,
-      navigationType: (metric.navigationType as any) || 'navigate',
+      navigationType: (metric.navigationType as 'navigate' | 'reload' | 'back_forward' | 'prerender') || 'navigate',
       timestamp: Date.now(),
       entries: metric.entries,
     };
