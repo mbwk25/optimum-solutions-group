@@ -9,6 +9,10 @@ import { usePageLoad } from '@/shared/components/LoadingScreen';
 import SEOHead from '@/shared/components/optimized/SEOHead';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
+// Import analytics hook
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
+// Import PWA install prompt
+import PWAInstallPrompt from '@/shared/components/PWAInstallPrompt';
 
 // Import enhanced lazy loading utilities for below-fold content
 import { lazyWithMetrics } from '@/shared/utils/dynamicImports';
@@ -73,6 +77,23 @@ const SectionFallback = () => (
 const Index = () => {
   const isLoading = usePageLoad();
 
+  // Track page analytics with comprehensive configuration
+  useAnalytics({
+    pageTitle: 'Home - Optimum Solutions Group',
+    pageCategory: 'landing',
+    trackPageViews: true,
+    trackPerformance: true,
+    trackScrollDepth: true,
+    trackClicks: true,
+    trackErrors: true,
+    enableWebVitals: true,
+    customProperties: {
+      pagePath: '/',
+      pageSection: 'home',
+      businessType: 'digital_transformation',
+    },
+  });
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -90,6 +111,15 @@ const Index = () => {
       <div className="min-h-screen">
         <Navigation />
         <HeroSection />
+        
+        {/* PWA Install Prompt - Banner after hero */}
+        <PWAInstallPrompt 
+          variant="banner"
+          autoShow={true}
+          showDelay={5000}
+          hideAfterInstall={true}
+          className="sticky top-0 z-40"
+        />
         
         {/* Main content area with proper landmark structure */}
         <main id="main" role="main">

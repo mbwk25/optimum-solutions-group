@@ -12,8 +12,11 @@ import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { AccessibilityProvider } from "@/shared/components/AccessibilityProvider";
 import errorHandler from "@/shared/utils/errorHandler";
 import { serviceWorkerManager } from "@/shared/utils/serviceWorkerManager";
+import PWAInstallPrompt from "@/shared/components/PWAInstallPrompt";
 // Import accessibility styles
 import "@/shared/styles/accessibility.css";
+// Import analytics service for auto-initialization
+import "@/shared/services/analytics";
 
 // Remove Vercel analytics if not needed, or install the package
 // import { Analytics } from '@vercel/analytics/react';
@@ -67,6 +70,18 @@ const NotFound = lazyWithRetry(
   1000 // 1s delay
 );
 
+const AnalyticsPage = lazyWithRetry(
+  () => import("./pages/AnalyticsPage"),
+  2, // 2 retries
+  1000 // 1s delay
+);
+
+const PWAPage = lazyWithRetry(
+  () => import("./pages/PWAPage"),
+  2, // 2 retries
+  1000 // 1s delay
+);
+
 // Preload critical routes on app initialization
 if (typeof window !== 'undefined') {
   // Preload Index immediately
@@ -116,15 +131,30 @@ const App: React.FC = () => {
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <Suspense fallback={<LoadingFallback />}>
-              <BrowserRouter>
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
                 <PerformanceOptimizer />
                 <CriticalCSS />
                 <ResourcePrefetcher />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/component-showcase" element={<ComponentShowcase />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/pwa" element={<PWAPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                
+                {/* PWA Install Prompt - Floating */}
+                <PWAInstallPrompt 
+                  variant="floating"
+                  autoShow={false}
+                  hideAfterInstall={true}
+                />
+                
                 <Toaster />
                 <Sonner />
               </BrowserRouter>
