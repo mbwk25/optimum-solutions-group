@@ -32,7 +32,7 @@ describe('Accessibility E2E Tests', () => {
   describe('Keyboard Navigation', () => {
     it('should support full keyboard navigation', () => {
       // Start navigation from body
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       
       // Verify focus is visible and navigation works
       for (let i = 0; i < 15; i++) {
@@ -46,7 +46,7 @@ describe('Accessibility E2E Tests', () => {
             cy.log(`Focused element: ${tagName} ${testId ? `(${testId})` : ''}`)
           })
         
-        cy.focused().tab()
+        cy.focused().type('{tab}')
       }
     })
 
@@ -60,7 +60,7 @@ describe('Accessibility E2E Tests', () => {
           .should('exist')
           .should('be.visible')
         
-        cy.focused().tab({ shift: true })
+        cy.focused().type('{shift+tab}')
       }
     })
 
@@ -70,12 +70,12 @@ describe('Accessibility E2E Tests', () => {
       cy.focused().type('Keyboard User')
       
       // Use tab navigation properly
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'input-email')
       cy.focused().type('keyboard@test.com')
       
       // Navigate to select
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'select-category')
       cy.focused().type('{enter}')
       
@@ -83,17 +83,17 @@ describe('Accessibility E2E Tests', () => {
       cy.focused().type('{downarrow}{downarrow}{enter}')
       
       // Continue to textarea
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'textarea-message')
       cy.focused().type('Testing keyboard navigation in forms')
       
       // Navigate to checkbox and activate with space
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'checkbox-subscribe')
       cy.focused().type(' ') // Space to toggle checkbox
       
       // Navigate to submit button
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'btn-submit')
       cy.focused().type('{enter}')
       
@@ -235,7 +235,7 @@ describe('Accessibility E2E Tests', () => {
       // Tab through expected order
       expectedFocusOrder.forEach((selector, index) => {
         if (index > 0) {
-          cy.focused().tab()
+          cy.focused().type('{tab}')
         }
         cy.focused().should('have.attr', 'data-testid', selector.replace(/\[data-testid="([^"]+)"\]/, '$1'))
       })
@@ -249,7 +249,7 @@ describe('Accessibility E2E Tests', () => {
       cy.get('[data-testid="option-general"]').should('be.visible')
       
       // Tab should cycle within dropdown options
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('be.visible')
       
       // Escape should close and return focus
@@ -297,7 +297,7 @@ describe('Accessibility E2E Tests', () => {
       })
       
       // User should still be able to navigate
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       cy.focused().should('exist').and('be.visible')
     })
   })
@@ -362,7 +362,7 @@ describe('Accessibility E2E Tests', () => {
         
         // Test keyboard navigation still works
         cy.get('[data-testid="input-name"]').focus()
-        cy.focused().tab()
+        cy.focused().type('{tab}')
         cy.focused().should('exist').and('be.visible')
         
         // Test touch targets are adequately sized on mobile
