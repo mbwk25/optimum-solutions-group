@@ -1,9 +1,12 @@
-const { spawn, exec } = require('child_process');
-const { promisify } = require('util');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import { spawn, exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const execAsync = promisify(exec);
 
 /**
@@ -319,18 +322,18 @@ class ServerManager {
 }
 
 // CLI usage
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const manager = new ServerManager();
   
   // Handle process termination
   process.on('SIGINT', async () => {
-    console.log('\n🛑 Received SIGINT, stopping servers...');
+    console.log('\n🚫 Received SIGINT, stopping servers...');
     await manager.stopAllServers();
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
-    console.log('\n🛑 Received SIGTERM, stopping servers...');
+    console.log('\n🚫 Received SIGTERM, stopping servers...');
     await manager.stopAllServers();
     process.exit(0);
   });
@@ -360,4 +363,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = ServerManager;
+export default ServerManager;

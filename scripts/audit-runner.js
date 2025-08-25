@@ -1,9 +1,13 @@
-const { validateEnvironment } = require('./chrome-config');
-const ServerManager = require('./server-manager');
-const lighthouse = require('lighthouse');
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
+import { validateEnvironment } from './chrome-config.js';
+import ServerManager from './server-manager.js';
+import lighthouse from 'lighthouse';
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Comprehensive Audit Runner with Retry Logic and Robust Error Handling
@@ -320,7 +324,7 @@ class AuditRunner {
 }
 
 // CLI usage
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const auditType = process.argv[2] || 'performance';
   const url = process.argv[3];
   const outputPath = process.argv[4] || 'audit-results.json';
@@ -329,13 +333,13 @@ if (require.main === module) {
   
   // Handle process termination
   process.on('SIGINT', async () => {
-    console.log('\n🛑 Received SIGINT, cleaning up...');
+    console.log('\n🚫 Received SIGINT, cleaning up...');
     await runner.cleanup();
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
-    console.log('\n🛑 Received SIGTERM, cleaning up...');
+    console.log('\n🚫 Received SIGTERM, cleaning up...');
     await runner.cleanup();
     process.exit(0);
   });
@@ -380,4 +384,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = AuditRunner;
+export default AuditRunner;
