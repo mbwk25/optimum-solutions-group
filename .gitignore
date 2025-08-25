@@ -47,3 +47,14 @@ reports/
 # Dashboard build output
 dashboard/data.json
 dashboard/data.min.json
+
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+junit.xml
+*.png
+*.jpg
+*.jpeg
+# Exception: keep baseline screenshots
+!tests/visual/**/*.png
