@@ -476,7 +476,7 @@ jobs:
 
     - name: Generate SEO Report
       run: |
-        cat > generate-report.js << 'EOF'
+        cat > generate-report.cjs << 'EOF'
         const fs = require('fs');
         
         const audit = JSON.parse(fs.readFileSync('seo-audit-results.json', 'utf-8'));
@@ -620,7 +620,7 @@ jobs:
         console.log('📝 SEO Report generated successfully!');
         EOF
         
-        node generate-report.js
+        node generate-report.cjs
 
     - name: Upload SEO Audit Results
       uses: actions/upload-artifact@v4
@@ -735,9 +735,20 @@ jobs:
 
     - name: Process Lighthouse Results
       run: |
-        cat > process-lighthouse.js << 'EOF'
+        cat > process-lighthouse.cjs << 'EOF'
         const fs = require('fs');
-        const lighthouse = JSON.parse(fs.readFileSync('lighthouse-results.report.json', 'utf-8'));
+        // Try different possible file paths for Lighthouse results
+        let lighthouseFilePath;
+        if (fs.existsSync('lighthouse-results.json')) {
+          lighthouseFilePath = 'lighthouse-results.json';
+        } else if (fs.existsSync('lighthouse-results.report.json')) {
+          lighthouseFilePath = 'lighthouse-results.report.json';
+        } else {
+          console.error('❌ No Lighthouse results file found');
+          process.exit(1);
+        }
+        
+        const lighthouse = JSON.parse(fs.readFileSync(lighthouseFilePath, 'utf-8'));
         
         const seoScore = lighthouse.categories.seo.score * 100;
         const accessibilityScore = lighthouse.categories.accessibility.score * 100;
@@ -770,15 +781,15 @@ jobs:
         console.log(`✨ Best Practices Score: ${bestPracticesScore}/100`);
         EOF
         
-        node process-lighthouse.js
+        node process-lighthouse.cjs
 
     - name: Upload Lighthouse Results
       uses: actions/upload-artifact@v4
       with:
         name: lighthouse-audit-results
         path: |
-          lighthouse-results.report.json
-          lighthouse-results.report.html
+          lighthouse-results.json
+          lighthouse-results.html
           lighthouse-summary.json
         retention-days: 30
 
@@ -797,17 +808,21 @@ jobs:
       with:
         name: seo-audit-results
         path: ./technical-results
+        run-id: ${{ github.run_id }}
 
     - name: Download Lighthouse Results
       uses: actions/download-artifact@v4
       if: needs.seo-setup.outputs.include-lighthouse == 'true'
+      continue-on-error: true
       with:
         name: lighthouse-audit-results
         path: ./lighthouse-results
+        run-id: ${{ github.run_id }}
 
     - name: Generate Combined Report
+      id: generate-combined-report
       run: |
-        cat > generate-combined-report.js << 'EOF'
+        cat > generate-combined-report.cjs << 'EOF'
         const fs = require('fs');
         
         // Load technical audit results
@@ -988,7 +1003,7 @@ jobs:
         console.log('📋 Combined SEO report generated successfully!');
         EOF
         
-        node generate-combined-report.js
+        node generate-combined-report.cjs
 
     - name: Upload Combined Report
       uses: actions/upload-artifact@v4
@@ -1048,7 +1063,7 @@ jobs:
 
     - name: Update SEO Metrics
       run: |
-        cat > update-metrics.js << 'EOF'
+        cat > update-metrics.cjs << 'EOF'
         // This would integrate with your analytics/monitoring system
         // For now, we'll just log the metrics
         
@@ -1076,7 +1091,7 @@ jobs:
         
         EOF
         
-        node update-metrics.js
+        node update-metrics.cjs
         env:
           OVERALL_SCORE: ${{ needs.seo-report.outputs.overall-score }}
           TECHNICAL_SCORE: ${{ needs.seo-report.outputs.technical-score }}

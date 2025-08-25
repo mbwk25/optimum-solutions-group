@@ -135,7 +135,7 @@ async function validatePageRendering(url, timeout = 30000) {
     }
 
     // Wait for potential dynamic content
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Check for basic content rendering
     const checks = await page.evaluate(() => {
