@@ -1,17 +1,24 @@
 /**
  * Real-time Performance Monitoring System
  * Tracks Web Vitals, user interactions, and performance metrics
+ * Enhanced with Core Web Vitals integration
  */
 
-import { getCLS, getFCP, getFID, getLCP, getTTFB, Metric } from 'web-vitals';
+import { getCLS, getFCP, getFID, getLCP, getTTFB, onINP, Metric } from 'web-vitals';
+import { useCoreWebVitals, CoreWebVitalsData, WebVitalsMetric } from '../hooks/useCoreWebVitals';
 
 export interface PerformanceMetrics {
-  // Core Web Vitals
-  cls: number | null; // Cumulative Layout Shift
-  fcp: number | null; // First Contentful Paint
-  fid: number | null; // First Input Delay
-  lcp: number | null; // Largest Contentful Paint
-  ttfb: number | null; // Time to First Byte
+  // Core Web Vitals (Enhanced)
+  cls: WebVitalsMetric | null; // Cumulative Layout Shift
+  fcp: WebVitalsMetric | null; // First Contentful Paint
+  fid: WebVitalsMetric | null; // First Input Delay
+  lcp: WebVitalsMetric | null; // Largest Contentful Paint
+  ttfb: WebVitalsMetric | null; // Time to First Byte
+  inp: WebVitalsMetric | null; // Interaction to Next Paint
+  
+  // Performance Score (0-100)
+  performanceScore: number;
+  coreWebVitalsScore: number;
   
   // Custom Metrics
   domContentLoaded: number | null;
@@ -25,11 +32,14 @@ export interface PerformanceMetrics {
   // Memory Information
   memoryUsage: number | null;
   jsHeapSize: number | null;
+  deviceMemory: number | null;
+  isLowEndDevice: boolean;
   
   // Connection Information
   connectionType: string | null;
   downlink: number | null;
   rtt: number | null;
+  effectiveType: string | null;
 }
 
 export interface UserInteractionMetrics {
@@ -56,6 +66,9 @@ class PerformanceMonitor {
     fid: null,
     lcp: null,
     ttfb: null,
+    inp: null,
+    performanceScore: 0,
+    coreWebVitalsScore: 0,
     domContentLoaded: null,
     windowLoad: null,
     firstByte: null,
@@ -63,9 +76,12 @@ class PerformanceMonitor {
     loadComplete: null,
     memoryUsage: null,
     jsHeapSize: null,
+    deviceMemory: null,
+    isLowEndDevice: false,
     connectionType: null,
     downlink: null,
     rtt: null,
+    effectiveType: null,
   };
 
   private userMetrics: UserInteractionMetrics = {
@@ -87,8 +103,11 @@ class PerformanceMonitor {
     fcp: { good: 1800, poor: 3000 },
     fid: { good: 100, poor: 300 },
     lcp: { good: 2500, poor: 4000 },
-    ttfb: { good: 600, poor: 1500 },
+    ttfb: { good: 800, poor: 1800 },
+    inp: { good: 200, poor: 500 },
   };
+
+  private coreWebVitalsMonitor: ReturnType<typeof useCoreWebVitals> | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -174,11 +193,14 @@ class PerformanceMonitor {
     
     // Core Web Vitals
     console.group('🎯 Core Web Vitals');
-    this.logMetric('CLS (Cumulative Layout Shift)', this.metrics.cls, this.thresholds.cls);
-    this.logMetric('FCP (First Contentful Paint)', this.metrics.fcp, this.thresholds.fcp, 'ms');
-    this.logMetric('FID (First Input Delay)', this.metrics.fid, this.thresholds.fid, 'ms');
-    this.logMetric('LCP (Largest Contentful Paint)', this.metrics.lcp, this.thresholds.lcp, 'ms');
-    this.logMetric('TTFB (Time to First Byte)', this.metrics.ttfb, this.thresholds.ttfb, 'ms');
+    this.logEnhancedMetric('CLS (Cumulative Layout Shift)', this.metrics.cls);
+    this.logEnhancedMetric('FCP (First Contentful Paint)', this.metrics.fcp, 'ms');
+    this.logEnhancedMetric('FID (First Input Delay)', this.metrics.fid, 'ms');
+    this.logEnhancedMetric('LCP (Largest Contentful Paint)', this.metrics.lcp, 'ms');
+    this.logEnhancedMetric('TTFB (Time to First Byte)', this.metrics.ttfb, 'ms');
+    this.logEnhancedMetric('INP (Interaction to Next Paint)', this.metrics.inp, 'ms');
+    console.log(`📊 Performance Score: ${this.metrics.performanceScore}/100`);
+    console.log(`🎯 Core Web Vitals Score: ${this.metrics.coreWebVitalsScore}/100`);
     console.groupEnd();
 
     // Custom Metrics
@@ -258,12 +280,19 @@ class PerformanceMonitor {
   }
 
   private initializeWebVitals(): void {
-    // Core Web Vitals tracking
-    getCLS(this.handleMetric.bind(this, 'cls'));
-    getFCP(this.handleMetric.bind(this, 'fcp'));
-    getFID(this.handleMetric.bind(this, 'fid'));
-    getLCP(this.handleMetric.bind(this, 'lcp'));
-    getTTFB(this.handleMetric.bind(this, 'ttfb'));
+    // Enhanced Core Web Vitals tracking with detailed metrics
+    getCLS(this.handleWebVitalMetric.bind(this, 'cls'));
+    getFCP(this.handleWebVitalMetric.bind(this, 'fcp'));
+    getFID(this.handleWebVitalMetric.bind(this, 'fid'));
+    getLCP(this.handleWebVitalMetric.bind(this, 'lcp'));
+    getTTFB(this.handleWebVitalMetric.bind(this, 'ttfb'));
+    
+    // Include INP if supported
+    try {
+      onINP(this.handleWebVitalMetric.bind(this, 'inp'));
+    } catch (error) {
+      console.warn('[Performance Monitor] INP metric not supported:', error);
+    }
   }
 
   private initializeCustomMetrics(): void {
@@ -278,17 +307,29 @@ class PerformanceMonitor {
 
     // Memory API
     if ('memory' in performance) {
-      const memory = (performance as Record<string, unknown>).memory;
+      const memory = (performance as any).memory;
       this.metrics.jsHeapSize = memory.usedJSHeapSize;
       this.metrics.memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
     }
 
+    // Device Memory API
+    if ('deviceMemory' in navigator) {
+      this.metrics.deviceMemory = (navigator as any).deviceMemory || 4;
+      this.metrics.isLowEndDevice = this.metrics.deviceMemory <= 1;
+    }
+
     // Network Information API
     if ('connection' in navigator) {
-      const connection = (navigator as Record<string, unknown>).connection;
-      this.metrics.connectionType = connection.effectiveType;
-      this.metrics.downlink = connection.downlink;
-      this.metrics.rtt = connection.rtt;
+      const connection = (navigator as any).connection;
+      this.metrics.connectionType = connection?.type || 'unknown';
+      this.metrics.effectiveType = connection?.effectiveType || 'unknown';
+      this.metrics.downlink = connection?.downlink || 0;
+      this.metrics.rtt = connection?.rtt || 0;
+      
+      // Update low-end device detection based on connection
+      if (connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g') {
+        this.metrics.isLowEndDevice = true;
+      }
     }
   }
 
@@ -332,8 +373,34 @@ class PerformanceMonitor {
     });
   }
 
-  private handleMetric(metricName: keyof PerformanceMetrics, metric: Metric): void {
-    this.metrics[metricName] = metric.value as number;
+  private handleWebVitalMetric(metricName: keyof PerformanceMetrics, metric: Metric): void {
+    // Convert to enhanced WebVitalsMetric format
+    const thresholds = this.thresholds[metricName as keyof typeof this.thresholds];
+    let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
+    
+    if (thresholds) {
+      if (metric.value > thresholds.poor) {
+        rating = 'poor';
+      } else if (metric.value > thresholds.good) {
+        rating = 'needs-improvement';
+      }
+    }
+
+    const enhancedMetric: WebVitalsMetric = {
+      name: metric.name,
+      value: metric.value,
+      delta: metric.delta,
+      id: metric.id,
+      rating,
+      navigationType: (metric.navigationType as any) || 'navigate',
+      timestamp: Date.now(),
+      entries: metric.entries,
+    };
+
+    this.metrics[metricName] = enhancedMetric;
+    
+    // Update performance scores
+    this.updatePerformanceScores();
     
     // Check for performance issues
     this.checkThresholds(metricName, metric.value);
@@ -343,7 +410,7 @@ class PerformanceMonitor {
     
     // Log in development
     if (import.meta.env.MODE === 'development') {
-      console.log(`[Performance Monitor] ${metricName.toUpperCase()}: ${metric.value}`);
+      console.log(`[Performance Monitor] ${metricName.toUpperCase()}: ${metric.value} (${rating})`);
     }
   }
 
@@ -376,6 +443,79 @@ class PerformanceMonitor {
     if (this.alerts.length > 50) {
       this.alerts = this.alerts.slice(-25);
     }
+  }
+
+  private updatePerformanceScores(): void {
+    const scores: number[] = [];
+    const coreVitalScores: number[] = [];
+    
+    // Calculate scores for each metric
+    ['cls', 'fcp', 'fid', 'lcp', 'ttfb', 'inp'].forEach(metricName => {
+      const metric = this.metrics[metricName as keyof PerformanceMetrics] as WebVitalsMetric | null;
+      if (metric && 'rating' in metric) {
+        let score = 0;
+        switch (metric.rating) {
+          case 'good': score = 100; break;
+          case 'needs-improvement': score = 50; break;
+          case 'poor': score = 0; break;
+        }
+        scores.push(score);
+        
+        // Core Web Vitals are LCP, FID, CLS
+        if (['lcp', 'fid', 'cls'].includes(metricName)) {
+          coreVitalScores.push(score);
+        }
+      }
+    });
+    
+    // Calculate overall performance score
+    this.metrics.performanceScore = scores.length > 0 ? 
+      Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    
+    // Calculate Core Web Vitals score (Google's main metrics)
+    this.metrics.coreWebVitalsScore = coreVitalScores.length > 0 ? 
+      Math.round(coreVitalScores.reduce((a, b) => a + b, 0) / coreVitalScores.length) : 0;
+  }
+
+  /**
+   * Get Core Web Vitals data in the format expected by the dashboard
+   */
+  getCoreWebVitalsData(): CoreWebVitalsData {
+    return {
+      lcp: this.metrics.lcp,
+      fid: this.metrics.fid,
+      cls: this.metrics.cls,
+      fcp: this.metrics.fcp,
+      ttfb: this.metrics.ttfb,
+      inp: this.metrics.inp,
+      timestamp: Date.now(),
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      connectionType: this.metrics.effectiveType || undefined,
+      deviceMemory: this.metrics.deviceMemory || undefined,
+      isLowEndDevice: this.metrics.isLowEndDevice,
+      pageLoadTime: this.metrics.domContentLoaded || 0,
+    };
+  }
+
+  /**
+   * Get simplified metric values for backward compatibility
+   */
+  getMetricValues(): Record<string, number | null> {
+    const values: Record<string, number | null> = {};
+    
+    Object.keys(this.metrics).forEach(key => {
+      const metric = this.metrics[key as keyof PerformanceMetrics];
+      if (metric && typeof metric === 'object' && 'value' in metric) {
+        values[key] = metric.value;
+      } else if (typeof metric === 'number') {
+        values[key] = metric;
+      } else {
+        values[key] = null;
+      }
+    });
+    
+    return values;
   }
 
   private updateEngagementScore(): void {
@@ -416,6 +556,21 @@ class PerformanceMonitor {
     }
 
     console.log(`${status} ${name}: ${value}${unit}`);
+  }
+
+  private logEnhancedMetric(name: string, metric: WebVitalsMetric | null, unit: string = ''): void {
+    if (!metric) {
+      console.log(`⚪ ${name}: Not measured yet`);
+      return;
+    }
+
+    const statusEmoji = {
+      'good': '🟢',
+      'needs-improvement': '🟡', 
+      'poor': '🔴'
+    }[metric.rating] || '⚪';
+
+    console.log(`${statusEmoji} ${name}: ${metric.value}${unit} (${metric.rating.replace('-', ' ')})`);
   }
 
   private formatBytes(bytes: number | null): string {

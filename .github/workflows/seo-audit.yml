@@ -1,0 +1,962 @@
+name: Advanced SEO Audit & Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run SEO audit daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'URL to audit (overrides default)'
+        required: false
+        type: string
+      include_lighthouse:
+        description: 'Include Lighthouse SEO audit'
+        required: false
+        default: true
+        type: boolean
+      audit_depth:
+        description: 'Audit depth (basic, standard, comprehensive)'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - basic
+          - standard  
+          - comprehensive
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # =============================================
+  # SEO Configuration & Setup
+  # =============================================
+  seo-setup:
+    name: SEO Audit Setup
+    runs-on: ubuntu-latest
+    outputs:
+      target-url: ${{ steps.config.outputs.target-url }}
+      audit-depth: ${{ steps.config.outputs.audit-depth }}
+      include-lighthouse: ${{ steps.config.outputs.include-lighthouse }}
+      deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Configure Audit Settings
+      id: config
+      run: |
+        # Determine target URL
+        if [[ -n "${{ github.event.inputs.target_url }}" ]]; then
+          TARGET_URL="${{ github.event.inputs.target_url }}"
+        elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # For PRs, we'll deploy to a preview URL
+          TARGET_URL="https://preview-${{ github.event.number }}.optimum-solutions-group.vercel.app"
+        else
+          TARGET_URL="https://optimum-solutions-group.vercel.app"
+        fi
+        
+        echo "target-url=$TARGET_URL" >> $GITHUB_OUTPUT
+        echo "audit-depth=${{ github.event.inputs.audit_depth || 'standard' }}" >> $GITHUB_OUTPUT
+        echo "include-lighthouse=${{ github.event.inputs.include_lighthouse || 'true' }}" >> $GITHUB_OUTPUT
+        
+        echo "🎯 Target URL: $TARGET_URL"
+        echo "📊 Audit Depth: ${{ github.event.inputs.audit_depth || 'standard' }}"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: |
+        npm ci --legacy-peer-deps || npm ci --force
+
+    - name: Build Application
+      run: |
+        npm run build
+        echo "✅ Application built successfully"
+
+    - name: Deploy for Testing (Preview)
+      id: deploy
+      if: github.event_name == 'pull_request'
+      run: |
+        # In a real scenario, this would deploy to Vercel/Netlify preview
+        echo "deployment-url=https://preview-${{ github.event.number }}.optimum-solutions-group.vercel.app" >> $GITHUB_OUTPUT
+        echo "🚀 Preview deployment would be created for PR #${{ github.event.number }}"
+
+  # =============================================
+  # Technical SEO Audit
+  # =============================================
+  technical-seo:
+    name: Technical SEO Analysis
+    runs-on: ubuntu-latest
+    needs: seo-setup
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: |
+        npm ci --legacy-peer-deps || npm ci --force
+        npm install -g seo-analyzer cheerio-cli
+
+    - name: Build Application
+      run: npm run build
+
+    - name: Start Local Server
+      run: |
+        npx http-server dist -p 8080 --silent &
+        sleep 5
+        echo "🌐 Local server started on http://localhost:8080"
+
+    - name: Run Technical SEO Analysis
+      run: |
+        cat > seo-audit-script.js << 'EOF'
+        const fs = require('fs');
+        const path = require('path');
+        const { JSDOM } = require('jsdom');
+        
+        // SEO Analysis Functions
+        function analyzeMetaTags(document) {
+          const metaTags = [];
+          const tags = document.querySelectorAll('meta');
+          
+          tags.forEach(tag => {
+            const name = tag.getAttribute('name');
+            const property = tag.getAttribute('property');
+            const content = tag.getAttribute('content');
+            
+            if (name || property) {
+              metaTags.push({
+                type: name ? 'name' : 'property',
+                key: name || property,
+                content: content || '',
+                length: (content || '').length
+              });
+            }
+          });
+          
+          return metaTags;
+        }
+        
+        function analyzeStructuredData(document) {
+          const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+          const structuredData = [];
+          
+          scripts.forEach((script, index) => {
+            try {
+              const data = JSON.parse(script.textContent);
+              structuredData.push({
+                index,
+                type: data['@type'],
+                context: data['@context'],
+                valid: true,
+                data: data
+              });
+            } catch (error) {
+              structuredData.push({
+                index,
+                valid: false,
+                error: error.message
+              });
+            }
+          });
+          
+          return structuredData;
+        }
+        
+        function analyzeHeadings(document) {
+          const headings = {};
+          for (let i = 1; i <= 6; i++) {
+            const tags = document.querySelectorAll(`h${i}`);
+            headings[`h${i}`] = Array.from(tags).map(tag => ({
+              text: tag.textContent.trim(),
+              length: tag.textContent.trim().length
+            }));
+          }
+          return headings;
+        }
+        
+        function analyzeImages(document) {
+          const images = document.querySelectorAll('img');
+          const analysis = {
+            total: images.length,
+            withAlt: 0,
+            withoutAlt: 0,
+            issues: []
+          };
+          
+          images.forEach((img, index) => {
+            const alt = img.getAttribute('alt');
+            const src = img.getAttribute('src');
+            
+            if (alt !== null && alt.trim() !== '') {
+              analysis.withAlt++;
+            } else {
+              analysis.withoutAlt++;
+              analysis.issues.push({
+                index,
+                src: src || 'unknown',
+                issue: 'Missing alt attribute'
+              });
+            }
+          });
+          
+          return analysis;
+        }
+        
+        function analyzeLinks(document) {
+          const links = document.querySelectorAll('a[href]');
+          const analysis = {
+            total: links.length,
+            internal: 0,
+            external: 0,
+            issues: []
+          };
+          
+          links.forEach((link, index) => {
+            const href = link.getAttribute('href');
+            const text = link.textContent.trim();
+            
+            if (href.startsWith('http://') || href.startsWith('https://')) {
+              if (href.includes('optimum-solutions-group')) {
+                analysis.internal++;
+              } else {
+                analysis.external++;
+              }
+            } else {
+              analysis.internal++;
+            }
+            
+            if (!text) {
+              analysis.issues.push({
+                index,
+                href,
+                issue: 'Link without text content'
+              });
+            }
+          });
+          
+          return analysis;
+        }
+        
+        // Main analysis
+        async function runSEOAudit() {
+          const htmlPath = path.join('dist', 'index.html');
+          const html = fs.readFileSync(htmlPath, 'utf-8');
+          const dom = new JSDOM(html);
+          const document = dom.window.document;
+          
+          const audit = {
+            timestamp: new Date().toISOString(),
+            url: 'http://localhost:8080',
+            title: document.title,
+            metaTags: analyzeMetaTags(document),
+            structuredData: analyzeStructuredData(document),
+            headings: analyzeHeadings(document),
+            images: analyzeImages(document),
+            links: analyzeLinks(document),
+            technical: {
+              hasCanonical: !!document.querySelector('link[rel="canonical"]'),
+              hasRobots: !!document.querySelector('meta[name="robots"]'),
+              hasViewport: !!document.querySelector('meta[name="viewport"]'),
+              hasLang: !!document.documentElement.getAttribute('lang'),
+              hasCharset: !!document.querySelector('meta[charset]'),
+              headTitle: document.title,
+              titleLength: document.title.length
+            }
+          };
+          
+          // Calculate SEO score
+          let score = 100;
+          const issues = [];
+          
+          // Meta tags scoring
+          const requiredMeta = ['description', 'og:title', 'og:description', 'twitter:card'];
+          const foundMeta = audit.metaTags.map(tag => tag.key);
+          
+          requiredMeta.forEach(required => {
+            if (!foundMeta.includes(required)) {
+              score -= 10;
+              issues.push({
+                category: 'meta',
+                severity: 'high',
+                message: `Missing required meta tag: ${required}`,
+                impact: 10
+              });
+            }
+          });
+          
+          // Title analysis
+          if (!audit.technical.headTitle) {
+            score -= 15;
+            issues.push({
+              category: 'content',
+              severity: 'high',
+              message: 'Missing page title',
+              impact: 15
+            });
+          } else if (audit.technical.titleLength > 60) {
+            score -= 5;
+            issues.push({
+              category: 'content',
+              severity: 'medium',
+              message: 'Title too long (>60 characters)',
+              impact: 5
+            });
+          }
+          
+          // H1 analysis
+          if (audit.headings.h1.length === 0) {
+            score -= 10;
+            issues.push({
+              category: 'content',
+              severity: 'high',
+              message: 'Missing H1 tag',
+              impact: 10
+            });
+          } else if (audit.headings.h1.length > 1) {
+            score -= 5;
+            issues.push({
+              category: 'content',
+              severity: 'medium',
+              message: 'Multiple H1 tags found',
+              impact: 5
+            });
+          }
+          
+          // Images analysis
+          if (audit.images.withoutAlt > 0) {
+            const impact = Math.min(audit.images.withoutAlt * 2, 15);
+            score -= impact;
+            issues.push({
+              category: 'accessibility',
+              severity: 'medium',
+              message: `${audit.images.withoutAlt} images missing alt text`,
+              impact: impact
+            });
+          }
+          
+          // Technical SEO
+          if (!audit.technical.hasCanonical) {
+            score -= 5;
+            issues.push({
+              category: 'technical',
+              severity: 'medium',
+              message: 'Missing canonical URL',
+              impact: 5
+            });
+          }
+          
+          if (!audit.technical.hasLang) {
+            score -= 3;
+            issues.push({
+              category: 'technical',
+              severity: 'low',
+              message: 'Missing language declaration',
+              impact: 3
+            });
+          }
+          
+          // Structured data
+          if (audit.structuredData.length === 0) {
+            score -= 10;
+            issues.push({
+              category: 'structured-data',
+              severity: 'medium',
+              message: 'No structured data found',
+              impact: 10
+            });
+          }
+          
+          audit.score = Math.max(0, Math.round(score));
+          audit.issues = issues;
+          audit.summary = {
+            score: audit.score,
+            totalIssues: issues.length,
+            highSeverity: issues.filter(i => i.severity === 'high').length,
+            mediumSeverity: issues.filter(i => i.severity === 'medium').length,
+            lowSeverity: issues.filter(i => i.severity === 'low').length
+          };
+          
+          return audit;
+        }
+        
+        // Run audit and save results
+        runSEOAudit().then(audit => {
+          fs.writeFileSync('seo-audit-results.json', JSON.stringify(audit, null, 2));
+          console.log(`🎯 SEO Audit Complete! Score: ${audit.score}/100`);
+          console.log(`📊 Found ${audit.issues.length} issues`);
+          
+          // Output for GitHub Actions
+          console.log(`::set-output name=seo-score::${audit.score}`);
+          console.log(`::set-output name=total-issues::${audit.issues.length}`);
+        }).catch(error => {
+          console.error('❌ SEO Audit failed:', error);
+          process.exit(1);
+        });
+        EOF
+        
+        node seo-audit-script.js
+
+    - name: Generate SEO Report
+      run: |
+        cat > generate-report.js << 'EOF'
+        const fs = require('fs');
+        
+        const audit = JSON.parse(fs.readFileSync('seo-audit-results.json', 'utf-8'));
+        
+        function generateMarkdownReport(audit) {
+          const scoreEmoji = audit.score >= 90 ? '🟢' : audit.score >= 70 ? '🟡' : '🔴';
+          const grade = audit.score >= 90 ? 'A' : audit.score >= 80 ? 'B' : audit.score >= 70 ? 'C' : audit.score >= 60 ? 'D' : 'F';
+          
+          let report = `# 🔍 SEO Audit Report
+        
+        ${scoreEmoji} **Overall Score: ${audit.score}/100 (Grade ${grade})**
+        
+        **Audit Date:** ${new Date(audit.timestamp).toLocaleString()}  
+        **Target URL:** ${audit.url}
+        
+        ## 📊 Summary
+        
+        | Metric | Count |
+        |--------|-------|
+        | Total Issues | ${audit.summary.totalIssues} |
+        | High Severity | ${audit.summary.highSeverity} |
+        | Medium Severity | ${audit.summary.mediumSeverity} |
+        | Low Severity | ${audit.summary.lowSeverity} |
+        
+        ## 🎯 Key Metrics
+        
+        ### Meta Tags
+        - **Found:** ${audit.metaTags.length} meta tags
+        - **Title Length:** ${audit.technical.titleLength} characters
+        
+        ### Content Structure
+        - **H1 Tags:** ${audit.headings.h1.length}
+        - **H2 Tags:** ${audit.headings.h2.length}
+        - **H3 Tags:** ${audit.headings.h3.length}
+        
+        ### Images & Accessibility
+        - **Total Images:** ${audit.images.total}
+        - **With Alt Text:** ${audit.images.withAlt}
+        - **Missing Alt Text:** ${audit.images.withoutAlt}
+        
+        ### Links
+        - **Total Links:** ${audit.links.total}
+        - **Internal Links:** ${audit.links.internal}
+        - **External Links:** ${audit.links.external}
+        
+        ### Technical SEO
+        - **Canonical URL:** ${audit.technical.hasCanonical ? '✅' : '❌'}
+        - **Robots Meta:** ${audit.technical.hasRobots ? '✅' : '❌'}
+        - **Viewport Meta:** ${audit.technical.hasViewport ? '✅' : '❌'}
+        - **Language Declaration:** ${audit.technical.hasLang ? '✅' : '❌'}
+        - **Charset Declaration:** ${audit.technical.hasCharset ? '✅' : '❌'}
+        
+        ### Structured Data
+        - **JSON-LD Scripts:** ${audit.structuredData.length}
+        - **Valid Schemas:** ${audit.structuredData.filter(s => s.valid).length}
+        `;
+        
+          if (audit.issues.length > 0) {
+            report += `
+        ## 🚨 Issues Found
+        
+        `;
+            audit.issues.forEach((issue, index) => {
+              const severityEmoji = issue.severity === 'high' ? '🔴' : issue.severity === 'medium' ? '🟡' : '🟤';
+              report += `### ${index + 1}. ${severityEmoji} ${issue.message}
+        
+        - **Category:** ${issue.category}
+        - **Severity:** ${issue.severity.toUpperCase()}
+        - **Impact:** -${issue.impact} points
+        
+        `;
+            });
+          } else {
+            report += `
+        ## ✅ No Issues Found
+        
+        Congratulations! Your SEO implementation looks excellent with no critical issues detected.
+        `;
+          }
+        
+          if (audit.structuredData.length > 0) {
+            report += `
+        ## 📋 Structured Data Details
+        
+        `;
+            audit.structuredData.forEach((schema, index) => {
+              if (schema.valid) {
+                report += `### ${index + 1}. ${schema.type} Schema ✅
+        - **Context:** ${schema.context}
+        - **Status:** Valid
+        
+        `;
+              } else {
+                report += `### ${index + 1}. Invalid Schema ❌
+        - **Error:** ${schema.error}
+        
+        `;
+              }
+            });
+          }
+        
+          report += `
+        ## 💡 Recommendations
+        
+        `;
+        
+          if (audit.score < 90) {
+            report += `### Priority Actions:
+        
+        `;
+            const highIssues = audit.issues.filter(i => i.severity === 'high');
+            if (highIssues.length > 0) {
+              highIssues.forEach(issue => {
+                report += `- **${issue.message}** (${issue.category})\n`;
+              });
+            }
+          }
+        
+          if (audit.score < 70) {
+            report += `
+        ### Medium Priority:
+        
+        `;
+            const mediumIssues = audit.issues.filter(i => i.severity === 'medium');
+            mediumIssues.forEach(issue => {
+              report += `- **${issue.message}** (${issue.category})\n`;
+            });
+          }
+        
+          report += `
+        ---
+        
+        🤖 *This report was automatically generated by the SEO Audit workflow*
+        `;
+        
+          return report;
+        }
+        
+        const report = generateMarkdownReport(audit);
+        fs.writeFileSync('seo-report.md', report);
+        console.log('📝 SEO Report generated successfully!');
+        EOF
+        
+        node generate-report.js
+
+    - name: Upload SEO Audit Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: seo-audit-results
+        path: |
+          seo-audit-results.json
+          seo-report.md
+        retention-days: 30
+
+  # =============================================
+  # Lighthouse SEO Audit (Optional)
+  # =============================================
+  lighthouse-audit:
+    name: Lighthouse SEO Analysis
+    runs-on: ubuntu-latest
+    needs: seo-setup
+    if: needs.seo-setup.outputs.include-lighthouse == 'true'
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: |
+        npm ci --legacy-peer-deps || npm ci --force
+        npm install -g lighthouse
+
+    - name: Build Application
+      run: npm run build
+
+    - name: Start Local Server
+      run: |
+        npx http-server dist -p 8080 --silent &
+        sleep 5
+
+    - name: Run Lighthouse Audit
+      run: |
+        lighthouse http://localhost:8080 \
+          --only-categories=seo,accessibility,best-practices \
+          --output=json,html \
+          --output-path=./lighthouse-results \
+          --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+          --quiet
+
+    - name: Process Lighthouse Results
+      run: |
+        cat > process-lighthouse.js << 'EOF'
+        const fs = require('fs');
+        const lighthouse = JSON.parse(fs.readFileSync('lighthouse-results.report.json', 'utf-8'));
+        
+        const seoScore = lighthouse.categories.seo.score * 100;
+        const accessibilityScore = lighthouse.categories.accessibility.score * 100;
+        const bestPracticesScore = lighthouse.categories['best-practices'].score * 100;
+        
+        const summary = {
+          scores: {
+            seo: seoScore,
+            accessibility: accessibilityScore,
+            bestPractices: bestPracticesScore,
+            average: Math.round((seoScore + accessibilityScore + bestPracticesScore) / 3)
+          },
+          audits: {
+            seo: Object.entries(lighthouse.audits)
+              .filter(([key, audit]) => lighthouse.categories.seo.auditRefs.some(ref => ref.id === key))
+              .filter(([key, audit]) => audit.score !== null && audit.score < 1)
+              .map(([key, audit]) => ({
+                id: key,
+                title: audit.title,
+                description: audit.description,
+                score: audit.score,
+                displayValue: audit.displayValue
+              }))
+          }
+        };
+        
+        fs.writeFileSync('lighthouse-summary.json', JSON.stringify(summary, null, 2));
+        console.log(`🏆 Lighthouse SEO Score: ${seoScore}/100`);
+        console.log(`♿ Accessibility Score: ${accessibilityScore}/100`);
+        console.log(`✨ Best Practices Score: ${bestPracticesScore}/100`);
+        EOF
+        
+        node process-lighthouse.js
+
+    - name: Upload Lighthouse Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: lighthouse-audit-results
+        path: |
+          lighthouse-results.report.json
+          lighthouse-results.report.html
+          lighthouse-summary.json
+        retention-days: 30
+
+  # =============================================
+  # Comprehensive Analysis & Reporting
+  # =============================================
+  seo-report:
+    name: Generate SEO Report
+    runs-on: ubuntu-latest
+    needs: [seo-setup, technical-seo, lighthouse-audit]
+    if: always()
+    
+    steps:
+    - name: Download Technical SEO Results
+      uses: actions/download-artifact@v4
+      with:
+        name: seo-audit-results
+        path: ./technical-results
+
+    - name: Download Lighthouse Results
+      uses: actions/download-artifact@v4
+      if: needs.seo-setup.outputs.include-lighthouse == 'true'
+      with:
+        name: lighthouse-audit-results
+        path: ./lighthouse-results
+
+    - name: Generate Combined Report
+      run: |
+        cat > generate-combined-report.js << 'EOF'
+        const fs = require('fs');
+        
+        // Load technical audit results
+        const technicalAudit = JSON.parse(fs.readFileSync('./technical-results/seo-audit-results.json', 'utf-8'));
+        
+        // Load Lighthouse results if available
+        let lighthouseData = null;
+        if (fs.existsSync('./lighthouse-results/lighthouse-summary.json')) {
+          lighthouseData = JSON.parse(fs.readFileSync('./lighthouse-results/lighthouse-summary.json', 'utf-8'));
+        }
+        
+        function generateCombinedReport(technical, lighthouse) {
+          const overallScore = lighthouse ? 
+            Math.round((technical.score + lighthouse.scores.seo) / 2) : 
+            technical.score;
+          
+          const scoreEmoji = overallScore >= 90 ? '🟢' : overallScore >= 70 ? '🟡' : '🔴';
+          const grade = overallScore >= 90 ? 'A' : overallScore >= 80 ? 'B' : overallScore >= 70 ? 'C' : overallScore >= 60 ? 'D' : 'F';
+          
+          let report = `# 🔍 Comprehensive SEO Audit Report
+        
+        ${scoreEmoji} **Overall SEO Score: ${overallScore}/100 (Grade ${grade})**
+        
+        **Audit Date:** ${new Date(technical.timestamp).toLocaleString()}  
+        **Target URL:** ${technical.url}  
+        **Commit:** ${process.env.GITHUB_SHA?.substring(0, 7) || 'N/A'}
+        
+        ## 📊 Score Breakdown
+        
+        | Assessment | Score | Status |
+        |------------|-------|--------|
+        | Technical SEO | ${technical.score}/100 | ${technical.score >= 90 ? '🟢 Excellent' : technical.score >= 70 ? '🟡 Good' : '🔴 Needs Work'} |`;
+        
+          if (lighthouse) {
+            report += `
+        | Lighthouse SEO | ${lighthouse.scores.seo}/100 | ${lighthouse.scores.seo >= 90 ? '🟢 Excellent' : lighthouse.scores.seo >= 70 ? '🟡 Good' : '🔴 Needs Work'} |
+        | Accessibility | ${lighthouse.scores.accessibility}/100 | ${lighthouse.scores.accessibility >= 90 ? '🟢 Excellent' : lighthouse.scores.accessibility >= 70 ? '🟡 Good' : '🔴 Needs Work'} |
+        | Best Practices | ${lighthouse.scores.bestPractices}/100 | ${lighthouse.scores.bestPractices >= 90 ? '🟢 Excellent' : lighthouse.scores.bestPractices >= 70 ? '🟡 Good' : '🔴 Needs Work'} |`;
+          }
+        
+          report += `
+        
+        ## 🎯 Technical SEO Analysis
+        
+        ### Meta Tags & Content
+        - **Meta Tags Found:** ${technical.metaTags.length}
+        - **Page Title:** "${technical.technical.headTitle}" (${technical.technical.titleLength} chars)
+        - **H1 Tags:** ${technical.headings.h1.length}
+        
+        ### Images & Accessibility
+        - **Total Images:** ${technical.images.total}
+        - **Images with Alt Text:** ${technical.images.withAlt}/${technical.images.total} (${technical.images.total > 0 ? Math.round((technical.images.withAlt / technical.images.total) * 100) : 0}%)
+        
+        ### Technical Implementation
+        - **Canonical URL:** ${technical.technical.hasCanonical ? '✅ Present' : '❌ Missing'}
+        - **Robots Meta:** ${technical.technical.hasRobots ? '✅ Present' : '❌ Missing'}
+        - **Language Declaration:** ${technical.technical.hasLang ? '✅ Present' : '❌ Missing'}
+        - **Structured Data:** ${technical.structuredData.length} schema(s) found
+        `;
+        
+          if (lighthouse && lighthouse.audits.seo.length > 0) {
+            report += `
+        ## 🔍 Lighthouse SEO Findings
+        
+        `;
+            lighthouse.audits.seo.forEach(audit => {
+              const scoreIcon = audit.score >= 0.9 ? '🟢' : audit.score >= 0.5 ? '🟡' : '🔴';
+              report += `### ${scoreIcon} ${audit.title}
+        
+        ${audit.description}
+        
+        ${audit.displayValue ? `**Current Value:** ${audit.displayValue}` : ''}
+        
+        `;
+            });
+          }
+        
+          if (technical.issues.length > 0) {
+            report += `
+        ## 🚨 Issues Requiring Attention
+        
+        `;
+            technical.issues.forEach((issue, index) => {
+              const severityEmoji = issue.severity === 'high' ? '🔴' : issue.severity === 'medium' ? '🟡' : '🟤';
+              report += `### ${index + 1}. ${severityEmoji} ${issue.message}
+        
+        - **Category:** ${issue.category}
+        - **Severity:** ${issue.severity.toUpperCase()}
+        - **SEO Impact:** -${issue.impact} points
+        
+        `;
+            });
+          }
+        
+          report += `
+        ## 🎯 Action Items
+        
+        `;
+        
+          if (overallScore < 90) {
+            const highPriorityIssues = technical.issues.filter(i => i.severity === 'high');
+            if (highPriorityIssues.length > 0) {
+              report += `### 🔴 High Priority (Fix First)
+        
+        `;
+              highPriorityIssues.forEach(issue => {
+                report += `- [ ] **${issue.message}** - Impact: ${issue.impact} points\n`;
+              });
+            }
+            
+            const mediumPriorityIssues = technical.issues.filter(i => i.severity === 'medium');
+            if (mediumPriorityIssues.length > 0) {
+              report += `
+        ### 🟡 Medium Priority
+        
+        `;
+              mediumPriorityIssues.forEach(issue => {
+                report += `- [ ] **${issue.message}** - Impact: ${issue.impact} points\n`;
+              });
+            }
+          } else {
+            report += `### 🎉 Excellent SEO Implementation!
+        
+        Your site has achieved an excellent SEO score. Consider these optional enhancements:
+        
+        - [ ] Monitor Core Web Vitals performance
+        - [ ] Implement additional structured data schemas
+        - [ ] Optimize for voice search and featured snippets
+        - [ ] Set up comprehensive SEO monitoring
+        `;
+          }
+        
+          report += `
+        ## 📈 Historical Tracking
+        
+        | Metric | Current | Target | Status |
+        |--------|---------|--------|--------|
+        | Overall Score | ${overallScore}/100 | 90+ | ${overallScore >= 90 ? '✅' : '🎯'} |
+        | Technical Issues | ${technical.issues.length} | 0 | ${technical.issues.length === 0 ? '✅' : '🎯'} |
+        | Meta Tags | ${technical.metaTags.length} | 8+ | ${technical.metaTags.length >= 8 ? '✅' : '🎯'} |
+        | Image Alt Tags | ${technical.images.withAlt}/${technical.images.total} | 100% | ${technical.images.total === 0 || technical.images.withAlt === technical.images.total ? '✅' : '🎯'} |
+        
+        ---
+        
+        **Next Audit:** Scheduled daily at 3:00 AM UTC  
+        **Report Generated:** ${new Date().toISOString()}  
+        **Workflow:** \`seo-audit.yml\`
+        
+        > 🤖 This comprehensive report was automatically generated by GitHub Actions
+        `;
+        
+          return report;
+        }
+        
+        const report = generateCombinedReport(technicalAudit, lighthouseData);
+        fs.writeFileSync('combined-seo-report.md', report);
+        
+        // Generate summary for GitHub output
+        const overallScore = lighthouseData ? 
+          Math.round((technicalAudit.score + lighthouseData.scores.seo) / 2) : 
+          technicalAudit.score;
+        
+        console.log(`::set-output name=overall-score::${overallScore}`);
+        console.log(`::set-output name=technical-score::${technicalAudit.score}`);
+        console.log(`::set-output name=total-issues::${technicalAudit.issues.length}`);
+        console.log(`::set-output name=high-severity-issues::${technicalAudit.issues.filter(i => i.severity === 'high').length}`);
+        
+        console.log('📋 Combined SEO report generated successfully!');
+        EOF
+        
+        node generate-combined-report.js
+
+    - name: Upload Combined Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: seo-comprehensive-report
+        path: combined-seo-report.md
+        retention-days: 90
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          if (fs.existsSync('combined-seo-report.md')) {
+            const report = fs.readFileSync('combined-seo-report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔍 SEO Audit Results\n\n${report}`
+            });
+          }
+
+    - name: Create Issue for Low Scores
+      if: github.event_name == 'schedule' && steps.generate-combined-report.outputs.overall-score < 70
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('combined-seo-report.md', 'utf8');
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 SEO Audit Alert: Score Below Threshold (${process.env.OVERALL_SCORE}/100)`,
+            body: `Our automated SEO audit has detected a score below the 70-point threshold.\n\n${report}`,
+            labels: ['seo', 'priority', 'automated']
+          });
+
+  # =============================================
+  # SEO Performance Tracking
+  # =============================================
+  seo-tracking:
+    name: SEO Performance Tracking
+    runs-on: ubuntu-latest
+    needs: [seo-report]
+    if: github.event_name == 'schedule' || github.event_name == 'push'
+    
+    steps:
+    - name: Download SEO Report
+      uses: actions/download-artifact@v4
+      with:
+        name: seo-comprehensive-report
+
+    - name: Update SEO Metrics
+      run: |
+        cat > update-metrics.js << 'EOF'
+        // This would integrate with your analytics/monitoring system
+        // For now, we'll just log the metrics
+        
+        const metricsData = {
+          timestamp: new Date().toISOString(),
+          commit: process.env.GITHUB_SHA,
+          branch: process.env.GITHUB_REF_NAME,
+          scores: {
+            overall: process.env.OVERALL_SCORE || 0,
+            technical: process.env.TECHNICAL_SCORE || 0
+          },
+          issues: {
+            total: process.env.TOTAL_ISSUES || 0,
+            highSeverity: process.env.HIGH_SEVERITY_ISSUES || 0
+          }
+        };
+        
+        console.log('📊 SEO Metrics:', JSON.stringify(metricsData, null, 2));
+        
+        // In a real implementation, you might:
+        // - Send metrics to Google Analytics
+        // - Update a database
+        // - Send to monitoring services like Datadog
+        // - Post to Slack/Discord
+        
+        EOF
+        
+        node update-metrics.js
+        env:
+          OVERALL_SCORE: ${{ needs.seo-report.outputs.overall-score }}
+          TECHNICAL_SCORE: ${{ needs.seo-report.outputs.technical-score }}
+          TOTAL_ISSUES: ${{ needs.seo-report.outputs.total-issues }}
+          HIGH_SEVERITY_ISSUES: ${{ needs.seo-report.outputs.high-severity-issues }}
+
+    - name: Archive SEO History
+      run: |
+        echo "📁 SEO audit completed and archived"
+        echo "🕒 Next scheduled audit: Tomorrow at 3:00 AM UTC"
+        echo "📈 Score trend tracking available in artifacts"
