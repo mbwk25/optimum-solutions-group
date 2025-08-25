@@ -85,8 +85,26 @@ jobs:
         
     - name: Start Test Server
       run: |
+        # Start the preview server with error handling
         npm run preview &
-        npx wait-on http://localhost:4173 -t 30000
+        SERVER_PID=$!
+        echo "Preview server started with PID: $SERVER_PID"
+        
+        # Wait for server with better error handling
+        if npx wait-on http://localhost:4173 -t 45000 --httpTimeout 10000; then
+          echo "✅ Server is ready at http://localhost:4173"
+        else
+          echo "❌ Server failed to start or respond"
+          kill $SERVER_PID || true
+          exit 1
+        fi
+        
+        # Test server response
+        if curl -f -s http://localhost:4173 > /dev/null; then
+          echo "✅ Server is responding to requests"
+        else
+          echo "⚠️ Server started but not responding properly"
+        fi
       
     - name: Run Performance Benchmark
       id: audit

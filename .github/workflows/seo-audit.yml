@@ -129,7 +129,7 @@ jobs:
 
     - name: Run Technical SEO Analysis
       run: |
-        cat > seo-audit-script.js << 'EOF'
+        cat > seo-audit-script.cjs << 'EOF'
         const fs = require('fs');
         const path = require('path');
         const { JSDOM } = require('jsdom');
@@ -415,7 +415,7 @@ jobs:
         });
         EOF
         
-        node seo-audit-script.js
+        node seo-audit-script.cjs
 
     - name: Generate SEO Report
       run: |

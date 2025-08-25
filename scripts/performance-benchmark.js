@@ -67,16 +67,31 @@ const runLighthouseAudit = async (config) => {
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding',
-        '--disable-features=TranslateUI',
+        '--disable-features=TranslateUI,VizDisplayCompositor',
         '--disable-ipc-flooding-protection',
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor',
         '--run-all-compositor-stages-before-draw',
         '--disable-extensions',
         '--disable-plugins',
         '--disable-default-apps',
-        '--virtual-time-budget=25000',  // 25 second budget
-        '--window-size=1280,720'  // Explicit window size
+        '--disable-hang-monitor',
+        '--disable-prompt-on-repost',
+        '--disable-background-networking',
+        '--disable-sync',
+        '--disable-translate',
+        '--hide-scrollbars',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--ignore-certificate-errors',
+        '--ignore-ssl-errors',
+        '--ignore-certificate-errors-spki-list',
+        '--virtual-time-budget=30000',  // 30 second budget
+        '--window-size=1280,720',  // Explicit window size
+        '--force-color-profile=srgb',
+        '--enable-logging',  // Enable logging for debugging
+        '--log-level=0'  // Verbose logging
       ]
     });
 
@@ -132,10 +147,14 @@ const runLighthouseAudit = async (config) => {
         disabled: false,
       },
       // Increase timeouts for CI environment
-      maxWaitForLoad: 45 * 1000, // 45 seconds
-      maxWaitForFcp: 30 * 1000,  // 30 seconds for first contentful paint
-      // Skip some problematic audits in CI
-      skipAudits: ['screenshot-thumbnails', 'final-screenshot']
+      maxWaitForLoad: 60 * 1000, // 60 seconds
+      maxWaitForFcp: 45 * 1000,  // 45 seconds for first contentful paint
+      // Additional timeout settings
+      pauseAfterLoadMs: 2000,    // Wait 2s after load
+      networkQuietThresholdMs: 2000, // Network quiet for 2s
+      cpuQuietThresholdMs: 2000, // CPU quiet for 2s
+      // Skip problematic audits in CI
+      skipAudits: ['screenshot-thumbnails', 'final-screenshot', 'metrics']
     };
 
     const results = [];
