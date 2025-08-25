@@ -57,7 +57,7 @@ describe('Button Component E2E Tests', () => {
 
     it('should support keyboard navigation', () => {
       // Test Tab navigation
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       cy.focused().should('exist')
       
       // Test Enter key activation
