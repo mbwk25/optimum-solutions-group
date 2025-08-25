@@ -59,7 +59,13 @@
     "test:visual": "playwright test --config=playwright.visual.config.js",
     "test:visual:update": "playwright test --config=playwright.visual.config.js --update-snapshots",
     "test:visual:report": "playwright show-report playwright-report",
-    "test:visual:ui": "playwright test --config=playwright.visual.config.js --ui"
+    "test:visual:ui": "playwright test --config=playwright.visual.config.js --ui",
+    "pwa:validate": "node scripts/pwa-dev-tools.js validate-manifest",
+    "pwa:check-icons": "node scripts/pwa-dev-tools.js check-icons",
+    "pwa:performance": "node scripts/pwa-dev-tools.js analyze-performance",
+    "pwa:test-offline": "node scripts/pwa-dev-tools.js test-offline",
+    "pwa:help": "node scripts/pwa-dev-tools.js help",
+    "generate:icons": "node scripts/generate-pwa-icons.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
