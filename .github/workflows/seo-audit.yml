@@ -406,9 +406,16 @@ jobs:
           console.log(`🎯 SEO Audit Complete! Score: ${audit.score}/100`);
           console.log(`📊 Found ${audit.issues.length} issues`);
           
-          // Output for GitHub Actions
-          console.log(`::set-output name=seo-score::${audit.score}`);
-          console.log(`::set-output name=total-issues::${audit.issues.length}`);
+          // Output for GitHub Actions - Updated syntax
+          const fs_output = require('fs');
+          const outputFile = process.env.GITHUB_OUTPUT;
+          if (outputFile) {
+            fs_output.appendFileSync(outputFile, `seo-score=${audit.score}\n`);
+            fs_output.appendFileSync(outputFile, `total-issues=${audit.issues.length}\n`);
+          } else {
+            console.log(`::set-output name=seo-score::${audit.score}`);
+            console.log(`::set-output name=total-issues::${audit.issues.length}`);
+          }
         }).catch(error => {
           console.error('❌ SEO Audit failed:', error);
           process.exit(1);
@@ -852,10 +859,20 @@ jobs:
           Math.round((technicalAudit.score + lighthouseData.scores.seo) / 2) : 
           technicalAudit.score;
         
-        console.log(`::set-output name=overall-score::${overallScore}`);
-        console.log(`::set-output name=technical-score::${technicalAudit.score}`);
-        console.log(`::set-output name=total-issues::${technicalAudit.issues.length}`);
-        console.log(`::set-output name=high-severity-issues::${technicalAudit.issues.filter(i => i.severity === 'high').length}`);
+        // Output for GitHub Actions - Updated syntax
+        const fs_output = require('fs');
+        const outputFile = process.env.GITHUB_OUTPUT;
+        if (outputFile) {
+          fs_output.appendFileSync(outputFile, `overall-score=${overallScore}\n`);
+          fs_output.appendFileSync(outputFile, `technical-score=${technicalAudit.score}\n`);
+          fs_output.appendFileSync(outputFile, `total-issues=${technicalAudit.issues.length}\n`);
+          fs_output.appendFileSync(outputFile, `high-severity-issues=${technicalAudit.issues.filter(i => i.severity === 'high').length}\n`);
+        } else {
+          console.log(`::set-output name=overall-score::${overallScore}`);
+          console.log(`::set-output name=technical-score::${technicalAudit.score}`);
+          console.log(`::set-output name=total-issues::${technicalAudit.issues.length}`);
+          console.log(`::set-output name=high-severity-issues::${technicalAudit.issues.filter(i => i.severity === 'high').length}`);
+        }
         
         console.log('📋 Combined SEO report generated successfully!');
         EOF
