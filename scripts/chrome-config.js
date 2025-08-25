@@ -134,24 +134,56 @@ async function validatePageRendering(url, timeout = 30000) {
       console.log('✅ Navigation completed');
     }
 
-    // Wait for potential dynamic content
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait for React app to load and render
+    console.log('⏳ Waiting for React app to load...');
+    
+    // Wait for React root to be populated with content
+    await page.waitForFunction(
+      () => {
+        const root = document.getElementById('root');
+        if (!root) return false;
+        
+        // Check if React has rendered content
+        const hasReactContent = root.children.length > 0 && 
+                               root.textContent && 
+                               root.textContent.trim().length > 100;
+        
+        // Also check for specific React elements
+        const hasNavigation = document.querySelector('nav') !== null;
+        const hasSection = document.querySelector('section') !== null;
+        
+        return hasReactContent || hasNavigation || hasSection;
+      },
+      { timeout: 15000 }
+    );
+    
+    // Additional wait for dynamic content to settle
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Check for basic content rendering
+    // Check for React app content rendering
     const checks = await page.evaluate(() => {
       const body = document.body;
-      const hasContent = body && body.textContent.trim().length > 0;
-      const hasVisibleElements = document.querySelectorAll('*').length > 10;
+      const root = document.getElementById('root');
+      const rootContent = root ? root.textContent?.trim() || '' : '';
+      const hasReactContent = rootContent.length > 100;
+      const hasVisibleElements = document.querySelectorAll('*').length > 20;
       const hasImages = document.querySelectorAll('img').length > 0;
       const hasStyles = document.querySelectorAll('style, link[rel="stylesheet"]').length > 0;
+      const hasNavigation = document.querySelector('nav') !== null;
+      const hasSection = document.querySelector('section') !== null;
+      const hasFooter = document.querySelector('footer') !== null;
       
       return {
         hasBody: !!body,
-        hasContent,
+        hasContent: hasReactContent,
         hasVisibleElements,
         hasImages,
         hasStyles,
-        bodyText: body ? body.textContent.trim().substring(0, 200) + '...' : '',
+        hasNavigation,
+        hasSection,
+        hasFooter,
+        bodyText: rootContent.substring(0, 200) + '...',
+        rootText: rootContent.substring(0, 100) + '...',
         elementCount: document.querySelectorAll('*').length,
         title: document.title
       };

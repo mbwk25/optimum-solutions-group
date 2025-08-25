@@ -42,6 +42,10 @@ export default defineConfig({
     
     /* Record video on failure */
     video: 'retain-on-failure',
+    
+    /* Increase timeout for elements */
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
 
   /* Configure projects for major browsers */
@@ -82,11 +86,13 @@ export default defineConfig({
     toHaveScreenshot: { 
       threshold: 0.2, // Allow 20% difference
       mode: 'pixel',
-      animations: 'disabled' // Disable animations for consistent screenshots
+      animations: 'disabled', // Disable animations for consistent screenshots
+      timeout: 10000 // Increase screenshot timeout
     },
     toMatchSnapshot: { 
       threshold: 0.2,
-      mode: 'pixel' 
+      mode: 'pixel',
+      timeout: 10000
     }
   },
 
