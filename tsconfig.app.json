@@ -24,6 +24,13 @@
     "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
+    
+    /* Additional strict typing options */
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitUseStrict": true,
 
     "baseUrl": ".",
     "paths": {

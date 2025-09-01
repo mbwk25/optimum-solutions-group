@@ -1,3 +1,4 @@
+import { logger } from './logger';
 /**
  * Performance Benchmarking Suite
  * 
@@ -5,7 +6,7 @@
  * automated performance regression detection and optimization tracking.
  */
 
-import { getCLS, getFCP, getFID, getLCP, getTTFB } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals';
 
 // ========== TYPES AND INTERFACES ==========
 
@@ -54,33 +55,33 @@ export interface PerformanceBenchmark {
     fid?: number;
     lcp?: number;
     ttfb?: number;
-    
+
     // Custom Performance Metrics
     domContentLoaded: number;
     windowLoaded: number;
     firstPaint: number;
     firstContentfulPaint: number;
     largestContentfulPaint?: number;
-    
+
     // Resource Loading
     totalResourceCount: number;
     totalResourceSize: number;
     criticalResourceLoadTime: number;
-    
+
     // JavaScript Performance
     mainThreadBlockingTime: number;
     totalJavaScriptSize: number;
     unusedJavaScriptSize?: number;
-    
+
     // CSS Performance
     totalCSSSize: number;
     unusedCSSSize?: number;
-    
+
     // Memory Usage
     usedJSHeapSize?: number;
     totalJSHeapSize?: number;
     jsHeapSizeLimit?: number;
-    
+
     // Bundle Analysis
     bundleSize: {
       total: number;
@@ -136,6 +137,7 @@ export const DEFAULT_THRESHOLDS: BenchmarkThresholds = {
 // ========== PERFORMANCE BENCHMARK CLASS ==========
 
 export class PerformanceBenchmarkSuite {
+
   private thresholds: BenchmarkThresholds;
   private results: PerformanceBenchmark[] = [];
 
@@ -148,9 +150,19 @@ export class PerformanceBenchmarkSuite {
    */
   async runBenchmark(config: BenchmarkConfig): Promise<PerformanceBenchmark> {
     const benchmarkId = this.generateBenchmarkId();
-    
+
     console.log(`🚀 Starting performance benchmark: ${benchmarkId}`);
-    
+
+    const metrics = await this.collectMetrics();
+
+    // Example usage of thresholds: log warning if any metric is poor
+    Object.entries(this.thresholds).forEach(([key, threshold]) => {
+      const metricValue = (metrics as Record<string, unknown>)[key];
+      if (typeof metricValue === 'number' && metricValue > (threshold as { poor: number }).poor) {
+        logger.warn(`Metric ${key} is above the poor threshold: ${metricValue} > ${(threshold as { poor: number }).poor}`);
+      }
+    });
+
     const benchmark: PerformanceBenchmark = {
       id: benchmarkId,
       name: `Benchmark ${new Date().toISOString()}`,
@@ -158,7 +170,7 @@ export class PerformanceBenchmarkSuite {
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       connection: this.getConnectionInfo(),
-      metrics: await this.collectMetrics(),
+      metrics,
       scores: await this.calculateScores()
     };
 
@@ -190,16 +202,16 @@ export class PerformanceBenchmarkSuite {
 
     // Collect Web Vitals
     await this.collectWebVitals(metrics);
-    
+
     // Collect Navigation Timing
     this.collectNavigationTiming(metrics);
-    
+
     // Collect Resource Timing
     this.collectResourceTiming(metrics);
-    
+
     // Collect Memory Info
     this.collectMemoryInfo(metrics);
-    
+
     // Collect Bundle Analysis
     await this.collectBundleAnalysis(metrics);
 
@@ -219,28 +231,26 @@ export class PerformanceBenchmarkSuite {
         if (collected === total) resolve();
       };
 
-      getCLS((metric) => {
+      onCLS((metric: Metric) => {
         metrics.cls = metric.value;
         checkComplete();
       });
 
-      getFCP((metric) => {
+      onFCP((metric: Metric) => {
         metrics.fcp = metric.value;
         checkComplete();
       });
 
-      getFID((metric) => {
-        metrics.fid = metric.value;
-        checkComplete();
-      });
+      // onFID n'est pas disponible dans cette version de web-vitals
+      // Si besoin, utilisez une alternative ou une version compatible
 
-      getLCP((metric) => {
+      onLCP((metric: Metric) => {
         metrics.lcp = metric.value;
         metrics.largestContentfulPaint = metric.value;
         checkComplete();
       });
 
-      getTTFB((metric) => {
+      onTTFB((metric: Metric) => {
         metrics.ttfb = metric.value;
         checkComplete();
       });
@@ -261,18 +271,18 @@ export class PerformanceBenchmarkSuite {
 
     metrics.domContentLoaded = timing.domContentLoadedEventEnd - navigationStart;
     metrics.windowLoaded = timing.loadEventEnd - navigationStart;
-    
+
     // Paint Timing API
     if (performance.getEntriesByType) {
       const paintEntries = performance.getEntriesByType('paint');
-      
+
       const firstPaint = paintEntries.find(entry => entry.name === 'first-paint');
       const firstContentfulPaint = paintEntries.find(entry => entry.name === 'first-contentful-paint');
-      
+
       if (firstPaint) {
         metrics.firstPaint = firstPaint.startTime;
       }
-      
+
       if (firstContentfulPaint) {
         metrics.firstContentfulPaint = firstContentfulPaint.startTime;
       }
@@ -286,7 +296,7 @@ export class PerformanceBenchmarkSuite {
     if (!performance.getEntriesByType) return;
 
     const resources = performance.getEntriesByType('resource');
-    
+
     metrics.totalResourceCount = resources.length;
     metrics.totalResourceSize = resources.reduce((total, resource) => {
       const resourceTiming = resource as PerformanceResourceTiming;
@@ -295,9 +305,9 @@ export class PerformanceBenchmarkSuite {
 
     // Calculate critical resource load time
     const criticalResources = resources.filter((resource) => {
-      return resource.name.includes('.css') || 
-             resource.name.includes('.js') ||
-             resource.name.includes('font');
+      return resource.name.includes('.css') ||
+        resource.name.includes('.js') ||
+        resource.name.includes('font');
     });
 
     metrics.criticalResourceLoadTime = Math.max(
@@ -349,7 +359,7 @@ export class PerformanceBenchmarkSuite {
         const resourceTiming = resource as PerformanceResourceTiming;
         const size = resourceTiming.transferSize || 0;
         totalSize += size;
-        
+
         chunks.push({
           name: resource.name.split('/').pop() || 'unknown',
           size: resourceTiming.decodedBodySize || size,
@@ -363,7 +373,7 @@ export class PerformanceBenchmarkSuite {
         chunks
       };
     } catch (error) {
-      console.warn('Bundle analysis failed:', error);
+      logger.warn('Bundle analysis failed:', error);
     }
   }
 
@@ -373,7 +383,7 @@ export class PerformanceBenchmarkSuite {
   private async calculateScores(): Promise<PerformanceBenchmark['scores']> {
     // This would typically integrate with Lighthouse or similar tools
     // For now, we'll provide a basic scoring algorithm
-    
+
     return {
       performance: 85, // Would be calculated based on metrics
       accessibility: 95,
@@ -391,17 +401,17 @@ export class PerformanceBenchmarkSuite {
       connection?: NetworkInformation;
       mozConnection?: NetworkInformation;
       webkitConnection?: NetworkInformation;
-    }).connection || 
-    (navigator as Navigator & {
-      connection?: NetworkInformation;
-      mozConnection?: NetworkInformation;
-      webkitConnection?: NetworkInformation;
-    }).mozConnection || 
-    (navigator as Navigator & {
-      connection?: NetworkInformation;
-      mozConnection?: NetworkInformation;
-      webkitConnection?: NetworkInformation;
-    }).webkitConnection;
+    }).connection ||
+      (navigator as Navigator & {
+        connection?: NetworkInformation;
+        mozConnection?: NetworkInformation;
+        webkitConnection?: NetworkInformation;
+      }).mozConnection ||
+      (navigator as Navigator & {
+        connection?: NetworkInformation;
+        mozConnection?: NetworkInformation;
+        webkitConnection?: NetworkInformation;
+      }).webkitConnection;
 
     return {
       type: connection?.type || 'unknown',
@@ -422,7 +432,7 @@ export class PerformanceBenchmarkSuite {
    * Compare benchmarks and detect regressions
    */
   compareBenchmarks(
-    baseline: PerformanceBenchmark, 
+    baseline: PerformanceBenchmark,
     current: PerformanceBenchmark
   ): {
     regressions: Array<{ metric: string; baseline: number; current: number; change: number }>;
@@ -433,7 +443,7 @@ export class PerformanceBenchmarkSuite {
     const improvements: ComparisonEntry[] = [];
 
     const metricsToCompare = [
-      'cls', 'fcp', 'fid', 'lcp', 'ttfb', 
+      'cls', 'fcp', 'fid', 'lcp', 'ttfb',
       'domContentLoaded', 'windowLoaded', 'totalResourceSize'
     ];
 
@@ -443,7 +453,7 @@ export class PerformanceBenchmarkSuite {
 
       if (baselineValue && currentValue) {
         const change = ((currentValue - baselineValue) / baselineValue) * 100;
-        
+
         if (Math.abs(change) > 5) { // Only consider significant changes (>5%)
           const entry = {
             metric,
@@ -479,7 +489,7 @@ export class PerformanceBenchmarkSuite {
       'domContentLoaded', 'windowLoaded', 'totalResourceSize',
       'mainThreadBlockingTime'
     ];
-    
+
     return worseWhenHigher.includes(metric);
   }
 
@@ -492,11 +502,11 @@ export class PerformanceBenchmarkSuite {
     }
 
     let summary = '';
-    
+
     if (regressions.length > 0) {
       summary += `⚠️ ${regressions.length} performance regression${regressions.length > 1 ? 's' : ''} detected. `;
     }
-    
+
     if (improvements.length > 0) {
       summary += `✅ ${improvements.length} performance improvement${improvements.length > 1 ? 's' : ''} detected.`;
     }
@@ -574,7 +584,7 @@ export class PerformanceBenchmarkSuite {
 
     metrics.forEach(metric => {
       const values = recentResults.map(r => r.metrics[metric as keyof typeof r.metrics] as number).filter(v => v != null);
-      
+
       if (values.length > 1) {
         const firstValue = values[0];
         const lastValue = values[values.length - 1];
@@ -620,8 +630,8 @@ export class AutomatedPerformanceTesting {
     this.testSchedule = setInterval(async () => {
       try {
         console.log('🔄 Running scheduled performance test...');
-        const result = await this.benchmarkSuite.runBenchmark(config);
-        
+        await this.benchmarkSuite.runBenchmark(config);
+
         // Check for regressions
         const results = this.benchmarkSuite.getResults();
         if (results.length > 1) {
@@ -629,14 +639,14 @@ export class AutomatedPerformanceTesting {
             results[results.length - 2],
             results[results.length - 1]
           );
-          
+
           if (comparison.regressions.length > 0) {
-            console.warn('⚠️ Performance regressions detected!', comparison.regressions);
+            logger.warn('⚠️ Performance regressions detected!', comparison.regressions);
             this.onRegressionDetected(comparison);
           }
         }
       } catch (error) {
-        console.error('Performance test failed:', error);
+        logger.error('Performance test failed:', error);
       }
     }, intervalMs);
 
@@ -691,12 +701,12 @@ export class AutomatedPerformanceTesting {
 export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['metrics']>> => {
   return new Promise((resolve) => {
     const snapshot: Partial<PerformanceBenchmark['metrics']> = {};
-    
+
     // Get basic timing info
     if (performance.timing) {
       const timing = performance.timing;
       const navigationStart = timing.navigationStart;
-      
+
       snapshot.domContentLoaded = timing.domContentLoadedEventEnd - navigationStart;
       snapshot.windowLoaded = timing.loadEventEnd - navigationStart;
     }
@@ -717,9 +727,10 @@ export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['
  * Monitor Core Web Vitals in real-time
  */
 export const monitorCoreWebVitals = (callback: (metric: string, value: number) => void): void => {
-  getCLS((metric) => callback('CLS', metric.value));
-  getFCP((metric) => callback('FCP', metric.value));
-  getFID((metric) => callback('FID', metric.value));
-  getLCP((metric) => callback('LCP', metric.value));
-  getTTFB((metric) => callback('TTFB', metric.value));
+  onCLS((metric: Metric) => callback('CLS', metric.value));
+  onFCP((metric: Metric) => callback('FCP', metric.value));
+  // onFID n'est pas disponible dans cette version de web-vitals
+  // Si besoin, utilisez une alternative ou une version compatible
+  onLCP((metric: Metric) => callback('LCP', metric.value));
+  onTTFB((metric: Metric) => callback('TTFB', metric.value));
 };

@@ -1,11 +1,13 @@
+// Déclarations globales déplacées dans global.d.ts
+import { logger } from './logger';
 /**
  * Real-time Performance Monitoring System
  * Tracks Web Vitals, user interactions, and performance metrics
  * Enhanced with Core Web Vitals integration
  */
 
-import { getCLS, getFCP, getFID, getLCP, getTTFB, onINP, Metric } from 'web-vitals';
-import { useCoreWebVitals, CoreWebVitalsData, WebVitalsMetric } from '../hooks/useCoreWebVitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
+import type { CoreWebVitalsData, WebVitalsMetric } from '../types/coreWebVitals';
 
 export interface PerformanceMetrics {
   // Core Web Vitals (Enhanced)
@@ -15,26 +17,26 @@ export interface PerformanceMetrics {
   lcp: WebVitalsMetric | null; // Largest Contentful Paint
   ttfb: WebVitalsMetric | null; // Time to First Byte
   inp: WebVitalsMetric | null; // Interaction to Next Paint
-  
+
   // Performance Score (0-100)
   performanceScore: number;
   coreWebVitalsScore: number;
-  
+
   // Custom Metrics
   domContentLoaded: number | null;
   windowLoad: number | null;
   firstByte: number | null;
-  
+
   // Navigation Timing
   navigationStart: number | null;
   loadComplete: number | null;
-  
+
   // Memory Information
   memoryUsage: number | null;
   jsHeapSize: number | null;
   deviceMemory: number | null;
   isLowEndDevice: boolean;
-  
+
   // Connection Information
   connectionType: string | null;
   downlink: number | null;
@@ -107,7 +109,7 @@ class PerformanceMonitor {
     inp: { good: 200, poor: 500 },
   };
 
-  private coreWebVitalsMonitor: ReturnType<typeof useCoreWebVitals> | null = null;
+  // private coreWebVitalsMonitor: ReturnType<typeof useCoreWebVitals> | null = null; // Non utilisé
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -120,22 +122,22 @@ class PerformanceMonitor {
    */
   startMonitoring(): void {
     if (this.isMonitoring) return;
-    
+
     this.isMonitoring = true;
     this.startTime = Date.now();
-    
+
     // Initialize Web Vitals monitoring
     this.initializeWebVitals();
-    
+
     // Initialize custom metrics
     this.initializeCustomMetrics();
-    
+
     // Initialize user interaction tracking
     this.initializeUserTracking();
-    
+
     // Set up periodic reporting
     this.startPeriodicReporting();
-    
+
     console.log('[Performance Monitor] Monitoring started');
   }
 
@@ -190,7 +192,7 @@ class PerformanceMonitor {
     if (import.meta.env.MODE !== 'development') return;
 
     console.group('📊 Performance Report');
-    
+
     // Core Web Vitals
     console.group('🎯 Core Web Vitals');
     this.logEnhancedMetric('CLS (Cumulative Layout Shift)', this.metrics.cls);
@@ -223,7 +225,7 @@ class PerformanceMonitor {
     if (this.alerts.length > 0) {
       console.group('⚠️ Performance Alerts');
       this.alerts.forEach(alert => {
-        console.warn(`${alert.type.toUpperCase()}: ${alert.message}`);
+        logger.warn(`${alert.type.toUpperCase()}: ${alert.message}`);
       });
       console.groupEnd();
     }
@@ -236,11 +238,11 @@ class PerformanceMonitor {
    */
   sendToAnalytics(metrics: PerformanceMetrics): void {
     // Integration point for analytics services (Google Analytics, etc.)
-    if (typeof window !== 'undefined' && (window as Record<string, unknown>).gtag) {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       // Send Core Web Vitals to Google Analytics
       Object.entries(metrics).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'number') {
-          (window as Record<string, unknown>).gtag('event', 'web_vital', {
+        if (value !== null && typeof value === 'number' && window.gtag) {
+          window.gtag('event', 'web_vital', {
             name: key.toUpperCase(),
             value: Math.round(value),
             event_category: 'Web Vitals',
@@ -263,7 +265,7 @@ class PerformanceMonitor {
           timestamp: Date.now(),
         }),
       }).catch(error => {
-        console.warn('[Performance Monitor] Failed to send analytics:', error);
+        logger.warn('[Performance Monitor] Failed to send analytics:', error);
       });
     }
   }
@@ -281,17 +283,17 @@ class PerformanceMonitor {
 
   private initializeWebVitals(): void {
     // Enhanced Core Web Vitals tracking with detailed metrics
-    getCLS(this.handleWebVitalMetric.bind(this, 'cls'));
-    getFCP(this.handleWebVitalMetric.bind(this, 'fcp'));
-    getFID(this.handleWebVitalMetric.bind(this, 'fid'));
-    getLCP(this.handleWebVitalMetric.bind(this, 'lcp'));
-    getTTFB(this.handleWebVitalMetric.bind(this, 'ttfb'));
-    
+    onCLS(this.handleWebVitalMetric.bind(this, 'cls'));
+    onFCP(this.handleWebVitalMetric.bind(this, 'fcp'));
+    // onFID n'est pas disponible dans cette version de web-vitals
+    onLCP(this.handleWebVitalMetric.bind(this, 'lcp'));
+    onTTFB(this.handleWebVitalMetric.bind(this, 'ttfb'));
+
     // Include INP if supported
     try {
       onINP(this.handleWebVitalMetric.bind(this, 'inp'));
     } catch (error) {
-      console.warn('[Performance Monitor] INP metric not supported:', error);
+      logger.warn('[Performance Monitor] INP metric not supported:', error);
     }
   }
 
@@ -308,24 +310,26 @@ class PerformanceMonitor {
     // Memory API
     if ('memory' in performance) {
       const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }).memory;
-      this.metrics.jsHeapSize = memory.usedJSHeapSize;
-      this.metrics.memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
+      if (memory) {
+        this.metrics.jsHeapSize = memory.usedJSHeapSize;
+        this.metrics.memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
+      }
     }
 
     // Device Memory API
     if ('deviceMemory' in navigator) {
-      this.metrics.deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory || 4;
+      this.metrics.deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
       this.metrics.isLowEndDevice = this.metrics.deviceMemory <= 1;
     }
 
     // Network Information API
     if ('connection' in navigator) {
       const connection = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string; downlink?: number; rtt?: number } }).connection;
-      this.metrics.connectionType = connection?.type || 'unknown';
-      this.metrics.effectiveType = connection?.effectiveType || 'unknown';
-      this.metrics.downlink = connection?.downlink || 0;
-      this.metrics.rtt = connection?.rtt || 0;
-      
+      this.metrics.connectionType = connection?.type ?? 'unknown';
+      this.metrics.effectiveType = connection?.effectiveType ?? 'unknown';
+      this.metrics.downlink = connection?.downlink ?? 0;
+      this.metrics.rtt = connection?.rtt ?? 0;
+
       // Update low-end device detection based on connection
       if (connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g') {
         this.metrics.isLowEndDevice = true;
@@ -377,7 +381,7 @@ class PerformanceMonitor {
     // Convert to enhanced WebVitalsMetric format
     const thresholds = this.thresholds[metricName as keyof typeof this.thresholds];
     let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
-    
+
     if (thresholds) {
       if (metric.value > thresholds.poor) {
         rating = 'poor';
@@ -397,17 +401,17 @@ class PerformanceMonitor {
       entries: metric.entries,
     };
 
-    this.metrics[metricName] = enhancedMetric;
-    
+    (this.metrics as unknown as Record<string, WebVitalsMetric | null>)[metricName] = enhancedMetric;
+
     // Update performance scores
     this.updatePerformanceScores();
-    
+
     // Check for performance issues
     this.checkThresholds(metricName, metric.value);
-    
+
     // Notify observers
     this.notifyObservers();
-    
+
     // Log in development
     if (import.meta.env.MODE === 'development') {
       console.log(`[Performance Monitor] ${metricName.toUpperCase()}: ${metric.value} (${rating})`);
@@ -419,7 +423,7 @@ class PerformanceMonitor {
     if (!threshold) return;
 
     if (value > threshold.poor) {
-      this.addAlert('critical', metricName, value, threshold.poor, 
+      this.addAlert('critical', metricName, value, threshold.poor,
         `${metricName.toUpperCase()} is critically slow (${value} > ${threshold.poor})`);
     } else if (value > threshold.good) {
       this.addAlert('warning', metricName, value, threshold.good,
@@ -448,7 +452,7 @@ class PerformanceMonitor {
   private updatePerformanceScores(): void {
     const scores: number[] = [];
     const coreVitalScores: number[] = [];
-    
+
     // Calculate scores for each metric
     ['cls', 'fcp', 'fid', 'lcp', 'ttfb', 'inp'].forEach(metricName => {
       const metric = this.metrics[metricName as keyof PerformanceMetrics] as WebVitalsMetric | null;
@@ -460,20 +464,20 @@ class PerformanceMonitor {
           case 'poor': score = 0; break;
         }
         scores.push(score);
-        
+
         // Core Web Vitals are LCP, FID, CLS
         if (['lcp', 'fid', 'cls'].includes(metricName)) {
           coreVitalScores.push(score);
         }
       }
     });
-    
+
     // Calculate overall performance score
-    this.metrics.performanceScore = scores.length > 0 ? 
+    this.metrics.performanceScore = scores.length > 0 ?
       Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-    
+
     // Calculate Core Web Vitals score (Google's main metrics)
-    this.metrics.coreWebVitalsScore = coreVitalScores.length > 0 ? 
+    this.metrics.coreWebVitalsScore = coreVitalScores.length > 0 ?
       Math.round(coreVitalScores.reduce((a, b) => a + b, 0) / coreVitalScores.length) : 0;
   }
 
@@ -503,7 +507,7 @@ class PerformanceMonitor {
    */
   getMetricValues(): Record<string, number | null> {
     const values: Record<string, number | null> = {};
-    
+
     Object.keys(this.metrics).forEach(key => {
       const metric = this.metrics[key as keyof PerformanceMetrics];
       if (metric && typeof metric === 'object' && 'value' in metric) {
@@ -514,7 +518,7 @@ class PerformanceMonitor {
         values[key] = null;
       }
     });
-    
+
     return values;
   }
 
@@ -522,7 +526,7 @@ class PerformanceMonitor {
     const timeScore = Math.min(this.userMetrics.timeOnPage / 60000, 1); // 0-1 based on time (up to 1 min)
     const clickScore = Math.min(this.userMetrics.clickCount / 10, 1); // 0-1 based on clicks (up to 10)
     const scrollScore = Math.min(this.userMetrics.scrollDistance / 1000, 1); // 0-1 based on scroll (up to 1000px)
-    
+
     this.userMetrics.engagementScore = (timeScore + clickScore + scrollScore) / 3;
   }
 
@@ -546,29 +550,18 @@ class PerformanceMonitor {
     this.observers.forEach(observer => observer(this.metrics));
   }
 
-  private logMetric(name: string, value: number | null, threshold?: Record<string, unknown>, unit: string = ''): void {
-    if (value === null) return;
-
-    let status = '✅';
-    if (threshold) {
-      if (value > threshold.poor) status = '🔴';
-      else if (value > threshold.good) status = '🟡';
-    }
-
-    console.log(`${status} ${name}: ${value}${unit}`);
-  }
-
   private logEnhancedMetric(name: string, metric: WebVitalsMetric | null, unit: string = ''): void {
     if (!metric) {
       console.log(`⚪ ${name}: Not measured yet`);
       return;
     }
 
-    const statusEmoji = {
+    const statusMap: Record<string, string> = {
       'good': '🟢',
-      'needs-improvement': '🟡', 
+      'needs-improvement': '🟡',
       'poor': '🔴'
-    }[metric.rating] || '⚪';
+    };
+    const statusEmoji = statusMap[metric.rating] || '⚪';
 
     console.log(`${statusEmoji} ${name}: ${metric.value}${unit} (${metric.rating.replace('-', ' ')})`);
   }
@@ -587,7 +580,7 @@ export const performanceMonitor = new PerformanceMonitor();
 
 // Development-only global access
 if (import.meta.env.MODE === 'development' && typeof window !== 'undefined') {
-  (window as Record<string, unknown>).__performanceMonitor = performanceMonitor;
+  window.__performanceMonitor = performanceMonitor;
   console.log('📊 Performance monitor available at window.__performanceMonitor');
 }
 

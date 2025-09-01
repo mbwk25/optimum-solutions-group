@@ -1,10 +1,27 @@
+// Extension de l'interface Window pour typer gtag
+declare global {
+  interface Window {
+    gtag?: (event: string, action: string, params: Record<string, unknown>) => void;
+  }
+}
 /**
  * Advanced SEO Utilities
  * Comprehensive SEO analysis, meta tag validation, and structured data handling
  */
 
-import { WebVital } from 'web-vitals';
-import { Thing, WithContext, Organization, WebPage, Article } from 'schema-dts';
+import { Article, WebPage, WithContext } from 'schema-dts';
+// Typage local pour l'organisation (adapté à la structure utilisée dans SEOConfig)
+export interface LocalOrganization {
+  '@type': 'Organization';
+  name: string;
+  url: string;
+  logo: string;
+  sameAs: string[];
+}
+
+
+import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals';
+import { logger } from './logger';
 
 // ====================================================
 // Types and Interfaces
@@ -62,7 +79,7 @@ export interface SEOConfig {
   defaultImage: string;
   twitterHandle?: string;
   facebookAppId?: string;
-  organization: Organization;
+  organization: LocalOrganization;
 }
 
 export interface StructuredDataItem {
@@ -130,12 +147,12 @@ export const validateMetaTags = (document: Document): {
 
   // Get all meta tags
   const metaTags = document.querySelectorAll('meta');
-  
+
   metaTags.forEach(tag => {
     const name = tag.getAttribute('name');
     const property = tag.getAttribute('property');
     const content = tag.getAttribute('content') || '';
-    
+
     if (name || property) {
       found.push({ name: name || undefined, property: property || undefined, content });
     }
@@ -143,7 +160,7 @@ export const validateMetaTags = (document: Document): {
 
   // Check for required tags
   REQUIRED_META_TAGS.forEach(requiredTag => {
-    const foundTag = found.find(tag => 
+    const foundTag = found.find(tag =>
       (requiredTag.name && tag.name === requiredTag.name) ||
       (requiredTag.property && tag.property === requiredTag.property)
     );
@@ -179,7 +196,7 @@ export const validateMetaTags = (document: Document): {
             impact: 'medium'
           });
         }
-        
+
         if ((foundTag.property === 'og:title' || foundTag.name === 'twitter:title') && foundTag.content.length > 60) {
           issues.push({
             type: 'warning',
@@ -213,12 +230,12 @@ export const validateStructuredData = (document: Document): {
 
   // Find all JSON-LD scripts
   const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
-  
+
   jsonLdScripts.forEach((script, index) => {
     try {
       const jsonData = JSON.parse(script.textContent || '');
       data.push(jsonData);
-      
+
       // Detect schema types
       if (jsonData['@type']) {
         schemas.push(jsonData['@type']);
@@ -233,7 +250,7 @@ export const validateStructuredData = (document: Document): {
         errors.push(`JSON-LD script ${index + 1} missing @context`);
         valid = false;
       }
-      
+
       if (!jsonData['@type']) {
         errors.push(`JSON-LD script ${index + 1} missing @type`);
         valid = false;
@@ -254,8 +271,8 @@ export const validateStructuredData = (document: Document): {
 
 export class CoreWebVitalsTracker {
   private static instance: CoreWebVitalsTracker;
-  private vitals: Map<string, WebVital> = new Map();
-  private callbacks: Array<(vital: WebVital) => void> = [];
+  private vitals: Map<string, Metric> = new Map();
+  private callbacks: Array<(vital: Metric) => void> = [];
 
   static getInstance(): CoreWebVitalsTracker {
     if (!CoreWebVitalsTracker.instance) {
@@ -270,25 +287,22 @@ export class CoreWebVitalsTracker {
 
   private async initializeWebVitals() {
     try {
-      const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
-
-      getCLS(this.handleVital.bind(this));
-      getFID(this.handleVital.bind(this));
-      getFCP(this.handleVital.bind(this));
-      getLCP(this.handleVital.bind(this));
-      getTTFB(this.handleVital.bind(this));
+      onCLS(this.handleVital.bind(this));
+      onFCP(this.handleVital.bind(this));
+      onLCP(this.handleVital.bind(this));
+      onTTFB(this.handleVital.bind(this));
     } catch (error) {
-      console.warn('Web Vitals library not available:', error);
+      logger.warn('Web Vitals library not available:', error);
     }
   }
 
-  private handleVital(vital: WebVital) {
+  private handleVital(vital: Metric) {
     this.vitals.set(vital.name, vital);
     this.callbacks.forEach(callback => callback(vital));
-    
+
     // Send to analytics if configured
-    if (typeof gtag !== 'undefined') {
-      gtag('event', vital.name, {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', vital.name, {
         value: Math.round(vital.name === 'CLS' ? vital.value * 1000 : vital.value),
         event_category: 'Web Vitals',
         event_label: vital.id,
@@ -297,11 +311,11 @@ export class CoreWebVitalsTracker {
     }
   }
 
-  public subscribe(callback: (vital: WebVital) => void) {
+  public subscribe(callback: (vital: Metric) => void): void {
     this.callbacks.push(callback);
   }
 
-  public getVitals() {
+  public getVitals(): Record<string, Metric> {
     return Object.fromEntries(this.vitals);
   }
 
@@ -338,12 +352,12 @@ export const calculateSEOScore = (
   score += structuredDataScore;
 
   // Content analysis (25 points)
-  const title = document.querySelector('title')?.textContent || '';
-  const h1Elements = document.querySelectorAll('h1');
-  const imgElements = document.querySelectorAll('img');
-  
+  const title: string = document.querySelector('title')?.textContent || '';
+  const h1Elements: NodeListOf<HTMLHeadingElement> = document.querySelectorAll('h1');
+  const imgElements: NodeListOf<HTMLImageElement> = document.querySelectorAll('img');
+
   let contentScore = 0;
-  
+
   // Title analysis
   if (title.length > 0 && title.length <= 60) {
     contentScore += 5;
@@ -371,7 +385,7 @@ export const calculateSEOScore = (
   }
 
   // Image alt text analysis
-  const imagesWithoutAlt = Array.from(imgElements).filter(img => !img.getAttribute('alt'));
+  const imagesWithoutAlt: HTMLImageElement[] = Array.from(imgElements).filter(img => !img.getAttribute('alt'));
   if (imagesWithoutAlt.length === 0 && imgElements.length > 0) {
     contentScore += 5;
   } else if (imagesWithoutAlt.length > 0) {
@@ -385,7 +399,7 @@ export const calculateSEOScore = (
   }
 
   // Content length check
-  const bodyText = document.body?.textContent || '';
+  const bodyText: string = document.body?.textContent || '';
   if (bodyText.length >= 300) {
     contentScore += 10;
   } else {
@@ -402,15 +416,15 @@ export const calculateSEOScore = (
 
   // Technical SEO (15 points)
   let technicalScore = 0;
-  
+
   // Check for robots meta tag
-  const robotsMeta = document.querySelector('meta[name="robots"]');
+  const robotsMeta: HTMLMetaElement | null = document.querySelector('meta[name="robots"]');
   if (robotsMeta && !robotsMeta.getAttribute('content')?.includes('noindex')) {
     technicalScore += 3;
   }
 
   // Check for canonical URL
-  const canonical = document.querySelector('link[rel="canonical"]');
+  const canonical: HTMLLinkElement | null = document.querySelector('link[rel="canonical"]');
   if (canonical) {
     technicalScore += 3;
   } else {
@@ -424,7 +438,7 @@ export const calculateSEOScore = (
   }
 
   // Check for language declaration
-  const htmlLang = document.documentElement.getAttribute('lang');
+  const htmlLang: string | null = document.documentElement.getAttribute('lang');
   if (htmlLang) {
     technicalScore += 2;
   } else {
@@ -443,7 +457,7 @@ export const calculateSEOScore = (
   }
 
   // Mobile-friendly viewport
-  const viewport = document.querySelector('meta[name="viewport"]');
+  const viewport: HTMLMetaElement | null = document.querySelector('meta[name="viewport"]');
   if (viewport?.getAttribute('content')?.includes('width=device-width')) {
     technicalScore += 5;
   }
@@ -453,7 +467,7 @@ export const calculateSEOScore = (
   // Core Web Vitals scoring (10 points)
   const vitals = coreWebVitals.getVitals();
   let performanceScore = 0;
-  
+
   const lcp = vitals.LCP?.value || null;
   const fid = vitals.FID?.value || null;
   const cls = vitals.CLS?.value || null;
@@ -505,7 +519,7 @@ export const calculateSEOScore = (
 // Structured Data Generators
 // ====================================================
 
-export const generateOrganizationSchema = (config: SEOConfig): WithContext<Organization> => ({
+export const generateOrganizationSchema = (config: SEOConfig): WithContext<LocalOrganization> => ({
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: config.organization.name,
@@ -589,7 +603,7 @@ export const generateStructuredData = () => ({
     "@type": "Service",
     "serviceType": [
       "Custom Web Development",
-      "Mobile App Development", 
+      "Mobile App Development",
       "IoT Solutions",
       "Digital Transformation",
       "Business Automation"
@@ -613,7 +627,7 @@ export const generateBreadcrumbs = (items: Array<{ name: string; url: string }>)
 
 export const generateFAQStructuredData = (faqs: Array<{ question: string; answer: string }>) => ({
   "@context": "https://schema.org",
-  "@type": "FAQPage", 
+  "@type": "FAQPage",
   "mainEntity": faqs.map(faq => ({
     "@type": "Question",
     "name": faq.question,

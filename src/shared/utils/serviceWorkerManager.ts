@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * Service Worker Manager
  * Handles registration, updates, and communication with service worker
@@ -63,7 +65,7 @@ class ServiceWorkerManager {
 
       return this.getStatus();
     } catch (error) {
-      console.error('[SW Manager] Service worker registration failed:', error);
+      logger.error('[SW Manager] Service worker registration failed:', error);
       this.emit('error', error);
       return this.getStatus();
     }
@@ -76,16 +78,16 @@ class ServiceWorkerManager {
     if (!this.registration) return false;
 
     try {
-      const result = await this.registration.unregister();
+      const result: boolean = await this.registration.unregister();
       this.stopUpdateChecks();
       this.registration = null;
-      
+
       console.log('[SW Manager] Service worker unregistered');
       this.emit('unregistered');
-      
+
       return result;
     } catch (error) {
-      console.error('[SW Manager] Service worker unregistration failed:', error);
+      logger.error('[SW Manager] Service worker unregistration failed:', error);
       return false;
     }
   }
@@ -102,7 +104,7 @@ class ServiceWorkerManager {
       await this.registration.update();
       console.log('[SW Manager] Service worker update requested');
     } catch (error) {
-      console.error('[SW Manager] Service worker update failed:', error);
+      logger.error('[SW Manager] Service worker update failed:', error);
       throw error;
     }
   }
@@ -136,7 +138,7 @@ class ServiceWorkerManager {
       await this.registration.update();
       return !!this.registration.waiting;
     } catch (error) {
-      console.error('[SW Manager] Update check failed:', error);
+      logger.error('[SW Manager] Update check failed:', error);
       return false;
     }
   }
@@ -162,9 +164,9 @@ class ServiceWorkerManager {
       return Notification.permission;
     }
 
-    const permission = await Notification.requestPermission();
+    const permission: NotificationPermission = await Notification.requestPermission();
     console.log('[SW Manager] Notification permission:', permission);
-    
+
     return permission;
   }
 
@@ -177,15 +179,16 @@ class ServiceWorkerManager {
     }
 
     try {
-      const subscription = await this.registration.pushManager.subscribe({
+      const applicationServerKey: ArrayBuffer = this.urlB64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer;
+      const subscription: PushSubscription = await this.registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlB64ToUint8Array(vapidPublicKey),
+        applicationServerKey,
       });
 
       console.log('[SW Manager] Push subscription created');
       return subscription;
     } catch (error) {
-      console.error('[SW Manager] Push subscription failed:', error);
+      logger.error('[SW Manager] Push subscription failed:', error);
       return null;
     }
   }
@@ -224,7 +227,7 @@ class ServiceWorkerManager {
    * Remove event listener
    */
   off(event: string, listener: (...args: unknown[]) => void): void {
-    const eventListeners = this.listeners.get(event);
+    const eventListeners: Array<(...args: unknown[]) => void> | undefined = this.listeners.get(event);
     if (eventListeners) {
       const index = eventListeners.indexOf(listener);
       if (index > -1) {
@@ -237,7 +240,7 @@ class ServiceWorkerManager {
    * Emit event to listeners
    */
   private emit(event: string, ...args: unknown[]): void {
-    const eventListeners = this.listeners.get(event);
+    const eventListeners: Array<(...args: unknown[]) => void> | undefined = this.listeners.get(event);
     if (eventListeners) {
       eventListeners.forEach(listener => listener(...args));
     }
@@ -251,14 +254,14 @@ class ServiceWorkerManager {
 
     // Handle service worker updates
     this.registration.addEventListener('updatefound', () => {
-      const newWorker = this.registration!.installing;
+      const newWorker: ServiceWorker | null = this.registration!.installing;
       if (newWorker) {
         console.log('[SW Manager] New service worker installing');
         this.emit('installing', newWorker);
 
         newWorker.addEventListener('statechange', () => {
           console.log('[SW Manager] Service worker state changed:', newWorker.state);
-          
+
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             console.log('[SW Manager] New service worker available');
             this.emit('updateavailable', newWorker);
@@ -302,16 +305,17 @@ class ServiceWorkerManager {
   }
 
   /**
-   * Convert VAPID key to Uint8Array
+   * Convert VAPID key to Uint8Array (with ArrayBuffer)
    */
   private urlB64ToUint8Array(base64String: string): Uint8Array {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
+    const padding: string = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64: string = (base64String + padding)
       .replace(/-/g, '+')
       .replace(/_/g, '/');
 
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+    const rawData: string = window.atob(base64);
+    const buffer: ArrayBuffer = new ArrayBuffer(rawData.length);
+    const outputArray: Uint8Array = new Uint8Array(buffer);
 
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
@@ -321,7 +325,7 @@ class ServiceWorkerManager {
 }
 
 // Singleton instance
-export const serviceWorkerManager = new ServiceWorkerManager();
+export const serviceWorkerManager: ServiceWorkerManager = new ServiceWorkerManager();
 
 // Auto-register in production
 if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {

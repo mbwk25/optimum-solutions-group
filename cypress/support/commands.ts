@@ -194,25 +194,22 @@ Cypress.Commands.add('shouldContainTextWithRetry', { prevSubject: true }, (subje
 })
 
 /**
- * Tab navigation command
+ * Tab navigation command - improved for Radix UI compatibility
  */
 Cypress.Commands.add('tab', { prevSubject: 'optional' }, (subject, options: { shift?: boolean } = {}) => {
-  const tabEvent = {
-    key: 'Tab',
-    keyCode: 9,
-    which: 9,
-    shiftKey: options.shift || false,
-    bubbles: true
-  }
-  
-  if (subject) {
-    return cy.wrap(subject)
-      .trigger('keydown', tabEvent)
-      .trigger('keyup', tabEvent)
+  // Use key simulation instead of type for tab navigation
+  if (options.shift) {
+    if (subject) {
+      return cy.wrap(subject).trigger('keydown', { keyCode: 9, shiftKey: true }).trigger('keyup', { keyCode: 9, shiftKey: true })
+    } else {
+      return cy.get('body').trigger('keydown', { keyCode: 9, shiftKey: true }).trigger('keyup', { keyCode: 9, shiftKey: true })
+    }
   } else {
-    return cy.get('body')
-      .trigger('keydown', tabEvent)
-      .trigger('keyup', tabEvent)
+    if (subject) {
+      return cy.wrap(subject).trigger('keydown', { keyCode: 9 }).trigger('keyup', { keyCode: 9 })
+    } else {
+      return cy.get('body').trigger('keydown', { keyCode: 9 }).trigger('keyup', { keyCode: 9 })
+    }
   }
 })
 

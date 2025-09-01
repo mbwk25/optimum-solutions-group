@@ -22,8 +22,16 @@ import 'cypress-axe'
 
 // Global before hook for all E2E tests
 beforeEach(() => {
-  // Inject axe-core for accessibility testing
-  cy.injectAxe()
+  // Inject axe-core for accessibility testing with error handling
+  cy.window().then((win) => {
+    // Check if axe is already loaded
+    if (!win.axe) {
+      cy.injectAxe()
+    }
+  })
+  
+  // Wait for the page to be fully loaded before proceeding
+  cy.get('body').should('exist')
 })
 
 // Global error handling

@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 // Performance budget monitoring
 export const PERFORMANCE_BUDGETS = {
   FCP: 1500, // First Contentful Paint - 1.5s
@@ -27,11 +29,11 @@ export const checkPerformanceBudget = () => {
 
 export const logPerformanceWarnings = () => {
   const budgetResults = checkPerformanceBudget();
-  
+
   Object.entries(budgetResults).forEach(([metric, result]) => {
     if (!result.passed) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(
+        logger.warn(
           `🚨 Performance Budget Exceeded: ${metric}`,
           `Actual: ${result.value}, Budget: ${result.budget}`
         );
