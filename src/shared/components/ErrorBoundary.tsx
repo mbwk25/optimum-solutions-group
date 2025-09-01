@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/shared/ui/button';
 import { AlertTriangle, RefreshCw, Copy, ExternalLink, Home } from 'lucide-react';
 import { errorHandler } from '@/shared/utils/errorHandler';
@@ -60,7 +60,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Generate a unique event ID for tracking
     const eventId = `error_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
@@ -73,7 +73,6 @@ class ErrorBoundary extends Component<Props, State> {
     errorHandler.handleError(`ErrorBoundary caught error (${this.props.level || 'unknown'})`, {
       error: error.message,
       component: this.constructor.name,
-      errorBoundaryLevel: this.props.level || 'unknown',
       errorStack: error.stack,
       componentStack: errorInfo.componentStack,
       eventId,
@@ -155,7 +154,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
   };
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     if (this.resetTimeoutId) {
       window.clearTimeout(this.resetTimeoutId);
     }

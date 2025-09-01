@@ -12,6 +12,9 @@ import {
   CoreWebVitalsOptions 
 } from '../types/coreWebVitals';
 
+// Export types for use in other components
+export type { WebVitalsMetric, CWV_THRESHOLDS };
+
 interface DeviceCapabilities {
   isLowEndDevice: boolean;
   deviceMemory: number | null;
