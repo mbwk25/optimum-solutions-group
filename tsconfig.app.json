@@ -30,7 +30,6 @@
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
-    "noImplicitUseStrict": true,
 
     "baseUrl": ".",
     "paths": {

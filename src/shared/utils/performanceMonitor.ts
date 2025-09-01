@@ -1,3 +1,14 @@
+/* 
+* Filename    : performanceMonitor.ts
+* File_path   : src/shared/utils/performanceMonitor.ts
+* Description : Real-time Performance Monitoring System
+* Author      : Mohammad-BNYAKOB.
+* Date        : 2025-09-03
+* Version     : 1.0.0
+* License     : MIT
+* Copyright   : Mohammad-BNYAKOB.
+* Contact     : mohammad.bn@optimum-solutions-group.com
+* ** */
 // Déclarations globales déplacées dans global.d.ts
 import { logger } from './logger';
 /**
@@ -210,7 +221,7 @@ class PerformanceMonitor {
     console.log(`DOM Content Loaded: ${this.metrics.domContentLoaded}ms`);
     console.log(`Window Load: ${this.metrics.windowLoad}ms`);
     console.log(`Memory Usage: ${this.formatBytes(this.metrics.jsHeapSize)}`);
-    console.log(`Connection: ${this.metrics.connectionType} (${this.metrics.downlink}Mbps, RTT: ${this.metrics.rtt}ms)`);
+    console.log(`Connection: ${this.metrics.connectionType || 'N/A'} (${this.metrics.downlink ? this.metrics.downlink + 'Mbps' : 'N/A'}, RTT: ${this.metrics.rtt ? this.metrics.rtt + 'ms' : 'N/A'})`);
     console.groupEnd();
 
     // User Metrics
@@ -285,7 +296,7 @@ class PerformanceMonitor {
     // Enhanced Core Web Vitals tracking with detailed metrics
     onCLS(this.handleWebVitalMetric.bind(this, 'cls'));
     onFCP(this.handleWebVitalMetric.bind(this, 'fcp'));
-    // onFID n'est pas disponible dans cette version de web-vitals
+    this.initializeFIDTracking(); // Custom FID implementation using PerformanceObserver
     onLCP(this.handleWebVitalMetric.bind(this, 'lcp'));
     onTTFB(this.handleWebVitalMetric.bind(this, 'ttfb'));
 
@@ -294,6 +305,132 @@ class PerformanceMonitor {
       onINP(this.handleWebVitalMetric.bind(this, 'inp'));
     } catch (error) {
       logger.warn('[Performance Monitor] INP metric not supported:', error);
+    }
+  }
+
+  private initializeFIDTracking(): void {
+    // Robust feature detection for FID tracking
+    const hasPerformanceObserver = typeof PerformanceObserver !== 'undefined';
+    const hasSupportedEntryTypes = hasPerformanceObserver && 
+      PerformanceObserver.supportedEntryTypes && 
+      PerformanceObserver.supportedEntryTypes.includes('first-input');
+    const hasPerformanceEventTiming = typeof PerformanceEventTiming !== 'undefined';
+    
+    // Check if FID tracking is supported
+    if (!hasPerformanceObserver || (!hasSupportedEntryTypes && !hasPerformanceEventTiming)) {
+      logger.warn('[Performance Monitor] FID not supported - PerformanceObserver or first-input entry type unavailable');
+      return;
+    }
+
+    try {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        
+        for (const entry of entries) {
+          // Validate entry type
+          if (entry.entryType !== 'first-input') {
+            continue;
+          }
+
+          // Safe type assertion with validation
+          const firstInputEntry = entry as PerformanceEventTiming;
+          
+          // Robust null checks and type validation
+          if (!firstInputEntry || 
+              typeof firstInputEntry.processingStart !== 'number' || 
+              typeof firstInputEntry.startTime !== 'number') {
+            logger.warn('[Performance Monitor] Invalid FID entry - missing required timing properties', {
+              entry: firstInputEntry,
+              processingStart: firstInputEntry?.processingStart,
+              startTime: firstInputEntry?.startTime
+            });
+            continue;
+          }
+
+          // Coerce to numbers and compute FID
+          const processingStart = Number(firstInputEntry.processingStart);
+          const startTime = Number(firstInputEntry.startTime);
+          const fid = processingStart - startTime;
+
+          // Validate computed FID value
+          if (isNaN(fid) || fid < 0 || !isFinite(fid)) {
+            logger.warn('[Performance Monitor] Invalid FID value computed', {
+              fid,
+              processingStart,
+              startTime,
+              entry: firstInputEntry
+            });
+            continue;
+          }
+
+          // Create enhanced FID metric with fallback ID
+          const thresholds = this.thresholds.fid;
+          let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
+          
+          if (thresholds) {
+            if (fid > thresholds.poor) {
+              rating = 'poor';
+            } else if (fid > thresholds.good) {
+              rating = 'needs-improvement';
+            }
+          }
+          
+          const enhancedMetric: WebVitalsMetric = {
+            name: 'FID',
+            value: fid,
+            delta: fid,
+            id: firstInputEntry.name || `fid-${Date.now()}`, // Fallback ID
+            rating,
+            navigationType: 'navigate',
+            timestamp: Date.now(),
+            entries: [firstInputEntry],
+          };
+          
+          // Update metrics and notify observers
+          this.metrics.fid = enhancedMetric;
+          this.updatePerformanceScores();
+          this.checkThresholds('fid', fid);
+          this.notifyObservers();
+          
+          // Log detailed FID information when first input is observed
+          logger.info('[Performance Monitor] First Input Delay recorded', {
+            fid: `${fid}ms`,
+            rating,
+            entryName: firstInputEntry.name || 'unknown',
+            startTime: `${startTime}ms`,
+            duration: `${firstInputEntry.duration || 0}ms`,
+            processingStart: `${processingStart}ms`,
+            processingEnd: `${firstInputEntry.processingEnd || 0}ms`,
+            target: (firstInputEntry.target as Element)?.tagName || 'unknown',
+            interactionId: firstInputEntry.interactionId || 'none'
+          });
+          
+          if (import.meta.env.MODE === 'development') {
+            console.log(`[Performance Monitor] FID: ${fid}ms (${rating}) - ${firstInputEntry.name || 'unknown'} on ${(firstInputEntry.target as Element)?.tagName || 'unknown'}`);
+          }
+          
+          // Only disconnect after successful FID measurement
+          observer.disconnect();
+          break;
+        }
+      });
+      
+      // Try modern observe syntax first, fall back to legacy
+      try {
+        observer.observe({ type: 'first-input', buffered: true });
+      } catch (observeError) {
+        try {
+          observer.observe({ entryTypes: ['first-input'] });
+        } catch (legacyObserveError) {
+          logger.warn('[Performance Monitor] Failed to observe first-input entries', {
+            modernError: observeError,
+            legacyError: legacyObserveError
+          });
+          observer.disconnect();
+        }
+      }
+    } catch (error) {
+      logger.warn('[Performance Monitor] FID tracking failed:', error);
     }
   }
 
@@ -318,17 +455,17 @@ class PerformanceMonitor {
 
     // Device Memory API
     if ('deviceMemory' in navigator) {
-      this.metrics.deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
-      this.metrics.isLowEndDevice = this.metrics.deviceMemory <= 1;
+      this.metrics.deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null;
+      this.metrics.isLowEndDevice = this.metrics.deviceMemory !== null && this.metrics.deviceMemory <= 1;
     }
 
     // Network Information API
     if ('connection' in navigator) {
       const connection = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string; downlink?: number; rtt?: number } }).connection;
-      this.metrics.connectionType = connection?.type ?? 'unknown';
-      this.metrics.effectiveType = connection?.effectiveType ?? 'unknown';
-      this.metrics.downlink = connection?.downlink ?? 0;
-      this.metrics.rtt = connection?.rtt ?? 0;
+      this.metrics.connectionType = connection?.type ?? null;
+      this.metrics.effectiveType = connection?.effectiveType ?? null;
+      this.metrics.downlink = connection?.downlink ?? null;
+      this.metrics.rtt = connection?.rtt ?? null;
 
       // Update low-end device detection based on connection
       if (connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g') {
@@ -495,8 +632,11 @@ class PerformanceMonitor {
       timestamp: Date.now(),
       url: typeof window !== 'undefined' ? window.location.href : '',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      connectionType: this.metrics.effectiveType || undefined,
-      deviceMemory: this.metrics.deviceMemory || undefined,
+      ...(this.metrics.connectionType != null && { connectionType: this.metrics.connectionType }),
+      ...(this.metrics.effectiveType != null && { effectiveType: this.metrics.effectiveType }),
+      ...(this.metrics.downlink != null && { downlink: this.metrics.downlink }),
+      ...(this.metrics.rtt != null && { rtt: this.metrics.rtt }),
+      ...(this.metrics.deviceMemory != null && { deviceMemory: this.metrics.deviceMemory }),
       isLowEndDevice: this.metrics.isLowEndDevice,
       pageLoadTime: this.metrics.domContentLoaded || 0,
     };

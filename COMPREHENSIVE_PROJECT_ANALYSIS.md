@@ -339,10 +339,9 @@ class PerformanceMonitor {
   private metrics: PerformanceMetrics = {
     cls: null,    // Cumulative Layout Shift
     fcp: null,    // First Contentful Paint
-    fid: null,    // First Input Delay
     lcp: null,    // Largest Contentful Paint
     ttfb: null,   // Time to First Byte
-    inp: null,    // Interaction to Next Paint
+    inp: null,    // Interaction to Next Paint (supersedes FID)
   };
 }
 ```

@@ -4,13 +4,19 @@
  */
 
 import { useEffect, useCallback, useState } from 'react';
-import { getCLS, getFID, getFCP, getLCP, getTTFB, onINP, Metric } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 import { 
   CWV_THRESHOLDS, 
   WebVitalsMetric, 
   CoreWebVitalsData, 
   CoreWebVitalsOptions 
 } from '../types/coreWebVitals';
+
+interface DeviceCapabilities {
+  isLowEndDevice: boolean;
+  deviceMemory: number | null;
+  connectionType: string | null;
+}
 
 /**
  * Custom hook for monitoring Core Web Vitals performance metrics
@@ -35,21 +41,27 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
   const [isReporting, setIsReporting] = useState(false);
   
   // Device and connection detection
-  const detectDeviceCapabilities = useCallback(() => {
-    if (typeof navigator === 'undefined') return { isLowEndDevice: false };
+  const detectDeviceCapabilities = useCallback((): DeviceCapabilities => {
+    if (typeof navigator === 'undefined') {
+      return {
+        isLowEndDevice: false,
+        deviceMemory: null,
+        connectionType: null,
+      };
+    }
     
     // @ts-expect-error - DeviceMemory is experimental but widely supported
-    const deviceMemory = navigator.deviceMemory || 4;
+    const deviceMemory = navigator.deviceMemory ?? null;
     // @ts-expect-error - Connection API
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     
-    const isLowEndDevice = deviceMemory <= 1 || 
+    const isLowEndDevice = (deviceMemory !== null && deviceMemory <= 1) || 
       (connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g'));
     
     return {
       isLowEndDevice,
       deviceMemory,
-      connectionType: connection?.effectiveType || 'unknown',
+      connectionType: connection?.effectiveType || null,
     };
   }, []);
 
@@ -72,7 +84,19 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       delta: metric.delta,
       id: metric.id,
       rating,
-      navigationType: metric.navigationType || 'navigate',
+      navigationType: (() => {
+        switch (metric.navigationType) {
+          case 'back-forward':
+          case 'back-forward-cache':
+            return 'back_forward';
+          case 'navigate':
+          case 'reload':
+          case 'prerender':
+            return metric.navigationType;
+          default:
+            return 'navigate';
+        }
+      })(),
       timestamp: Date.now(),
       entries: metric.entries,
     };
@@ -155,11 +179,10 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       // Register Web Vitals observers
       const options_internal = { reportAllChanges: options.reportAllChanges ?? false };
 
-      getLCP(handleMetric, options_internal);
-      getFID(handleMetric);
-      getCLS(handleMetric, options_internal);
-      getFCP(handleMetric, options_internal);
-      getTTFB(handleMetric);
+      onLCP(handleMetric, options_internal);
+      onFCP(handleMetric, options_internal);
+      onCLS(handleMetric, options_internal);
+      onTTFB(handleMetric);
       
       // INP is newer, might not be available in all browsers
       try {
@@ -221,10 +244,10 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
 
     try {
       // Force collection of current metrics
-      getLCP(handleMetric, { reportAllChanges: true });
-      getCLS(handleMetric, { reportAllChanges: true });
-      getFCP(handleMetric, { reportAllChanges: true });
-      getTTFB(handleMetric);
+      onLCP(handleMetric, { reportAllChanges: true });
+      onCLS(handleMetric, { reportAllChanges: true });
+      onFCP(handleMetric, { reportAllChanges: true });
+      onTTFB(handleMetric);
       
       try {
         onINP(handleMetric, { reportAllChanges: true });

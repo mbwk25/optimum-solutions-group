@@ -34,8 +34,8 @@ export interface CoreWebVitalsData {
   timestamp: number;
   url: string;
   userAgent: string;
-  connectionType?: string;
-  deviceMemory?: number;
+  connectionType?: string | null;
+  deviceMemory?: number | null;
   isLowEndDevice: boolean;
   pageLoadTime: number;
 }

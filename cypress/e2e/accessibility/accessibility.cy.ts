@@ -179,7 +179,7 @@ describe('Accessibility E2E Tests', () => {
         .blur()
         .then(($input) => {
           // Check for validation message
-          void expect($input[0].validationMessage).to.not.be.empty
+          void expect(($input[0] as HTMLInputElement).validationMessage).to.not.be.empty
         })
       
       // Test required field feedback
@@ -388,8 +388,8 @@ describe('Accessibility E2E Tests', () => {
       
       // Check that validation message is available to screen readers
       cy.get('[data-testid="input-email"]').then($input => {
-        void expect($input[0].validationMessage).to.not.be.empty
-        void expect($input[0].validity.valid).to.be.false
+        void expect(($input[0] as HTMLInputElement).validationMessage).to.not.be.empty
+        void expect(($input[0] as HTMLInputElement).validity.valid).to.be.false
       })
       
       // Fix email and verify
@@ -399,7 +399,7 @@ describe('Accessibility E2E Tests', () => {
         .blur()
       
       cy.get('[data-testid="input-email"]').then($input => {
-        void expect($input[0].validity.valid).to.be.true
+        void expect(($input[0] as HTMLInputElement).validity.valid).to.be.true
       })
     })
 

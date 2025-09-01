@@ -20,16 +20,45 @@ import 'cypress-axe'
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
+// Override visit command to auto-inject axe after navigation
+Cypress.Commands.overwrite('visit', (originalFn, ...args) => {
+  // Check for cross-origin visits to avoid cy.window() errors
+  try {
+    // Extract target URL from args
+    const targetUrl = typeof args[0] === 'string' ? args[0] : (args[0] as { url?: string })?.url || String(args[0])
+    
+    // Get base origin from Cypress config or current window
+    const baseUrl = Cypress.config('baseUrl')
+    const baseOrigin = baseUrl 
+      ? new URL(baseUrl).origin
+      : window.location.origin
+    
+    // Compare origins
+    const targetOrigin = new URL(targetUrl, baseOrigin).origin
+    
+    if (targetOrigin !== baseOrigin) {
+      // Cross-origin visit, skip cy.window() and cy.injectAxe()
+      return originalFn(...args)
+    }
+  } catch (error) {
+    // If URL parsing fails, proceed with original behavior
+    console.warn('Failed to parse URL for cross-origin check:', error)
+  }
+  
+  // Same-origin visit, proceed with axe injection
+  const result = originalFn(...args)
+  return result.then((subject) => {
+    cy.window({ log: false }).then((win) => {
+      if (!(win as Window & { axe?: unknown }).axe) {
+        return cy.injectAxe()
+      }
+    })
+    return subject
+  })
+})
+
 // Global before hook for all E2E tests
 beforeEach(() => {
-  // Inject axe-core for accessibility testing with error handling
-  cy.window().then((win) => {
-    // Check if axe is already loaded
-    if (!win.axe) {
-      cy.injectAxe()
-    }
-  })
-  
   // Wait for the page to be fully loaded before proceeding
   cy.get('body').should('exist')
 })

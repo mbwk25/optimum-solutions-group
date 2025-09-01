@@ -10,9 +10,10 @@
 
 ## 📊 Performance Dashboard
 
-**Live Dashboard**: https://mbwk25.github.io/optimum-solutions-group
+**Live Dashboard**: <https://mbwk25.github.io/optimum-solutions-group>
 
 Our automated performance monitoring system tracks:
+
 - **Lighthouse Performance Scores** - Core Web Vitals, Speed Index, and more
 - **Accessibility Compliance** - WCAG standards and best practices
 - **Bundle Size Analysis** - JavaScript bundle optimization tracking
@@ -20,7 +21,7 @@ Our automated performance monitoring system tracks:
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/191a8a44-4ca1-4155-9cf6-8342ccbd4142
+**URL**: <https://lovable.dev/projects/191a8a44-4ca1-4155-9cf6-8342ccbd4142>
 
 ## How can I edit this code?
 
@@ -191,6 +192,7 @@ This project includes a comprehensive performance monitoring system powered by G
 ### Automated Monitoring
 
 The performance monitoring system runs automatically:
+
 - **On every push** to main/develop branches
 - **On pull requests** with detailed performance reports
 - **Daily scheduled runs** at 6 AM UTC
@@ -199,24 +201,27 @@ The performance monitoring system runs automatically:
 ### Performance Metrics Tracked
 
 #### Lighthouse Scores
+
 - **Performance**: Speed Index, LCP, FID, CLS, and more
 - **Accessibility**: WCAG compliance and a11y best practices
 - **Best Practices**: Security, HTTPS usage, console errors
 - **SEO**: Meta tags, structured data, mobile-friendliness
 
 #### Core Web Vitals
+
 - **LCP (Largest Contentful Paint)**: Loading performance
 - **FID (First Input Delay)**: Interactivity responsiveness
 - **CLS (Cumulative Layout Shift)**: Visual stability
 
 #### Bundle Analysis
+
 - **JavaScript bundle size** tracking
 - **Dependency analysis** and optimization recommendations
 - **Asset optimization** monitoring
 
 ### Dashboard Features
 
-📊 **Live Dashboard**: https://mbwk25.github.io/optimum-solutions-group
+📊 **Live Dashboard**: <https://mbwk25.github.io/optimum-solutions-group>
 
 - **Real-time metrics** updated after each successful build
 - **Performance trends** with historical data visualization
@@ -240,6 +245,7 @@ npm run analyze:bundle
 ### Performance Thresholds
 
 The system monitors these performance thresholds:
+
 - **Performance Score**: ≥ 90 (excellent)
 - **Accessibility Score**: ≥ 95 (WCAG AA compliant)
 - **Bundle Size**: ≤ 300KB (gzipped)
@@ -250,6 +256,7 @@ The system monitors these performance thresholds:
 ### Regression Detection
 
 Automated regression detection:
+
 - **Performance score drops** > 5 points
 - **Core Web Vitals degradation** beyond thresholds
 - **Bundle size increases** > 10%
@@ -258,6 +265,7 @@ Automated regression detection:
 ### Notifications
 
 Optional Slack notifications for:
+
 - **Performance regressions** detected
 - **Daily monitoring reports** (when scheduled)
 - **Critical accessibility issues**
@@ -289,6 +297,7 @@ node scripts/performance-benchmark.js --help
 ### Contributing to Performance
 
 When contributing:
+
 1. Check the performance dashboard before and after your changes
 2. Run local performance tests during development
 3. Monitor PR performance reports for regressions

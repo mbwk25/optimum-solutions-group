@@ -36,6 +36,98 @@ type ComparisonEntry = {
   change: number;
 };
 
+// FID fallback interface
+interface FIDFallback {
+  value: number | null;
+  fidUnavailable: boolean;
+}
+
+// ========== FID FALLBACK IMPLEMENTATION ==========
+
+/**
+ * Custom FID measurement fallback
+ * Measures the delay between the first user interaction and when the browser can respond
+ * 
+ * @deprecated First Input Delay (FID) was officially deprecated on March 12, 2024 and replaced by Interaction to Next Paint (INP).
+ * This implementation is maintained for backward compatibility but will be removed in future versions.
+ * Consider migrating to INP measurement for better user interaction performance tracking.
+ */
+function measureFIDFallback(): Promise<FIDFallback> {
+  return new Promise((resolve) => {
+    // Check if PerformanceObserver is available for FID
+    if ('PerformanceObserver' in window) {
+      try {
+        const observer = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          if (entries.length > 0) {
+            const fidEntry = entries[0] as PerformanceEventTiming;
+            resolve({
+              value: fidEntry.processingStart - fidEntry.startTime,
+              fidUnavailable: false
+            });
+          }
+        });
+        
+        observer.observe({ entryTypes: ['first-input'] });
+        
+        // Timeout fallback
+        setTimeout(() => {
+          observer.disconnect();
+          resolve({ value: null, fidUnavailable: true });
+        }, 10000);
+        
+        return;
+      } catch (error) {
+        logger.warn('PerformanceObserver for FID failed, using event listener fallback');
+      }
+    }
+
+    // Event listener fallback
+    let firstInputTime: number | null = null;
+    let processingStartTime: number | null = null;
+    let isFirstInput = true;
+
+    const inputEvents = ['pointerdown', 'keydown', 'touchstart', 'mousedown'];
+    
+    const handleFirstInput = (event: Event) => {
+      if (!isFirstInput) return;
+      isFirstInput = false;
+
+      const now = performance.now();
+      firstInputTime = event.timeStamp;
+      processingStartTime = now;
+
+      // Calculate FID as the delay between first input and processing start
+      const fid = processingStartTime - firstInputTime;
+      
+      // Clean up event listeners
+      inputEvents.forEach(eventType => {
+        document.removeEventListener(eventType, handleFirstInput, { capture: true });
+      });
+
+      resolve({
+        value: Math.max(0, fid), // Ensure non-negative
+        fidUnavailable: false
+      });
+    };
+
+    // Add event listeners with capture to catch events early
+    inputEvents.forEach(eventType => {
+      document.addEventListener(eventType, handleFirstInput, { capture: true });
+    });
+
+    // Timeout fallback
+    setTimeout(() => {
+      if (isFirstInput) {
+        inputEvents.forEach(eventType => {
+          document.removeEventListener(eventType, handleFirstInput, { capture: true });
+        });
+        resolve({ value: null, fidUnavailable: true });
+      }
+    }, 10000);
+  });
+}
+
 export interface PerformanceBenchmark {
   id: string;
   name: string;
@@ -43,16 +135,16 @@ export interface PerformanceBenchmark {
   timestamp: number;
   userAgent: string;
   connection: {
-    type: string;
-    effectiveType: string;
-    downlink?: number;
-    rtt?: number;
+    type: string | null;
+    effectiveType: string | null;
+    downlink?: number | null;
+    rtt?: number | null;
   };
   metrics: {
     // Core Web Vitals
     cls?: number;
     fcp?: number;
-    fid?: number;
+    fid?: number | null;
     lcp?: number;
     ttfb?: number;
 
@@ -114,13 +206,26 @@ export interface BenchmarkConfig {
   collectTraces?: boolean;
 }
 
+// Type for individual threshold values
+type ThresholdValue = { good: number; poor: number };
+
+// Type guard to check if a value is a valid threshold
+function isThresholdValue(value: unknown): value is ThresholdValue {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'poor' in value &&
+    typeof (value as Record<string, unknown>)['poor'] === 'number'
+  );
+}
+
 export interface BenchmarkThresholds {
-  cls: { good: number; poor: number };
-  fcp: { good: number; poor: number };
-  fid: { good: number; poor: number };
-  lcp: { good: number; poor: number };
-  ttfb: { good: number; poor: number };
-  performanceScore: { good: number; poor: number };
+  cls: ThresholdValue;
+  fcp: ThresholdValue;
+  fid: ThresholdValue;
+  lcp: ThresholdValue;
+  ttfb: ThresholdValue;
+  performanceScore: ThresholdValue;
 }
 
 // ========== DEFAULT THRESHOLDS ==========
@@ -149,19 +254,25 @@ export class PerformanceBenchmarkSuite {
    * Run a complete performance benchmark
    */
   async runBenchmark(config: BenchmarkConfig): Promise<PerformanceBenchmark> {
-    const benchmarkId = this.generateBenchmarkId();
+    const benchmarkId: string = this.generateBenchmarkId();
 
     console.log(`🚀 Starting performance benchmark: ${benchmarkId}`);
 
-    const metrics = await this.collectMetrics();
+    const metrics: PerformanceBenchmark['metrics'] = await this.collectMetrics();
 
     // Example usage of thresholds: log warning if any metric is poor
-    Object.entries(this.thresholds).forEach(([key, threshold]) => {
+    for (const [key, threshold] of Object.entries(this.thresholds)) {
       const metricValue = (metrics as Record<string, unknown>)[key];
-      if (typeof metricValue === 'number' && metricValue > (threshold as { poor: number }).poor) {
-        logger.warn(`Metric ${key} is above the poor threshold: ${metricValue} > ${(threshold as { poor: number }).poor}`);
+      
+      // Type-safe checks: ensure both metricValue and threshold are valid
+      if (
+        typeof metricValue === 'number' &&
+        isThresholdValue(threshold) &&
+        metricValue > threshold.poor
+      ) {
+        logger.warn(`Metric ${key} is above the poor threshold: ${metricValue} > ${threshold.poor}`);
       }
-    });
+    }
 
     const benchmark: PerformanceBenchmark = {
       id: benchmarkId,
@@ -226,7 +337,7 @@ export class PerformanceBenchmarkSuite {
       let collected = 0;
       const total = 5; // CLS, FCP, FID, LCP, TTFB
 
-      const checkComplete = () => {
+      const checkComplete = (): void => {
         collected++;
         if (collected === total) resolve();
       };
@@ -241,8 +352,22 @@ export class PerformanceBenchmarkSuite {
         checkComplete();
       });
 
-      // onFID n'est pas disponible dans cette version de web-vitals
-      // Si besoin, utilisez une alternative ou une version compatible
+      // Use custom FID fallback implementation
+      measureFIDFallback().then((fidResult: FIDFallback) => {
+        if (!fidResult.fidUnavailable && fidResult.value !== null) {
+          metrics.fid = fidResult.value;
+          logger.info(`FID measured: ${fidResult.value}ms`);
+        } else {
+          logger.warn('FID measurement unavailable or timed out');
+          // Set a sentinel value to indicate FID is not available
+          metrics.fid = null;
+        }
+        checkComplete();
+      }).catch((error) => {
+        logger.error('FID measurement failed:', error);
+        metrics.fid = null;
+        checkComplete();
+      });
 
       onLCP((metric: Metric) => {
         metrics.lcp = metric.value;
@@ -414,10 +539,10 @@ export class PerformanceBenchmarkSuite {
       }).webkitConnection;
 
     return {
-      type: connection?.type || 'unknown',
-      effectiveType: connection?.effectiveType || 'unknown',
-      downlink: connection?.downlink,
-      rtt: connection?.rtt
+      type: connection?.type || null,
+      effectiveType: connection?.effectiveType || null,
+      ...(connection?.downlink !== undefined && { downlink: connection.downlink }),
+      ...(connection?.rtt !== undefined && { rtt: connection.rtt })
     };
   }
 
@@ -536,7 +661,7 @@ export class PerformanceBenchmarkSuite {
       result.url,
       result.metrics.cls || 0,
       result.metrics.fcp || 0,
-      result.metrics.fid || 0,
+      result.metrics.fid ?? 0,
       result.metrics.lcp || 0,
       result.metrics.ttfb || 0,
       result.metrics.domContentLoaded,
@@ -586,8 +711,8 @@ export class PerformanceBenchmarkSuite {
       const values = recentResults.map(r => r.metrics[metric as keyof typeof r.metrics] as number).filter(v => v != null);
 
       if (values.length > 1) {
-        const firstValue = values[0];
-        const lastValue = values[values.length - 1];
+        const firstValue = values[0]!;
+        const lastValue = values[values.length - 1]!;
         const change = ((lastValue - firstValue) / firstValue) * 100;
 
         if (Math.abs(change) < 5) {
@@ -636,8 +761,8 @@ export class AutomatedPerformanceTesting {
         const results = this.benchmarkSuite.getResults();
         if (results.length > 1) {
           const comparison = this.benchmarkSuite.compareBenchmarks(
-            results[results.length - 2],
-            results[results.length - 1]
+            results[results.length - 2]!,
+            results[results.length - 1]!
           );
 
           if (comparison.regressions.length > 0) {
@@ -729,8 +854,33 @@ export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['
 export const monitorCoreWebVitals = (callback: (metric: string, value: number) => void): void => {
   onCLS((metric: Metric) => callback('CLS', metric.value));
   onFCP((metric: Metric) => callback('FCP', metric.value));
-  // onFID n'est pas disponible dans cette version de web-vitals
-  // Si besoin, utilisez une alternative ou une version compatible
+  
+  // FID tracking using PerformanceObserver API (web-vitals v5 doesn't export onFID)
+  // Compatible with modern browsers that support PerformanceEventTiming
+  // @deprecated FID was deprecated on March 12, 2024. Consider using INP instead.
+  if ('PerformanceObserver' in window && 'PerformanceEventTiming' in window) {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        for (const entry of entries) {
+          if (entry.entryType === 'first-input') {
+            const firstInputEntry = entry as PerformanceEventTiming;
+            const fid = firstInputEntry.processingStart - firstInputEntry.startTime;
+            callback('FID', fid);
+            observer.disconnect(); // Only measure first input
+            break;
+          }
+        }
+      });
+      
+      observer.observe({ entryTypes: ['first-input'] });
+    } catch (error) {
+      console.warn('FID tracking failed (deprecated metric):', error);
+    }
+  } else {
+    console.warn('FID not supported - PerformanceEventTiming API unavailable (deprecated metric)');
+  }
+  
   onLCP((metric: Metric) => callback('LCP', metric.value));
   onTTFB((metric: Metric) => callback('TTFB', metric.value));
 };
