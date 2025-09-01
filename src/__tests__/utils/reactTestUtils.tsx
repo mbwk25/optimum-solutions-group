@@ -12,7 +12,7 @@ import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 
 // Import providers from the application
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
+import ErrorBoundary from '@/shared/components/ErrorBoundary';
 
 // Import types from the main utilities file
 import type { TestProviderOptions, AccessibilityTestResult } from './testUtils';

@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Menu, X } from 'lucide-react';
 import logo from '@/assets/logo.png';
-import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
-import { useAccessibility, useRovingTabIndex } from '@/shared/hooks/useAccessibility';
+import { useAccessibility } from '@/shared/hooks/useAccessibility';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const Navigation = memo(() => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentNavIndex, setCurrentNavIndex] = useState(0);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   
@@ -212,7 +210,7 @@ const Navigation = memo(() => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div 
-            ref={containerRef as React.RefObject<HTMLDivElement>}
+            ref={containerRef}
             className="md:hidden pb-4 focus-trap"
             id="mobile-menu"
             role="menu"

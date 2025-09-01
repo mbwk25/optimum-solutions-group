@@ -56,6 +56,7 @@ export const measureRenderPerformance = async (
   // Mark the start of component rendering
   performance.mark('component-render-start');
   
+  // Execute the render component function
   const renderResult = renderComponent();
   
   // Mark the end of component rendering
@@ -71,7 +72,10 @@ export const measureRenderPerformance = async (
   await new Promise(resolve => setTimeout(resolve, 0));
   const mountEndTime = performance.now();
   const componentMountTime = mountEndTime - endTime;
-
+  
+  // Suppress unused variable warning by using the result
+  void renderResult;
+  
   return {
     renderTime: totalRenderTime,
     componentMountTime,

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 // Direct imports for critical components to ensure proper bundling
 import Navigation from '@/features/navigation/Navigation';
 import HeroSection from '@/features/hero/HeroSection';
