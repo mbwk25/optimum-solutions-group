@@ -3,11 +3,7 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { useToast } from '@/shared/hooks/use-toast';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Calendar from 'lucide-react/dist/esm/icons/calendar';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import { Mail, Phone, MapPin, Calendar, CheckCircle } from 'lucide-react';
 
 const ContactSection = () => {
   const { toast } = useToast();

@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useCallback, memo } from 'react';
 import { Button } from '@/shared/ui/button';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 import heroBackground from '@/assets/hero-background-optimized.jpg';
 import ParticleSystem from '@/shared/components/ParticleSystem';
 import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const HeroSection: React.FC = memo(() => {
-  const { prefersReducedMotion, announcePolite } = useAccessibilityContext();
+  const { prefersReducedMotion } = useAccessibilityContext();
   // Memoized scroll functions with accessibility improvements
   const scrollToContact = useCallback(() => {
     const element: HTMLElement | null = document.querySelector('#contact');
@@ -20,9 +19,9 @@ const HeroSection: React.FC = memo(() => {
         element.tabIndex = -1;
       }
       element.focus();
-      announcePolite('Navigated to contact section');
+      // Welcome message for screen readers
     }
-  }, [prefersReducedMotion, announcePolite]);
+  }, [prefersReducedMotion]);
 
   const scrollToServices = useCallback(() => {
     const element: HTMLElement | null = document.querySelector('#services');
@@ -35,9 +34,9 @@ const HeroSection: React.FC = memo(() => {
         element.tabIndex = -1;
       }
       element.focus();
-      announcePolite('Navigated to services section');
+      // Welcome message for screen readers
     }
-  }, [prefersReducedMotion, announcePolite]);
+  }, [prefersReducedMotion]);
 
   return (
     <section 
@@ -54,18 +53,6 @@ const HeroSection: React.FC = memo(() => {
             src={heroBackground}
             alt="Modern digital workspace with technology elements representing business transformation"
             className="w-full h-full object-cover opacity-20 transition-opacity duration-700 ease-in-out"
-            priority
-            loading="eager"
-            quality={85}
-            width={1600}
-            height={900}
-            responsive={true}
-            responsiveSizes={[400, 768, 1024, 1600]}
-            sizes="100vw"
-            format="auto"
-            style={{
-              backgroundColor: '#1a1a1a',
-            }}
           />
         </div>
         {!prefersReducedMotion && <ParticleSystem />}

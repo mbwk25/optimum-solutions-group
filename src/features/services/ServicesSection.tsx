@@ -1,13 +1,4 @@
-import Code from 'lucide-react/dist/esm/icons/code';
-import Workflow from 'lucide-react/dist/esm/icons/workflow';
-import Users from 'lucide-react/dist/esm/icons/users';
-import BarChart from 'lucide-react/dist/esm/icons/bar-chart';
-import Palette from 'lucide-react/dist/esm/icons/palette';
-import Headphones from 'lucide-react/dist/esm/icons/headphones';
-import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
-import Database from 'lucide-react/dist/esm/icons/database';
-import Cpu from 'lucide-react/dist/esm/icons/cpu';
-import Shield from 'lucide-react/dist/esm/icons/shield';
+import { Code, Workflow, Users, BarChart, Palette, Headphones, TrendingUp, Database, Cpu, Shield } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import useScrollAnimation from '@/shared/hooks/useScrollAnimation';
 
