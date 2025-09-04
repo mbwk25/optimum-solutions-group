@@ -35,3 +35,4 @@ const usePageLoad = () => {
 };
 
 export { LoadingScreen, usePageLoad };
+export default LoadingScreen;

@@ -22,9 +22,8 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     
     errorHandler.handleError(errorMessage, {
       component,
-      action,
+      action: action || 'unknown',
       error: errorObj.message,
-      errorStack: errorObj.stack,
       ...context,
       ...additionalContext,
     });
@@ -40,7 +39,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   ): Promise<T | null> => {
     return errorHandler.wrapAsync(asyncFn, {
       component,
-      action: actionName || action,
+      action: actionName || action || 'async_operation',
       ...context,
       ...additionalContext,
     });
@@ -54,7 +53,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   ): T | null => {
     return errorHandler.wrapSync(syncFn, {
       component,
-      action: actionName || action,
+      action: actionName || action || 'sync_operation',
       ...context,
       ...additionalContext,
     });
@@ -88,6 +87,8 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         window.removeEventListener('error', handleGlobalError);
       };
     }
+    
+    return undefined;
   }, [handleError]);
 
   return {

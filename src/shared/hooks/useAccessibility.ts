@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { 
   FocusTrap, 
   focusManager,
@@ -413,12 +413,9 @@ export const useAccessibility = (options: UseAccessibilityOptions = {}) => {
   // Combine container refs
   const containerRef = useCallback((node: HTMLElement | null) => {
     if (node) {
-      if (focusTrapContainer.current !== node) {
-        focusTrapContainer.current = node;
-      }
-      if (validationContainer.current !== node) {
-        validationContainer.current = node;
-      }
+      // Use direct assignment via type assertion for readonly refs
+      (focusTrapContainer as any).current = node;
+      (validationContainer as any).current = node;
     }
   }, [focusTrapContainer, validationContainer]);
 

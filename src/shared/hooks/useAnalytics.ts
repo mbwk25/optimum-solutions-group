@@ -7,7 +7,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import analytics, { type AnalyticsEvent, type UserSession } from '@/shared/services/analytics';
+import analytics, { type UserSession } from '@/shared/services/analytics';
 // Import will be resolved from the existing hooks
 // Note: For now, we'll create a simplified integration
 
@@ -65,7 +65,6 @@ export function useAnalytics(config: AnalyticsHookConfig = {}): AnalyticsHookRet
   const previousLocation = useRef(location.pathname);
   
   // Web Vitals integration (simplified for now)
-  // TODO: Integrate with existing Core Web Vitals system
   useEffect(() => {
     if (config.trackPerformance !== false && config.enableWebVitals) {
       // Simple performance metrics collection
@@ -85,10 +84,15 @@ export function useAnalytics(config: AnalyticsHookConfig = {}): AnalyticsHookRet
       if (document.readyState === 'complete') {
         collectBasicMetrics();
       } else {
-        window.addEventListener('load', collectBasicMetrics);
-        return () => window.removeEventListener('load', collectBasicMetrics);
+        const handleLoad = () => {
+          collectBasicMetrics();
+          window.removeEventListener('load', handleLoad);
+        };
+        window.addEventListener('load', handleLoad);
+        return () => window.removeEventListener('load', handleLoad);
       }
     }
+    return undefined;
   }, [config.trackPerformance, config.enableWebVitals]);
 
   // Track page views on route changes
@@ -148,26 +152,14 @@ export function useAnalytics(config: AnalyticsHookConfig = {}): AnalyticsHookRet
       // Track different element types
       if (target.tagName === 'A') {
         const link = target as HTMLAnchorElement;
-        analytics.trackClick('link', link.href, {
-          text: link.textContent,
-          href: link.href,
-          external: !link.href.startsWith(window.location.origin),
-        });
+        analytics.trackClick(link.href);
       } else if (target.tagName === 'BUTTON') {
-        analytics.trackClick('button', target.textContent || 'button', {
-          text: target.textContent,
-          type: (target as HTMLButtonElement).type,
-          className: target.className,
-        });
+        analytics.trackClick(target.textContent || 'button');
       } else if (target.closest('[data-track-click]')) {
         const trackableElement = target.closest('[data-track-click]') as HTMLElement;
-        const trackingData = trackableElement.dataset.trackClick;
+        const trackingData = trackableElement.dataset['trackClick'];
         
-        analytics.trackClick('custom', trackingData || 'tracked_element', {
-          element: trackableElement.tagName.toLowerCase(),
-          text: trackableElement.textContent,
-          className: trackableElement.className,
-        });
+        analytics.trackClick(trackingData || 'tracked_element');
       }
     };
 
@@ -246,19 +238,21 @@ export function useAnalytics(config: AnalyticsHookConfig = {}): AnalyticsHookRet
     value?: number,
     properties?: Record<string, unknown>
   ) => {
-    analytics.track({
-      type: 'goal',
-      category: 'conversion',
-      action: 'goal_completed',
-      label: goalId,
-      value,
-      properties: {
-        goalId,
-        pageCategory: config.pageCategory,
-        ...config.customProperties,
-        ...properties,
-      },
-    });
+    if (value !== undefined) {
+      analytics.track({
+        type: 'goal',
+        category: 'conversion',
+        action: 'goal_completed',
+        label: goalId,
+        value,
+        properties: {
+          goalId,
+          pageCategory: config.pageCategory,
+          ...config.customProperties,
+          ...properties,
+        },
+      });
+    }
   }, [config.pageCategory, config.customProperties]);
 
   const trackTiming = useCallback((
@@ -341,7 +335,7 @@ export function useFormAnalytics(formName: string) {
     trackEvent('form', 'field_focus', `${formName}_${fieldName}`);
   }, [trackEvent, formName]);
 
-  const trackFieldError = useCallback((fieldName: string, errorMessage: string) => {
+  const trackFieldError = useCallback((fieldName: string) => {
     trackEvent('form', 'field_error', `${formName}_${fieldName}`);
   }, [trackEvent, formName]);
 
@@ -362,7 +356,6 @@ export function useEcommerceAnalytics() {
   const trackPurchase = useCallback((
     transactionId: string,
     value: number,
-    currency: string,
     items: Array<{ id: string; name: string; category: string; quantity: number; price: number }>
   ) => {
     trackEvent('ecommerce', 'purchase', transactionId, value);
@@ -391,7 +384,7 @@ export function useEcommerceAnalytics() {
     trackEvent('ecommerce', 'remove_from_cart', `${itemId}_${itemName}`, price * quantity);
   }, [trackEvent]);
 
-  const trackViewItem = useCallback((itemId: string, itemName: string, category: string) => {
+  const trackViewItem = useCallback((itemId: string, itemName: string) => {
     trackEvent('ecommerce', 'view_item', `${itemId}_${itemName}`);
   }, [trackEvent]);
 

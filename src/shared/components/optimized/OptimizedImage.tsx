@@ -13,7 +13,6 @@ interface OptimizedImageProps {
   sizes?: string;
   onLoad?: () => void;
   onError?: React.ReactEventHandler<HTMLImageElement>;
-  srcSet?: string;
   loading?: 'eager' | 'lazy';
   quality?: number;
   format?: 'auto' | 'webp' | 'avif' | 'jpeg' | 'png';
@@ -22,6 +21,14 @@ interface OptimizedImageProps {
   blurDataURL?: string;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   objectPosition?: string;
+  style?: React.CSSProperties;
+}
+
+interface OptimizeOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: 'auto' | 'webp' | 'avif' | 'jpeg' | 'png';
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
@@ -59,9 +66,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
 
   // Generate optimized URLs and srcSet using asset optimizer
   const { optimizedSrc, optimizedSrcSet, pictureElements } = useMemo(() => {
-    const baseOptions = {
-      width: typeof width === 'number' ? width : undefined,
-      height: typeof height === 'number' ? height : undefined,
+    const numericWidth = typeof width === 'number' ? width : undefined;
+    const numericHeight = typeof height === 'number' ? height : undefined;
+
+    const baseOptions: OptimizeOptions = {
+      ...(numericWidth && { width: numericWidth }),
+      ...(numericHeight && { height: numericHeight }),
       quality,
       format,
     };
@@ -80,9 +90,16 @@ const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
     if (format === 'auto') {
       // AVIF with fallback to WebP and JPEG
       if (formatSupport.avif) {
+        const avifOptions: OptimizeOptions = {
+          format: 'avif', 
+          quality,
+          ...(numericWidth && { width: numericWidth }),
+          ...(numericHeight && { height: numericHeight })
+        };
+        
         const avifSrcSet = responsive 
           ? assetOptimizer.generateSrcSet(processedSrc, responsiveSizes)
-          : assetOptimizer.getOptimizedImageUrl(processedSrc, { ...baseOptions, format: 'avif' });
+          : assetOptimizer.getOptimizedImageUrl(processedSrc, avifOptions);
         
         pictureElements.push({
           type: 'image/avif',
@@ -91,9 +108,16 @@ const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
       }
 
       if (formatSupport.webp) {
+        const webpOptions: OptimizeOptions = {
+          format: 'webp', 
+          quality,
+          ...(numericWidth && { width: numericWidth }),
+          ...(numericHeight && { height: numericHeight })
+        };
+        
         const webpSrcSet = responsive 
           ? assetOptimizer.generateSrcSet(processedSrc, responsiveSizes)
-          : assetOptimizer.getOptimizedImageUrl(processedSrc, { ...baseOptions, format: 'webp' });
+          : assetOptimizer.getOptimizedImageUrl(processedSrc, webpOptions);
         
         pictureElements.push({
           type: 'image/webp',

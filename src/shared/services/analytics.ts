@@ -114,8 +114,8 @@ export interface AnalyticsStorage {
 class AnalyticsService {
   private config: AnalyticsConfig;
   private eventQueue: AnalyticsEvent[] = [];
-  private session: UserSession;
-  private storage: AnalyticsStorage;
+  private session!: UserSession;
+  private storage!: AnalyticsStorage;
   private flushTimer: number | null = null;
   private isInitialized = false;
 

@@ -26,6 +26,7 @@ const LazyLoad: React.FC<LazyLoadProps> = ({
       timerRef.current = setTimeout(() => {
         setShowFallback(true);
       }, delay);
+      
       return () => {
         if (timerRef.current) {
           clearTimeout(timerRef.current);
@@ -33,6 +34,7 @@ const LazyLoad: React.FC<LazyLoadProps> = ({
       };
     } else {
       setShowFallback(true);
+      return; // Added return for when delay <= 0
     }
   }, [delay]);
 

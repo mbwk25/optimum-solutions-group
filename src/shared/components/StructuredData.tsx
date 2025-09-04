@@ -13,12 +13,10 @@ import {
   LocalBusiness,
   Product,
   Service,
-  Person,
-  Review,
   WithContext,
   Thing
 } from 'schema-dts';
-import { generateOrganizationSchema, generateWebPageSchema, generateArticleSchema, SEO_CONFIG } from '../utils/seo';
+import { SEO_CONFIG } from '../utils/seo';
 
 // ====================================================
 // Base Structured Data Component
@@ -127,7 +125,7 @@ export const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
     }),
     sameAs,
     ...(foundingDate && { foundingDate }),
-    ...(numberOfEmployees && { numberOfEmployees }),
+    ...(numberOfEmployees && { numberOfEmployees: { '@type': 'QuantitativeValue', value: numberOfEmployees } as const }),
     ...(industry && { industry }),
     ...(services && {
       hasOfferCatalog: {
@@ -277,8 +275,15 @@ export const ArticleSchema: React.FC<ArticleSchemaProps> = ({
       '@type': 'Organization',
       name: SEO_CONFIG.organization.name
     },
-    publisher: publisher || {
-      '@type': 'Organization',
+    publisher: publisher ? {
+      '@type': 'Organization' as const,
+      name: publisher.name,
+      logo: {
+        '@type': 'ImageObject',
+        url: publisher.logo
+      }
+    } : {
+      '@type': 'Organization' as const,
       name: SEO_CONFIG.organization.name,
       logo: {
         '@type': 'ImageObject',
@@ -660,7 +665,7 @@ export const WithSchema: React.FC<WithSchemaProps> = ({
         <WebPageSchema
           name={pageTitle}
           description={pageDescription}
-          breadcrumb={breadcrumbs}
+          {...(breadcrumbs ? { breadcrumb: breadcrumbs } : {})}
         />
       )}
       {breadcrumbs && breadcrumbs.length > 1 && (
