@@ -189,7 +189,7 @@ class AnalyticsService {
       ...event,
       timestamp: Date.now(),
       sessionId: this.session.id,
-      userId: this.storage.userId,
+      userId: this.session.id || '',
       url: window.location.href,
       referrer: document.referrer,
       title: document.title,
@@ -200,10 +200,12 @@ class AnalyticsService {
       deviceType: this.getDeviceType(),
     };
 
-    // Add performance metrics if available
-    if (this.config.trackPerformance) {
-      fullEvent.performanceMetrics = this.getPerformanceMetrics();
-    }
+      if (this.config.trackPerformance) {
+        const perfMetrics = this.getPerformanceMetrics();
+        if (perfMetrics) {
+          fullEvent.performanceMetrics = perfMetrics;
+        }
+      }
 
     this.eventQueue.push(fullEvent);
     this.updateSession();
@@ -240,8 +242,8 @@ class AnalyticsService {
       type: 'event',
       category,
       action,
-      label,
-      value,
+      ...(label && { label }),
+      ...(value && { value }),
     });
   }
 
@@ -362,7 +364,7 @@ class AnalyticsService {
       category: 'user',
       action: 'identify',
       userId,
-      properties,
+      properties: properties || {},
     });
   }
 
@@ -627,14 +629,14 @@ class AnalyticsService {
       const metrics: Record<string, number> = {};
       
       if (navigation) {
-        metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
-        metrics.loadComplete = navigation.loadEventEnd - navigation.loadEventStart;
-        metrics.ttfb = navigation.responseStart - navigation.requestStart;
+        metrics['domContentLoaded'] = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
+        metrics['loadComplete'] = navigation.loadEventEnd - navigation.loadEventStart;
+        metrics['ttfb'] = navigation.responseStart - navigation.requestStart;
       }
       
       paint.forEach(entry => {
         if (entry.name === 'first-contentful-paint') {
-          metrics.fcp = entry.startTime;
+          metrics['fcp'] = entry.startTime;
         }
       });
       

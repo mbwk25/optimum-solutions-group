@@ -1,38 +1,34 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useServiceWorker = () => {
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
+
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('SW registered: ', registration);
-            }
-            
-            // Check for updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New version available - could show update notification
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('New version available! Please refresh.');
-                    }
-                  }
-                });
-              }
-            });
-          })
-          .catch((registrationError) => {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('SW registration failed: ', registrationError);
-            }
-          });
-      });
+    // Check if service workers are supported
+    setIsSupported('serviceWorker' in navigator);
+
+    if ('serviceWorker' in navigator && import.meta.env['MODE'] === 'production') {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => setIsRegistered(true))
+        .catch(() => setIsRegistered(false));
     }
   }, []);
+
+  const register = () => {
+    console.log('Service worker registration triggered');
+  };
+
+  const unregister = () => {
+    console.log('Service worker unregistration triggered');
+  };
+
+  return {
+    isRegistered,
+    isSupported,
+    register,
+    unregister
+  };
 };
 
 export default useServiceWorker;

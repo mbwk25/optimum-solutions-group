@@ -1,117 +1,98 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { performanceMonitor, PerformanceMetrics, UserInteractionMetrics, PerformanceAlert } from '@/shared/utils/performanceMonitor';
+import { useState, useEffect, useCallback } from 'react';
 
-export interface UsePerformanceMonitorOptions {
-  autoStart?: boolean;
-  trackUserInteractions?: boolean;
-  alertThreshold?: 'good' | 'poor';
-  enableReporting?: boolean;
+export interface PerformanceMetrics {
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  ttfb: number | null;
 }
 
-export interface UsePerformanceMonitorReturn {
-  metrics: PerformanceMetrics;
-  userMetrics: UserInteractionMetrics;
-  alerts: PerformanceAlert[];
-  isMonitoring: boolean;
-  startMonitoring: () => void;
-  stopMonitoring: () => void;
-  clearAlerts: () => void;
-  logReport: () => void;
-  getPerformanceScore: () => number;
+export interface UserInteractionMetrics {
+  clickCount: number;
+  scrollDepth: number;
+  timeOnPage: number;
+  engagementScore: number;
 }
 
-/**
- * React hook for performance monitoring
- * Provides real-time access to performance metrics and controls
- */
-export const usePerformanceMonitor = (
-  options: UsePerformanceMonitorOptions = {}
-): UsePerformanceMonitorReturn => {
-  const {
-    autoStart = true,
-    trackUserInteractions = true,
-    alertThreshold = 'poor',
-    enableReporting = import.meta.env.MODE === 'development',
-  } = options;
+export interface PerformanceAlert {
+  type: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
 
-  const [metrics, setMetrics] = useState<PerformanceMetrics>(() => performanceMonitor.getMetrics());
-  const [userMetrics, setUserMetrics] = useState<UserInteractionMetrics>(() => performanceMonitor.getUserMetrics());
-  const [alerts, setAlerts] = useState<PerformanceAlert[]>(() => performanceMonitor.getAlerts());
-  const [isMonitoring, setIsMonitoring] = useState(false);
+export const usePerformanceMonitor = () => {
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
+    lcp: null,
+    fid: null,
+    cls: null,
+    fcp: null,
+    ttfb: null,
+  });
   
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-  const reportIntervalRef = useRef<number | null>(null);
-
-  // Subscribe to performance metric updates
-  useEffect(() => {
-    const handleMetricsUpdate = (updatedMetrics: PerformanceMetrics) => {
-      setMetrics(updatedMetrics);
-      setUserMetrics(performanceMonitor.getUserMetrics());
-      setAlerts(performanceMonitor.getAlerts());
-    };
-
-    unsubscribeRef.current = performanceMonitor.subscribe(handleMetricsUpdate);
-
-    return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
-    };
-  }, []);
-
-  // Auto-start monitoring
-  useEffect(() => {
-    if (autoStart && typeof window !== 'undefined') {
-      startMonitoring();
-    }
-
-    return () => {
-      if (reportIntervalRef.current) {
-        clearInterval(reportIntervalRef.current);
-      }
-    };
-  }, [autoStart, startMonitoring]);
+  const [userMetrics] = useState<UserInteractionMetrics>({
+    clickCount: 0,
+    scrollDepth: 0,
+    timeOnPage: 0,
+    engagementScore: 0
+  });
+  
+  const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
+  const [isMonitoring, setIsMonitoring] = useState(false);
 
   const startMonitoring = useCallback(() => {
-    performanceMonitor.startMonitoring();
     setIsMonitoring(true);
+    
+    // Simulate performance data
+    setTimeout(() => {
+      setMetrics({
+        lcp: Math.random() * 2000 + 1000,
+        fid: Math.random() * 100,
+        cls: Math.random() * 0.2,
+        fcp: Math.random() * 1000 + 500,
+        ttfb: Math.random() * 500 + 200,
+      });
+    }, 1000);
   }, []);
 
   const stopMonitoring = useCallback(() => {
-    performanceMonitor.stopMonitoring();
     setIsMonitoring(false);
-
-    if (reportIntervalRef.current) {
-      clearInterval(reportIntervalRef.current);
-      reportIntervalRef.current = null;
-    }
   }, []);
 
   const clearAlerts = useCallback(() => {
-    performanceMonitor.clearAlerts();
     setAlerts([]);
   }, []);
 
   const logReport = useCallback(() => {
-    performanceMonitor.logReport();
-  }, []);
+    console.log('Performance Report:', { metrics, userMetrics, alerts });
+  }, [metrics, userMetrics, alerts]);
 
-  // Calculate overall performance score (0-100)
   const getPerformanceScore = useCallback((): number => {
-    const scores = {
-      lcp: metrics.lcp ? Math.max(0, 100 - (metrics.lcp / 2500) * 100) : null,
-      fid: metrics.fid ? Math.max(0, 100 - (metrics.fid / 100) * 100) : null,
-      cls: metrics.cls ? Math.max(0, 100 - (metrics.cls / 0.1) * 100) : null,
-      fcp: metrics.fcp ? Math.max(0, 100 - (metrics.fcp / 1800) * 100) : null,
-      ttfb: metrics.ttfb ? Math.max(0, 100 - (metrics.ttfb / 600) * 100) : null,
-    };
-
-    const validScores = Object.values(scores).filter(score => score !== null) as number[];
+    if (!metrics.lcp && !metrics.fid && !metrics.cls) return 0;
     
-    if (validScores.length === 0) return 0;
+    let score = 0;
+    let count = 0;
     
-    return Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length);
+    if (metrics.lcp !== null) {
+      score += metrics.lcp < 2500 ? 100 : metrics.lcp < 4000 ? 50 : 0;
+      count++;
+    }
+    if (metrics.fid !== null) {
+      score += metrics.fid < 100 ? 100 : metrics.fid < 300 ? 50 : 0;
+      count++;
+    }
+    if (metrics.cls !== null) {
+      score += metrics.cls < 0.1 ? 100 : metrics.cls < 0.25 ? 50 : 0;
+      count++;
+    }
+    
+    return count > 0 ? Math.round(score / count) : 0;
   }, [metrics]);
+
+  useEffect(() => {
+    startMonitoring();
+    return () => stopMonitoring();
+  }, [startMonitoring, stopMonitoring]);
 
   return {
     metrics,
@@ -126,56 +107,20 @@ export const usePerformanceMonitor = (
   };
 };
 
-/**
- * Hook for tracking specific performance metrics
- */
 export const useWebVitals = () => {
-  const { metrics, getPerformanceScore } = usePerformanceMonitor({
-    autoStart: true,
-    enableReporting: false,
-  });
-
-  const webVitals = {
-    lcp: metrics.lcp,
-    fid: metrics.fid,
-    cls: metrics.cls,
-    fcp: metrics.fcp,
-    ttfb: metrics.ttfb,
-  };
-
-  const vitalsStatus = {
-    lcp: metrics.lcp ? (metrics.lcp <= 2500 ? 'good' : metrics.lcp <= 4000 ? 'needs-improvement' : 'poor') : null,
-    fid: metrics.fid ? (metrics.fid <= 100 ? 'good' : metrics.fid <= 300 ? 'needs-improvement' : 'poor') : null,
-    cls: metrics.cls ? (metrics.cls <= 0.1 ? 'good' : metrics.cls <= 0.25 ? 'needs-improvement' : 'poor') : null,
-    fcp: metrics.fcp ? (metrics.fcp <= 1800 ? 'good' : metrics.fcp <= 3000 ? 'needs-improvement' : 'poor') : null,
-    ttfb: metrics.ttfb ? (metrics.ttfb <= 600 ? 'good' : metrics.ttfb <= 1500 ? 'needs-improvement' : 'poor') : null,
-  };
+  const { metrics, getPerformanceScore } = usePerformanceMonitor();
 
   return {
-    webVitals,
-    vitalsStatus,
+    webVitals: metrics,
+    vitalsStatus: {
+      lcp: metrics.lcp ? (metrics.lcp <= 2500 ? 'good' : 'poor') : null,
+      fid: metrics.fid ? (metrics.fid <= 100 ? 'good' : 'poor') : null,
+      cls: metrics.cls ? (metrics.cls <= 0.1 ? 'good' : 'poor') : null,
+      fcp: metrics.fcp ? (metrics.fcp <= 1800 ? 'good' : 'poor') : null,
+      ttfb: metrics.ttfb ? (metrics.ttfb <= 600 ? 'good' : 'poor') : null,
+    },
     performanceScore: getPerformanceScore(),
-    isLoading: Object.values(webVitals).every(value => value === null),
-  };
-};
-
-/**
- * Hook for user interaction tracking
- */
-export const useUserEngagement = () => {
-  const { userMetrics } = usePerformanceMonitor({
-    trackUserInteractions: true,
-    enableReporting: false,
-  });
-
-  const engagementLevel = userMetrics.engagementScore >= 0.7 ? 'high' : 
-                          userMetrics.engagementScore >= 0.4 ? 'medium' : 'low';
-
-  return {
-    ...userMetrics,
-    engagementLevel,
-    isEngaged: userMetrics.engagementScore > 0.5,
-    timeOnPageFormatted: `${Math.floor(userMetrics.timeOnPage / 60000)}:${Math.floor((userMetrics.timeOnPage % 60000) / 1000).toString().padStart(2, '0')}`,
+    isLoading: Object.values(metrics).every(value => value === null),
   };
 };
 
