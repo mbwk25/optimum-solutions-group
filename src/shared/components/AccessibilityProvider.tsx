@@ -2,6 +2,7 @@ import React, { createContext, useContext } from 'react';
 
 interface AccessibilityContextType {
   announceMessage: (message: string) => void;
+  prefersReducedMotion: boolean;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
@@ -19,6 +20,20 @@ interface AccessibilityProviderProps {
 }
 
 export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ children }) => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   const announceMessage = (message: string) => {
     // Simple screen reader announcement
     const announcement = document.createElement('div');
@@ -34,7 +49,7 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
   };
 
   return (
-    <AccessibilityContext.Provider value={{ announceMessage }}>
+    <AccessibilityContext.Provider value={{ announceMessage, prefersReducedMotion }}>
       {children}
     </AccessibilityContext.Provider>
   );

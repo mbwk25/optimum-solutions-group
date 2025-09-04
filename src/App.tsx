@@ -1,6 +1,5 @@
 import React from "react";
-import { Toaster } from "@/shared/ui/toaster";
-import { Toaster as Sonner } from "@/shared/ui/sonner";
+import { Toaster } from '@/shared/ui';
 import { TooltipProvider } from "@/shared/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -31,7 +30,7 @@ if (typeof window !== "undefined" && typeof errorHandler === "function") {
         : typeof message === "string"
         ? message
         : "Unknown error";
-    errorHandler.handleError(errorMsg);
+    errorHandler.handleError(new Error(errorMsg));
     // Return false to allow default handling as well
     return false;
   };
@@ -47,7 +46,7 @@ if (typeof window !== "undefined" && typeof errorHandler === "function") {
           ? event.reason
           : JSON.stringify(event.reason)
         : "Unhandled promise rejection";
-    errorHandler.handleError(reason);
+    errorHandler.handleError(new Error(reason));
     return false;
   };
 }
@@ -91,14 +90,13 @@ if (typeof window !== 'undefined') {
   
   // Register service worker in production
   if (import.meta.env.MODE === 'production') {
-    window.addEventListener('load', () => {
-      serviceWorkerManager.register().then((status) => {
-        if (status.isRegistered) {
-          console.log('✅ Service worker registered successfully');
-        }
-      }).catch((error) => {
+    window.addEventListener('load', async () => {
+      try {
+        await serviceWorkerManager.register();
+        console.log('✅ Service worker registered successfully');
+      } catch (error) {
         console.error('❌ Service worker registration failed:', error);
-      });
+      }
     });
   }
   
@@ -156,7 +154,6 @@ const App: React.FC = () => {
                 />
                 
                 <Toaster />
-                <Sonner />
               </BrowserRouter>
             </Suspense>
           </TooltipProvider>

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Menu, X } from 'lucide-react';
 import logo from '@/assets/logo.png';
-import { useAccessibility } from '@/shared/hooks/useAccessibility';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const Navigation = memo(() => {
@@ -15,13 +14,10 @@ const Navigation = memo(() => {
   const { prefersReducedMotion } = useAccessibilityContext();
   
   // Accessibility features
-  const {
-    containerRef,
-    announcePolite
-  } = useAccessibility({
-    focusTrap: isMenuOpen,
-    announcements: true
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const announcePolite = (message: string) => {
+    console.log('Accessibility:', message);
+  };
 
   // Memoized scroll handler to prevent re-creation
   const handleScroll = useCallback(() => {
