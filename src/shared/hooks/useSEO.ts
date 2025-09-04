@@ -28,11 +28,24 @@ interface WebVital {
 
 export interface SEOAnalysisResult {
   score: number;
-  issues: string[];
-  suggestions: string[];
+  issues: Array<{
+    category: string;
+    type: string;
+    message: string;
+    recommendation: string;
+    impact: string;
+  }>;
+  recommendations: string[];
+  coreWebVitals?: {
+    lcp?: number;
+    fid?: number;
+    cls?: number;
+    fcp?: number;
+    ttfb?: number;
+  };
 }
 
-export const useSEO = (initialMetadata: SEOMetadata = {}) => {
+export const useSEO = (initialMetadata: SEOMetadata = {}, _options: any = {}) => {
   const location = useLocation();
   const [currentMetadata, setCurrentMetadata] = useState<SEOMetadata>(initialMetadata);
   const [analysis, setAnalysis] = useState<SEOAnalysisResult | null>(null);
@@ -59,17 +72,29 @@ export const useSEO = (initialMetadata: SEOMetadata = {}) => {
       const result: SEOAnalysisResult = {
         score: Math.floor(Math.random() * 100),
         issues: [],
-        suggestions: []
+        recommendations: []
       };
       
       if (!currentMetadata.title) {
-        result.issues.push('Missing title tag');
-        result.suggestions.push('Add a descriptive title tag');
+        result.issues.push({
+          category: 'meta',
+          type: 'error',
+          message: 'Missing title tag',
+          recommendation: 'Add a descriptive title tag',
+          impact: 'high'
+        });
+        result.recommendations.push('Add a descriptive title tag');
       }
       
       if (!currentMetadata.description) {
-        result.issues.push('Missing meta description');
-        result.suggestions.push('Add a meta description');
+        result.issues.push({
+          category: 'meta', 
+          type: 'warning',
+          message: 'Missing meta description',
+          recommendation: 'Add a meta description',
+          impact: 'medium'
+        });
+        result.recommendations.push('Add a meta description');
       }
       
       setAnalysis(result);
