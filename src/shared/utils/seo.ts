@@ -22,13 +22,13 @@ export const SEO_CONFIG = {
 };
 
 export const generateStructuredData = (data: any) => {
-  return JSON.stringify({
+  return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": data.siteName || "Website",
     "url": data.url || window.location.href,
     ...data
-  });
+  };
 };
 
 export const updateMetaTags = (seoData: SEOData) => {

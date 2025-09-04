@@ -1,3 +1,12 @@
+import { useCallback } from 'react';
+
+export interface ErrorHandlerOptions {
+  component?: string;
+  action?: string;
+  context?: Record<string, unknown>;
+  onError?: (error: Error) => void;
+}
+
 export const useErrorHandler = (_options: ErrorHandlerOptions = {}) => {
   const handleError = (error: Error | string) => {
     console.error('Error:', error);

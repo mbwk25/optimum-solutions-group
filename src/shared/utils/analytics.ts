@@ -18,3 +18,9 @@ export const trackEvent = (name: string, properties: Record<string, unknown> = {
 export const trackPerformance = (data: Record<string, unknown>) => {
   trackEvent('performance', data);
 };
+
+export const analytics = {
+  track: trackEvent,
+  trackPerformance,
+  track404: (path: string) => trackEvent('404', { path }),
+};

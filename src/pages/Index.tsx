@@ -104,7 +104,10 @@ const Index = () => {
         title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
         description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
         keywords={['digital transformation', 'IoT solutions', 'custom software', 'business automation', 'web development', 'mobile apps']}
-        structuredData={generateStructuredData()}
+        structuredData={generateStructuredData({
+          siteName: "Optimum Solutions Group",
+          url: "https://example.com"
+        })}
       />
       <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
       <CustomCursor />
