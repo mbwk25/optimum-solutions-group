@@ -34,6 +34,18 @@ export interface CoreWebVitalsOptions {
   onReport?: (data: CoreWebVitalsData) => void;
 }
 
+export interface CoreWebVitalsContextType {
+  metrics: CoreWebVitalsData | null;
+  performanceScore: number;
+  summary: {
+    good: number;
+    needsImprovement: number;
+    poor: number;
+  };
+  collectMetrics: () => void;
+  isSupported: boolean;
+}
+
 export const CWV_THRESHOLDS = {
   LCP: { good: 2500, needsImprovement: 4000 },
   FID: { good: 100, needsImprovement: 300 },

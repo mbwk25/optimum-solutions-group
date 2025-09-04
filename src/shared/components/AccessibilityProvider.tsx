@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { 
   globalLiveRegionManager, 
-  reducedMotion, 
-  highContrastMode,
   FocusTrap
 } from '../utils/accessibility';
 import { useUserPreferences } from '../hooks/useAccessibility';
@@ -134,6 +132,7 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({
       }, 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [settings.announcePageChanges]); // Include dependency
 
   return (
@@ -186,7 +185,7 @@ const SkipLinks: React.FC<SkipLinksProps> = ({ skipLinks }) => {
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              handleSkipClick(e as React.MouseEvent<HTMLAnchorElement>, target);
+              handleSkipClick(e as unknown as React.MouseEvent<HTMLAnchorElement>, target);
             }
           }}
         >

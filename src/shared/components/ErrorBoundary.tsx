@@ -15,20 +15,23 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
-  eventId?: string;
+  error: Error | undefined;
+  errorInfo: ErrorInfo | undefined;
+  eventId: string | undefined;
   retryCount: number;
   isRetrying: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  private resetTimeoutId?: number;
+  private resetTimeoutId: number | undefined;
   
   constructor(props: Props) {
     super(props);
     this.state = { 
-      hasError: false, 
+      hasError: false,
+      error: undefined,
+      errorInfo: undefined,
+      eventId: undefined,
       retryCount: 0,
       isRetrying: false
     };
@@ -42,7 +45,7 @@ class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidUpdate(prevProps: Props) {
+  override componentDidUpdate(prevProps: Props) {
     // Reset error boundary when resetKeys change
     if (this.props.resetKeys && prevProps.resetKeys) {
       if (this.props.resetKeys.some((key, i) => key !== prevProps.resetKeys![i])) {
@@ -73,13 +76,13 @@ class ErrorBoundary extends Component<Props, State> {
     errorHandler.handleError(`ErrorBoundary caught error (${this.props.level || 'unknown'})`, {
       error: error.message,
       component: this.constructor.name,
-      errorStack: error.stack,
-      componentStack: errorInfo.componentStack,
-      eventId,
-      retryCount: this.state.retryCount,
+      message: error.stack || 'No stack trace available',
       data: {
         error: error.toString(),
         errorInfo,
+        eventId,
+        retryCount: this.state.retryCount,
+        componentStack: errorInfo.componentStack,
         userAgent: navigator.userAgent,
         url: window.location.href,
         timestamp: new Date().toISOString()
@@ -102,11 +105,12 @@ class ErrorBoundary extends Component<Props, State> {
       error: undefined,
       errorInfo: undefined,
       eventId: undefined,
+      retryCount: 0,
       isRetrying: false
     });
     
     // Clear any pending retry timeout
-    if (this.resetTimeoutId) {
+    if (this.resetTimeoutId !== undefined) {
       window.clearTimeout(this.resetTimeoutId);
       this.resetTimeoutId = undefined;
     }
@@ -160,7 +164,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
@@ -191,7 +195,7 @@ class ErrorBoundary extends Component<Props, State> {
                 )}
                 Retry
               </Button>
-              {process.env.NODE_ENV === 'development' && (
+              {process.env['NODE_ENV'] === 'development' && (
                 <Button 
                   size="sm" 
                   variant="outline"
@@ -247,7 +251,7 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env['NODE_ENV'] === 'development' && this.state.error && (
               <details className="text-left mb-6 p-4 bg-muted rounded-lg">
                 <summary className="cursor-pointer font-medium mb-2 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
@@ -315,7 +319,7 @@ class ErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && (
+            {process.env['NODE_ENV'] === 'development' && (
               <div className="mt-6 pt-6 border-t border-border">
                 <div className="flex gap-2 justify-center">
                   <Button 

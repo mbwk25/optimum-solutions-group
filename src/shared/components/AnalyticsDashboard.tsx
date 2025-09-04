@@ -5,14 +5,12 @@
  * user behavior, performance metrics, and insights.
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
-import { Separator } from '@/shared/ui/separator';
-import { Progress } from '@/shared/ui/progress';
 import { 
   BarChart, 
   Bar, 
@@ -27,29 +25,20 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  AreaChart,
-  Area
 } from 'recharts';
 import {
   Users,
-  MousePointer,
   Clock,
   Eye,
-  TrendingUp,
   TrendingDown,
   Activity,
-  Globe,
-  Smartphone,
-  Monitor,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw,
-  Download,
-  Filter,
-  Calendar,
   BarChart3,
   PieChart as PieChartIcon,
   LineChart as LineChartIcon,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Download,
 } from 'lucide-react';
 import analytics, { type AnalyticsEvent, type UserSession } from '@/shared/services/analytics';
 
@@ -114,10 +103,10 @@ export const AnalyticsDashboard: React.FC<DashboardProps> = ({
       const session = analytics.getSession();
       
       // Simulate fetching stored events (in real implementation, this would be from your backend)
-      const events = []; // This would be fetched from your analytics API
+      const events: AnalyticsEvent[] = []; // This would be fetched from your analytics API
       
       const simulatedData: AnalyticsData = {
-        events: events,
+        events,
         session: session,
         metrics: {
           totalPageViews: session.pageViews || 1,
@@ -338,7 +327,7 @@ export const AnalyticsDashboard: React.FC<DashboardProps> = ({
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {data.deviceBreakdown.map((entry, index) => (
+                    {data.deviceBreakdown.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
@@ -510,12 +499,9 @@ export const AnalyticsDashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold">{Math.round(metric.value)}{metric.unit}</p>
-                    <Badge 
-                      variant={metric.rating === 'good' ? 'default' : metric.rating === 'needs-improvement' ? 'secondary' : 'destructive'}
-                      size="sm"
-                    >
-                      {metric.rating === 'good' ? 'Good' : metric.rating === 'needs-improvement' ? 'Needs Work' : 'Poor'}
-                    </Badge>
+                     <Badge variant={metric.rating === 'good' ? 'default' : metric.rating === 'needs-improvement' ? 'secondary' : 'destructive'}>
+                       {metric.rating === 'good' ? 'Good' : metric.rating === 'needs-improvement' ? 'Needs Work' : 'Poor'}
+                     </Badge>
                   </div>
                 </div>
               ))}

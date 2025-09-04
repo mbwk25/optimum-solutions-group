@@ -1,9 +1,4 @@
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Linkedin from 'lucide-react/dist/esm/icons/linkedin';
-import Twitter from 'lucide-react/dist/esm/icons/twitter';
-import Github from 'lucide-react/dist/esm/icons/github';
+import { Mail, Phone, MapPin, Linkedin, Twitter, Github } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import LazyImage from '@/shared/components/LazyImage';
 

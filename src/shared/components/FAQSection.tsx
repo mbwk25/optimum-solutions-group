@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
 import { Button } from '@/shared/ui/button';
-import HelpCircle from 'lucide-react/dist/esm/icons/help-circle';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import Users from 'lucide-react/dist/esm/icons/users';
-import Shield from 'lucide-react/dist/esm/icons/shield';
-import Zap from 'lucide-react/dist/esm/icons/zap';
+import { HelpCircle, Clock, DollarSign, Users, Shield, Zap } from 'lucide-react';
 
 const FAQSection = () => {
   const [activeCategory, setActiveCategory] = useState('general');

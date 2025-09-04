@@ -29,7 +29,6 @@ import {
   Star,
   Globe,
   Monitor,
-  Tablet,
   PhoneCall
 } from 'lucide-react';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
