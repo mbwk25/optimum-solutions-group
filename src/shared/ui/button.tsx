@@ -2,7 +2,6 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/shared/utils/utils"
-import { useCallback } from "react"
 
 
 export interface ButtonProps
@@ -57,7 +56,7 @@ const Button: React.FC<ButtonProps> = React.memo(React.forwardRef<HTMLButtonElem
     const Comp: React.ElementType = asChild ? Slot : "button"
     
     // Memoize the click handler with keyboard support
-    const handleClick: React.MouseEventHandler<HTMLButtonElement> = useCallback((
+    const handleClick: React.MouseEventHandler<HTMLButtonElement> = React.useCallback((
       e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
     ) => {
       if (!disabled && onClick) {
@@ -72,7 +71,7 @@ const Button: React.FC<ButtonProps> = React.memo(React.forwardRef<HTMLButtonElem
     }, [onClick, disabled]);
 
     // Add keyboard event handler for accessibility
-    const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = React.useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault(); // Prevent page scroll when space is pressed
         handleClick(e as unknown as React.MouseEvent<HTMLButtonElement>);

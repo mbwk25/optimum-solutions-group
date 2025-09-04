@@ -1,6 +1,4 @@
 import React from "react";
-import { Toaster } from '@/shared/ui';
-import { TooltipProvider } from "@/shared/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense } from "react";
@@ -127,7 +125,6 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <AccessibilityProvider>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
             <Suspense fallback={<LoadingFallback />}>
               <BrowserRouter
                 future={{
@@ -152,11 +149,8 @@ const App: React.FC = () => {
                   autoShow={false}
                   hideAfterInstall={true}
                 />
-                
-                <Toaster />
               </BrowserRouter>
             </Suspense>
-          </TooltipProvider>
         </QueryClientProvider>
       </AccessibilityProvider>
     </ErrorBoundary>

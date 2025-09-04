@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AccessibilityContextType {
   announceMessage: (message: string) => void;
@@ -20,9 +20,9 @@ interface AccessibilityProviderProps {
 }
 
 export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ children }) => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
     
@@ -57,7 +57,7 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
 
 // Simple component for page title announcements
 export const PageTitleAnnouncer: React.FC<{ title: string }> = ({ title }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     document.title = title;
   }, [title]);
 
