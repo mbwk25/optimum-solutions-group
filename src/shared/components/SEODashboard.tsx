@@ -3,7 +3,7 @@
  * Comprehensive SEO monitoring dashboard with real-time metrics and analysis
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -25,15 +25,11 @@ import {
   Clock,
   Shield,
   Target,
-  Smartphone,
-  Monitor,
   RefreshCw,
-  ExternalLink,
-  Download,
   Share2
 } from 'lucide-react';
 import { useSEO, type SEOMetadata } from '../hooks/useSEO';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
 // ====================================================
 // Types and Interfaces
@@ -53,9 +49,9 @@ interface MetricCardProps {
   title: string;
   value: string | number;
   description?: string;
-  trend?: 'up' | 'down' | 'stable';
-  trendValue?: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  trend?: 'up' | 'down' | 'stable' | undefined;
+  trendValue?: string | undefined;
+  icon?: React.ComponentType<any>;
   color?: 'default' | 'green' | 'yellow' | 'red' | 'blue';
   onClick?: () => void;
 }
@@ -64,11 +60,12 @@ interface MetricCardProps {
 // Utility Functions
 // ====================================================
 
-const getScoreColor = (score: number): string => {
-  if (score >= 90) return 'text-green-600';
-  if (score >= 70) return 'text-yellow-600';
-  if (score >= 50) return 'text-orange-600';
-  return 'text-red-600';
+
+const formatNumber = (num: number, decimals = 0): string => {
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(num);
 };
 
 const getScoreBadgeVariant = (score: number) => {
@@ -78,20 +75,6 @@ const getScoreBadgeVariant = (score: number) => {
   return 'destructive';
 };
 
-const formatNumber = (num: number, decimals = 0): string => {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  }).format(num);
-};
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
 
 const getVitalStatus = (value: number | null, thresholds: { good: number; poor: number }): 'good' | 'needs-improvement' | 'poor' | 'unknown' => {
   if (value === null) return 'unknown';
@@ -163,7 +146,6 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
   initialMetadata = {},
   autoRefresh = true,
   refreshInterval = 30000,
-  showAdvanced = true,
   compact = false,
   onScoreChange,
   onIssuesDetected
@@ -177,7 +159,6 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
     vitalsScore,
     trackingEnabled,
     setTrackingEnabled,
-    currentMetadata,
     metaTags,
     structuredDataValid,
     performanceMetrics,
@@ -190,7 +171,6 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [showPreview, setShowPreview] = useState(false);
 
   // Notify parent components of changes
   useEffect(() => {
@@ -210,11 +190,11 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
   // ====================================================
 
   const vitalsData = useMemo(() => {
-    const lcp = webVitals.LCP?.value || null;
-    const fid = webVitals.FID?.value || null;
-    const cls = webVitals.CLS?.value || null;
-    const fcp = webVitals.FCP?.value || null;
-    const ttfb = webVitals.TTFB?.value || null;
+    const lcp = webVitals['LCP']?.value || null;
+    const fid = webVitals['FID']?.value || null;
+    const cls = webVitals['CLS']?.value || null;
+    const fcp = webVitals['FCP']?.value || null;
+    const ttfb = webVitals['TTFB']?.value || null;
 
     return {
       lcp: {
@@ -280,8 +260,10 @@ export const SEODashboard: React.FC<SEODashboardProps> = ({
           description="Combined SEO performance rating"
           icon={Target}
           color={score >= 90 ? 'green' : score >= 70 ? 'yellow' : 'red'}
-          trend={scoreHistory.length > 1 ? (scoreHistory[scoreHistory.length - 1].score > scoreHistory[scoreHistory.length - 2].score ? 'up' : 'down') : undefined}
-          trendValue={scoreHistory.length > 1 ? `${Math.abs(scoreHistory[scoreHistory.length - 1].score - scoreHistory[scoreHistory.length - 2].score)} pts` : undefined}
+          trend={scoreHistory.length > 1 ? (
+            (scoreHistory[scoreHistory.length - 1]?.score || 0) > (scoreHistory[scoreHistory.length - 2]?.score || 0) ? 'up' : 'down'
+          ) : 'stable'}
+          trendValue={scoreHistory.length > 1 ? `${Math.abs((scoreHistory[scoreHistory.length - 1]?.score || 0) - (scoreHistory[scoreHistory.length - 2]?.score || 0))} pts` : undefined}
         />
         
         <MetricCard

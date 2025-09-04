@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, memo } from 'react';
+import { useEffect, useRef, useCallback, memo } from 'react';
 
 interface Particle {
   x: number;
@@ -93,6 +93,8 @@ const ParticleSystem = memo(() => {
         // Draw connections
         for (let j = i + 1; j < particlesRef.current.length; j++) {
           const other = particlesRef.current[j];
+          if (!other) continue;
+          
           const dx = particle.x - other.x;
           const dy = particle.y - other.y;
           const distance = Math.sqrt(dx * dx + dy * dy);

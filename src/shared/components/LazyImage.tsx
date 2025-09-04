@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { cn } from '@/shared/utils/utils';
 
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface LazyImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'onError'> {
   src: string;
   alt: string;
   className?: string;
@@ -45,7 +45,7 @@ const LazyImage = memo<LazyImageProps>(({
   // Memoized intersection observer callback
   const handleIntersection = useCallback((entries: IntersectionObserverEntry[]) => {
     const [entry] = entries;
-    if (entry.isIntersecting) {
+    if (entry?.isIntersecting) {
       setIsIntersecting(true);
     }
   }, []);
@@ -80,7 +80,7 @@ const LazyImage = memo<LazyImageProps>(({
   }, [src, loading, isIntersecting]);
 
   // Memoized load handler
-  const handleLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleLoad = useCallback(() => {
     setIsLoaded(true);
     setHasError(false);
     onLoad?.();
