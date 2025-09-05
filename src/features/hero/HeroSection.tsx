@@ -4,6 +4,7 @@ import ParticleSystem from '@/shared/components/ParticleSystem';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const HeroSection: React.FC = memo(() => {
+  console.log('HeroSection rendering - checking for undefined variables');
   const { prefersReducedMotion } = useAccessibilityContext();
   // Memoized scroll functions with accessibility improvements
   const scrollToContact = useCallback(() => {
