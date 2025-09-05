@@ -1,7 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { AccessibilityProvider } from "@/shared/components/AccessibilityProvider";
 
@@ -49,6 +49,15 @@ const LoadingFallback = () => (
 const queryClient: QueryClient = new QueryClient();
 
 const App: React.FC = () => {
+  // Force refresh to clear cache if needed
+  useEffect(() => {
+    const hasRefreshed = sessionStorage.getItem('hasRefreshed');
+    if (!hasRefreshed && window.location.search.includes('refresh=true')) {
+      sessionStorage.setItem('hasRefreshed', 'true');
+      window.location.reload();
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <AccessibilityProvider>
