@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Menu, X } from 'lucide-react';
-import logo from '@/assets/logo.png';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const Navigation = memo(() => {
@@ -125,38 +124,22 @@ const Navigation = memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div 
-            className="flex items-center gap-3 group cursor-pointer"
-            onClick={() => scrollToSection('#hero', 'Home')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                scrollToSection('#hero', 'Home');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Optimum Solutions Group"
-          >
-            <img 
-              src={logo} 
-              alt="Optimum Solutions Group logo"
-              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
-              width={32}
-              height={32}
-            />
-            <div className="font-bold text-xl tracking-tight">
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Optimum
-              </span>
-              <span className="text-foreground ml-1 font-light">
-                Solutions
-              </span>
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
-                GROUP
+            <div className="flex items-center gap-3 group cursor-pointer justify-center">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm">
+                OSG
+              </div>
+              <div className="font-bold text-xl tracking-tight">
+                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Optimum
+                </span>
+                <span className="text-foreground ml-1 font-light">
+                  Solutions
+                </span>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
+                  GROUP
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Desktop Navigation */}
           <div 

@@ -1,8 +1,6 @@
 import React, { useCallback, memo } from 'react';
 import { Button } from '@/shared/ui/button';
-import heroBackground from '@/assets/hero-background-optimized.jpg';
 import ParticleSystem from '@/shared/components/ParticleSystem';
-import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const HeroSection: React.FC = memo(() => {
@@ -48,13 +46,7 @@ const HeroSection: React.FC = memo(() => {
       {/* Background */}
       <div className="absolute inset-0" aria-hidden="true">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/80 via-background/60 to-background/80" />
-        <div className="absolute inset-0 -z-20 overflow-hidden">
-          <OptimizedImage
-            src={heroBackground}
-            alt="Modern digital workspace with technology elements representing business transformation"
-            className="w-full h-full object-cover opacity-20 transition-opacity duration-700 ease-in-out"
-          />
-        </div>
+        <div className="absolute inset-0 -z-20 overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/5 to-background" />
         {!prefersReducedMotion && <ParticleSystem />}
       </div>
 

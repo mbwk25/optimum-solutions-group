@@ -77,21 +77,11 @@ const SectionFallback = () => (
 const Index = () => {
   const isLoading = usePageLoad();
 
-  // Track page analytics with comprehensive configuration
+  // Simplified analytics tracking
   useAnalytics({
     pageTitle: 'Home - Optimum Solutions Group',
     pageCategory: 'landing',
     trackPageViews: true,
-    trackPerformance: true,
-    trackScrollDepth: true,
-    trackClicks: true,
-    trackErrors: true,
-    enableWebVitals: true,
-    customProperties: {
-      pagePath: '/',
-      pageSection: 'home',
-      businessType: 'digital_transformation',
-    },
   });
 
   if (isLoading) {
