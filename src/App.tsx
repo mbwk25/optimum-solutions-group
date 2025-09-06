@@ -49,12 +49,33 @@ const LoadingFallback = () => (
 const queryClient: QueryClient = new QueryClient();
 
 const App: React.FC = () => {
-  // Force refresh to clear cache if needed
+  // Force complete cache refresh
   useEffect(() => {
-    const hasRefreshed = sessionStorage.getItem('hasRefreshed');
-    if (!hasRefreshed && window.location.search.includes('refresh=true')) {
-      sessionStorage.setItem('hasRefreshed', 'true');
-      window.location.reload();
+    const handleCacheRefresh = () => {
+      // Clear all caches and force hard reload
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
+        });
+      }
+      
+      // Clear browser cache
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      
+      // Force hard reload after cache clear
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    };
+
+    // Trigger cache refresh if we detect stale cache
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('clearCache') === 'true') {
+      handleCacheRefresh();
     }
   }, []);
 
