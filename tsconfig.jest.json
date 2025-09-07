@@ -30,7 +30,8 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/setupTests.ts"
+    "src/setupTests.ts",
+    "src/types/jest-dom.d.ts"
   ],
   "exclude": ["node_modules"]
 }
