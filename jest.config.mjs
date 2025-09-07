@@ -6,8 +6,6 @@ export default {
   // Setup files to run before each test file
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   
-  // Module file extensions for importing
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   
   // Transform files with ts-jest (removed deprecated isolatedModules option)
   transform: {
@@ -16,15 +14,19 @@ export default {
       {
         tsconfig: 'tsconfig.jest.json',
         useESM: false,
+        isolatedModules: false,
       },
     ],
+    '^.+\\.(js|jsx)$': 'babel-jest',
   },
+  
   
   // Module name mapper for handling path aliases and static assets
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': 'jest-transform-stub',
+    '^lucide-react/dist/esm/icons/(.*)$': 'jest-transform-stub',
   },
   
   // Test match pattern - exclude Playwright tests
@@ -72,6 +74,12 @@ export default {
   transformIgnorePatterns: [
     '/node_modules/(?!(react-router-dom|@radix-ui|@tanstack|embla-carousel-react|date-fns|lucide-react|next-themes|react-day-picker|react-hook-form|react-resizable-panels|recharts|sonner|tailwind-merge|tailwindcss-animate|vaul|zod|class-variance-authority|clsx|cmdk|input-otp)/)',
   ],
+  
+  // Extensions to treat as modules
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  
+  // Setup for ES modules
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   
 
   

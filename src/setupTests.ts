@@ -56,7 +56,7 @@ Object.defineProperty(window, 'performance', {
     measure: jest.fn(),
     getEntriesByType: jest.fn(() => []),
     getEntriesByName: jest.fn(() => []),
-    now: jest.fn(() => Date.now()),
+    now: jest.fn(() => 1234567890),
   },
 });
 
@@ -172,6 +172,19 @@ beforeAll(() => {
 afterAll(() => {
   console.error = originalError;
   console.warn = originalWarn;
+});
+
+// Mock import.meta for Vite compatibility
+Object.defineProperty(global, 'import', {
+  value: {
+    meta: {
+      env: {
+        MODE: 'test',
+        DEV: true,
+        PROD: false
+      }
+    }
+  }
 });
 
 // Global test configuration
