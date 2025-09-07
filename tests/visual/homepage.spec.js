@@ -30,8 +30,8 @@ test.describe('Homepage Visual Tests', () => {
     // Wait for initial load
     await page.waitForLoadState('domcontentloaded');
     
-    // Wait for React root to exist
-    await page.waitForSelector('#root', { timeout: 10000 });
+    // Wait for React root to exist and be visible
+    await page.waitForSelector('#root', { state: 'visible', timeout: 15000 });
     
     // Wait for basic content to appear with a more flexible approach
     try {
@@ -48,14 +48,17 @@ test.describe('Homepage Visual Tests', () => {
           
           return hasText || hasElements || hasCommonElements;
         },
-        { timeout: 10000 }
+        { timeout: 15000 }
       );
     } catch (error) {
       console.log('Content check failed, but continuing with test');
     }
     
     // Additional wait for content to stabilize
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
+    
+    // Wait for any remaining network requests to complete
+    await page.waitForLoadState('networkidle');
     
     // Hide dynamic elements and disable animations
     await page.addStyleTag({
