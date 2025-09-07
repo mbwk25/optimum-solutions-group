@@ -1,224 +1,103 @@
-/**
- * Performance Monitor Component
- * Real-time performance monitoring and PWA status display
- */
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Badge } from '@/shared/ui/badge';
-import { Button } from '@/shared/ui/button';
-import { 
-  Activity, 
-  Gauge, 
-  Wifi, 
-  WifiOff, 
-  Smartphone, 
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
-  XCircle
-} from 'lucide-react';
-import { useCoreWebVitals } from '../hooks/useCoreWebVitals';
-import { usePWAStatus } from '../hooks/usePWAStatus';
+import React, { useEffect, useState } from 'react';
+import { useCoreWebVitals } from '@/shared/hooks/useCoreWebVitals';
 
 interface PerformanceMonitorProps {
-  className?: string;
-  showDetails?: boolean;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  showDevTools?: boolean;
 }
 
-export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
-  className = '',
-  showDetails = true,
-  autoRefresh = true,
-  refreshInterval = 5000
+const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
+  showDevTools = import.meta.env.MODE === 'development'
 }) => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [performanceData, setPerformanceData] = useState<any>(null);
   
-  const webVitals = useCoreWebVitals({
-    reportAllChanges: true,
-    enableConsoleLogging: false,
-    onMetric: () => setLastUpdate(new Date())
+  const { 
+    metrics, 
+    performanceScore, 
+    isSupported 
+  } = useCoreWebVitals({
+    enableConsoleLogging: import.meta.env.MODE === 'development',
+    reportAllChanges: false,
+    onReport: (data) => {
+      setPerformanceData(data);
+    }
   });
-  
-  const pwaStatus = usePWAStatus();
 
+  // Resource loading performance
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const observer = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      entries.forEach((entry) => {
+        if (entry.entryType === 'navigation') {
+          const navEntry = entry as PerformanceNavigationTiming;
+          const loadTime = navEntry.loadEventEnd - navEntry.loadEventStart;
+          
+          if (import.meta.env.MODE === 'development') {
+            console.log('Page Load Performance:', {
+              domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
+              loadComplete: loadTime,
+              firstByte: navEntry.responseStart - navEntry.requestStart,
+            });
+          }
+        }
+      });
+    });
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    observer.observe({ entryTypes: ['navigation', 'resource'] });
+    
+    return () => observer.disconnect();
   }, []);
 
+  // Memory usage monitoring
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (typeof window === 'undefined') return;
 
-    const interval = setInterval(() => {
-      webVitals.collectMetrics();
-      setLastUpdate(new Date());
-    }, refreshInterval);
+    const checkMemoryUsage = () => {
+      // @ts-ignore - performance.memory is experimental but widely supported
+      if (window.performance?.memory) {
+        // @ts-ignore
+        const memory = window.performance.memory;
+        const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
+        
+        if (usagePercent > 90) {
+          console.warn('High memory usage detected:', usagePercent.toFixed(2) + '%');
+        }
+      }
+    };
 
+    const interval = setInterval(checkMemoryUsage, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, webVitals]);
+  }, []);
 
-  const getMetricStatus = (rating: string | null) => {
-    switch (rating) {
-      case 'good': return { color: 'bg-green-500', icon: CheckCircle };
-      case 'needs-improvement': return { color: 'bg-yellow-500', icon: AlertTriangle };
-      case 'poor': return { color: 'bg-red-500', icon: XCircle };
-      default: return { color: 'bg-gray-400', icon: Gauge };
-    }
-  };
-
-  const formatValue = (value: number | null, metric: string) => {
-    if (value === null) return 'N/A';
-    
-    switch (metric) {
-      case 'CLS':
-        return value.toFixed(3);
-      case 'LCP':
-      case 'FCP':
-      case 'FID':
-      case 'TTFB':
-        return `${Math.round(value)}ms`;
-      case 'INP':
-        return `${Math.round(value)}ms`;
-      default:
-        return Math.round(value).toString();
-    }
-  };
-
-  const renderMetric = (name: string, label: string) => {
-    const value = webVitals.getMetricValue(name);
-    const rating = webVitals.getMetricRating(name);
-    const status = getMetricStatus(rating);
-    const Icon = status.icon;
-
-    return (
-      <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-        <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded-full ${status.color}`} />
-          <span className="font-medium text-sm">{label}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-mono">{formatValue(value, name)}</span>
-          <Icon className="w-4 h-4" />
-        </div>
-      </div>
-    );
-  };
+  if (!isSupported || !showDevTools) {
+    return null;
+  }
 
   return (
-    <Card className={`${className}`}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-blue-500" />
-            <CardTitle className="text-lg">Performance Monitor</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {isOnline ? (
-              <Wifi className="w-4 h-4 text-green-500" />
-            ) : (
-              <WifiOff className="w-4 h-4 text-red-500" />
+    <>
+      {showDevTools && performanceData && (
+        <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
+          <h4 className="font-semibold mb-2">Performance Metrics</h4>
+          <div className="space-y-1">
+            <div>Score: {performanceScore}/100</div>
+            {metrics.lcp && (
+              <div className={`${metrics.lcp.rating === 'good' ? 'text-green-400' : metrics.lcp.rating === 'needs-improvement' ? 'text-yellow-400' : 'text-red-400'}`}>
+                LCP: {metrics.lcp.value.toFixed(0)}ms ({metrics.lcp.rating})
+              </div>
             )}
-            <Badge variant={webVitals.isSupported ? 'default' : 'secondary'}>
-              {webVitals.isSupported ? 'Active' : 'Inactive'}
-            </Badge>
+            {metrics.fid && (
+              <div className={`${metrics.fid.rating === 'good' ? 'text-green-400' : metrics.fid.rating === 'needs-improvement' ? 'text-yellow-400' : 'text-red-400'}`}>
+                FID: {metrics.fid.value.toFixed(0)}ms ({metrics.fid.rating})
+              </div>
+            )}
+            {metrics.cls && (
+              <div className={`${metrics.cls.rating === 'good' ? 'text-green-400' : metrics.cls.rating === 'needs-improvement' ? 'text-yellow-400' : 'text-red-400'}`}>
+                CLS: {metrics.cls.value.toFixed(3)} ({metrics.cls.rating})
+              </div>
+            )}
           </div>
         </div>
-        <CardDescription>
-          Real-time performance metrics and PWA status
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Overall Score */}
-        <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-          <div className="text-3xl font-bold text-blue-600 mb-1">
-            {webVitals.performanceScore}
-          </div>
-          <div className="text-sm text-gray-600">Performance Score</div>
-        </div>
-
-        {/* PWA Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-card rounded-lg border">
-            <Smartphone className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <div className="text-xs text-muted-foreground mb-1">PWA Mode</div>
-            <Badge variant={pwaStatus.isStandalone ? 'default' : 'outline'}>
-              {pwaStatus.isStandalone ? 'Installed' : 'Web'}
-            </Badge>
-          </div>
-          <div className="text-center p-3 bg-card rounded-lg border">
-            <RefreshCw className="w-6 h-6 mx-auto mb-2 text-green-500" />
-            <div className="text-xs text-muted-foreground mb-1">Network</div>
-            <Badge variant={isOnline ? 'default' : 'destructive'}>
-              {isOnline ? 'Online' : 'Offline'}
-            </Badge>
-          </div>
-        </div>
-
-        {showDetails && (
-          <>
-            {/* Core Web Vitals */}
-            <div>
-              <h4 className="font-medium mb-3">Core Web Vitals</h4>
-              <div className="space-y-2">
-                {renderMetric('LCP', 'Largest Contentful Paint')}
-                {renderMetric('FID', 'First Input Delay')}
-                {renderMetric('CLS', 'Cumulative Layout Shift')}
-                {renderMetric('FCP', 'First Contentful Paint')}
-                {renderMetric('TTFB', 'Time to First Byte')}
-                {webVitals.getMetricValue('INP') !== null && renderMetric('INP', 'Interaction to Next Paint')}
-              </div>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-lg font-bold text-green-600">{webVitals.summary.good}</div>
-                <div className="text-xs text-gray-600">Good</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-yellow-600">{webVitals.summary.needsImprovement}</div>
-                <div className="text-xs text-gray-600">Needs Work</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-red-600">{webVitals.summary.poor}</div>
-                <div className="text-xs text-gray-600">Poor</div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
-          <div className="text-xs text-gray-500">
-            Last updated: {lastUpdate.toLocaleTimeString()}
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              webVitals.collectMetrics();
-              setLastUpdate(new Date());
-            }}
-          >
-            <RefreshCw className="w-4 h-4 mr-1" />
-            Refresh
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 };
 

@@ -9,6 +9,8 @@ import { usePageLoad } from '@/shared/components/LoadingScreen';
 import SEOHead from '@/shared/components/optimized/SEOHead';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
+import AccessibilityEnhancements from '@/shared/components/AccessibilityEnhancements';
+import PerformanceMonitor from '@/shared/components/PerformanceMonitor';
 // Import analytics hook
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 // Import PWA install prompt
@@ -89,7 +91,7 @@ const Index = () => {
   }
 
   return (
-    <>
+    <AccessibilityEnhancements>
       <SEOHead
         title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
         description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
@@ -101,6 +103,8 @@ const Index = () => {
       />
       <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
       <CustomCursor />
+      <PerformanceMonitor />
+      
       <div className="min-h-screen">
         <Navigation />
         <HeroSection />
@@ -115,7 +119,7 @@ const Index = () => {
         />
         
         {/* Main content area with proper landmark structure */}
-        <main id="main" role="main">
+        <main id="main" role="main" tabIndex={-1}>
           <AboutSection />
           
           <Suspense fallback={<SectionFallback />}>
@@ -157,7 +161,7 @@ const Index = () => {
           <BackToTop />
         </Suspense>
       </div>
-    </>
+    </AccessibilityEnhancements>
   );
 };
 
