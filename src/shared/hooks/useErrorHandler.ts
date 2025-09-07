@@ -7,9 +7,13 @@ export interface ErrorHandlerOptions {
   onError?: (error: Error) => void;
 }
 
-export const useErrorHandler = (_options: ErrorHandlerOptions = {}) => {
+export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   const handleError = (error: Error | string) => {
-    console.error('Error:', error);
+    // Only log in development or if explicitly requested
+    if (process.env['NODE_ENV'] === 'development' || options.onError) {
+      console.error('Error:', error);
+    }
+    options.onError?.(error instanceof Error ? error : new Error(String(error)));
   };
   return { handleError };
 };

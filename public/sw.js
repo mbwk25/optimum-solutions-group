@@ -135,21 +135,16 @@ const staleWhileRevalidate = async (request, cacheName) => {
 
 // Service Worker Event Listeners
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
-  
   event.waitUntil(
     (async () => {
       const cache = await caches.open(STATIC_CACHE);
       await cache.addAll(STATIC_ASSETS);
       await self.skipWaiting();
-      console.log('[SW] Service worker installed');
     })()
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
-  
   event.waitUntil(
     (async () => {
       const cacheNames = await caches.keys();
@@ -159,8 +154,6 @@ self.addEventListener('activate', (event) => {
       
       await Promise.all(oldCaches.map(cacheName => caches.delete(cacheName)));
       await self.clients.claim();
-      
-      console.log('[SW] Service worker activated');
     })()
   );
 });
@@ -189,4 +182,4 @@ self.addEventListener('message', (event) => {
   }
 });
 
-console.log('[SW] Service worker script loaded');
+// Service worker initialized

@@ -11,12 +11,15 @@ export interface ErrorContext {
 
 class ErrorHandler {
   handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext) {
-    console.error('Error caught:', error);
-    if (errorInfo) {
-      console.error('Component stack:', errorInfo.componentStack);
-    }
-    if (context) {
-      console.error('Context:', context);
+    // Only log errors in development
+    if (process.env['NODE_ENV'] === 'development') {
+      console.error('Error caught:', error);
+      if (errorInfo) {
+        console.error('Component stack:', errorInfo.componentStack);
+      }
+      if (context) {
+        console.error('Context:', context);
+      }
     }
   }
 }
