@@ -30,11 +30,8 @@ export const lazyWithMetrics = <T extends ComponentType<any>>(
   componentName: string
 ) => {
   return lazy(async () => {
-    const startTime = performance.now();
     try {
       const module = await importFunc();
-      const loadTime = performance.now() - startTime;
-      console.log(`Loaded ${componentName} in ${loadTime.toFixed(2)}ms`);
       return module;
     } catch (error) {
       console.error(`Failed to load ${componentName}:`, error);

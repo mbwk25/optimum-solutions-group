@@ -4,7 +4,6 @@ import { Menu, X } from 'lucide-react';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const Navigation = memo(() => {
-  console.log('Navigation rendering - checking for undefined variables');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -15,8 +14,8 @@ const Navigation = memo(() => {
   
   // Accessibility features
   const containerRef = useRef<HTMLDivElement>(null);
-  const announcePolite = (message: string) => {
-    console.log('Accessibility:', message);
+  const announcePolite = (_message: string) => {
+    // Accessibility announcements handled by screen readers
   };
 
   // Memoized scroll handler to prevent re-creation
