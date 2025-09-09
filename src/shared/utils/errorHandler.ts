@@ -27,26 +27,49 @@ class ErrorHandler {
     return ErrorHandler.instance;
   }
 
-  handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext) {
-    // Only log errors in development
-    if (process.env['NODE_ENV'] === 'development') {
-      console.error('Error caught:', error);
-      if (errorInfo) {
-        console.error('Component stack:', errorInfo.componentStack);
+  // Overloaded handleError method to handle both Error objects and string messages
+  handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext): void;
+  handleError(message: string, context?: ErrorContext): void;
+  handleError(errorOrMessage: Error | string, errorInfoOrContext?: ErrorInfo | ErrorContext, context?: ErrorContext): void {
+    // Handle Error object case
+    if (errorOrMessage instanceof Error) {
+      const error = errorOrMessage;
+      const errorInfo = errorInfoOrContext as ErrorInfo;
+      // Only log errors in development
+      if (process.env['NODE_ENV'] === 'development') {
+        console.error('Error caught:', error);
+        if (errorInfo) {
+          console.error('Component stack:', errorInfo.componentStack);
+        }
+        if (context) {
+          console.error('Context:', context);
+        }
       }
-      if (context) {
-        console.error('Context:', context);
-      }
+      return;
     }
-  }
 
-  private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
-    const tagName: string = element.tagName.toLowerCase();
-    const src: string = (element as HTMLImageElement).src || (element as HTMLLinkElement).href || 'unknown';
+    // Handle string message case
+    const message = errorOrMessage;
+    const contextParam = errorInfoOrContext as ErrorContext || {};
     
-    // Only log resource errors in development
+    if (!this.shouldLogError(message)) {
+      return; // Prevent error spam
+    }
+
+    const errorInfo: ErrorContext = {
+      message,
+      timestamp: new Date().toISOString(),
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      ...contextParam
+    };
+
+    // Log in development
     if (process.env["NODE_ENV"] === 'development') {
-      console.warn(`Failed to load ${tagName}: ${src}`);
+      console.error('Application Error:', errorInfo);
+    } else {
+      // In production, send to error tracking service
+      this.sendToErrorService(errorInfo);
     }
   }
 
@@ -56,12 +79,10 @@ class ErrorHandler {
     const minuteAgo: number = currentMinute - 1;
     
     // Clean old entries (remove keys from previous minutes)
-    for (const [key, count] of this.errorCount.entries()) {
+    for (const [key] of this.errorCount.entries()) {
       const keyMinute: number = parseInt(key.split('_').pop() || '0');
       if (keyMinute < minuteAgo) {
         this.errorCount.delete(key);
-        // Optional: log cleanup for debugging
-        console.debug(`Cleaned up ${count} old error entries for key: ${key}`);
       }
     }
 
@@ -74,28 +95,6 @@ class ErrorHandler {
 
     this.errorCount.set(key, count + 1);
     return true;
-  }
-
-  handleError(message: string, context: ErrorContext = {}): void {
-    if (!this.shouldLogError(message)) {
-      return; // Prevent error spam
-    }
-
-    const errorInfo: ErrorContext = {
-      message,
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-      ...context
-    };
-
-    // Log in development
-    if (process.env["NODE_ENV"] === 'development') {
-      console.error('Application Error:', errorInfo);
-    } else {
-      // In production, send to error tracking service
-      this.sendToErrorService(errorInfo);
-    }
   }
 
   private sendToErrorService(errorInfo: ErrorContext): void {

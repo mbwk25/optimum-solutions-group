@@ -389,3 +389,29 @@ img, video {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* High contrast mode styles */
+.high-contrast {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 15%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 90%;
+  --border: 0 0% 25%;
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: 0 0 0 1px hsl(var(--border)) !important;
+}
+
+.high-contrast button:focus,
+.high-contrast a:focus,
+.high-contrast input:focus {
+  outline: 3px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+}
