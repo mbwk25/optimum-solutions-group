@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -101,80 +101,80 @@
 <a name='L36'></a><a href='#L36'>36</a>
 <a name='L37'></a><a href='#L37'>37</a>
 <a name='L38'></a><a href='#L38'>38</a>
-<a name='L39'></a><a href='#L39'>39</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L39'></a><a href='#L39'>39</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">1132x</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1132x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1132x</span>
+<span class="cline-any cline-yes">1114x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1132x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1132x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >d</span>ebounce&lt;</span>T extends (...args: never[]) =&gt; unknown&gt;(
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">11140x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export function debounce&lt;T extends (...args: never[]) =&gt; unknown&gt;(
   func: T,
   wait: number,
-  immediate = <span class="branch-0 cbranch-no" title="branch not covered" >false</span>
+  immediate = false
 ): (...args: Parameters&lt;T&gt;) =&gt; void {
-  let timeout: NodeJS.Timeout | null = <span class="cstat-no" title="statement not covered" >null;</span>
+  let timeout: NodeJS.Timeout | null = null;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return function <span class="fstat-no" title="function not covered" >executedFunction(</span>...args: Parameters&lt;T&gt;) {</span>
-    const later = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      timeout = null;</span>
-<span class="cstat-no" title="statement not covered" >      if (!immediate) <span class="cstat-no" title="statement not covered" >func(...args);</span></span>
+  return function executedFunction(...args: Parameters&lt;T&gt;) {
+    const later = () =&gt; {
+      timeout = null;
+      if (!immediate) func(...args);
     };
 &nbsp;
-    const callNow = <span class="cstat-no" title="statement not covered" >immediate &amp;&amp; !timeout;</span>
+    const callNow = immediate &amp;&amp; !timeout;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (timeout !== null) {</span>
-<span class="cstat-no" title="statement not covered" >      clearTimeout(timeout);</span>
+    if (timeout !== null) {
+      clearTimeout(timeout);
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    timeout = setTimeout(later, wait);</span>
+    timeout = setTimeout(later, wait);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (callNow) <span class="cstat-no" title="statement not covered" >func(...args);</span></span>
+    if (callNow) func(...args);
   };
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >t</span>hrottle&lt;</span>T extends (...args: never[]) =&gt; unknown&gt;(
+export function throttle&lt;T extends (...args: never[]) =&gt; unknown&gt;(
   func: T,
   limit: number
 ): (...args: Parameters&lt;T&gt;) =&gt; void {
   let inThrottle: boolean;
   
-<span class="cstat-no" title="statement not covered" >  return function <span class="fstat-no" title="function not covered" >executedFunction(</span>...args: Parameters&lt;T&gt;) {</span>
-<span class="cstat-no" title="statement not covered" >    if (!inThrottle) {</span>
-<span class="cstat-no" title="statement not covered" >      func.apply(this, args);</span>
-<span class="cstat-no" title="statement not covered" >      inThrottle = true;</span>
-<span class="cstat-no" title="statement not covered" >      setTimeout(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" >inThrottle = false,</span> limit);</span>
+  return function executedFunction(...args: Parameters&lt;T&gt;) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() =&gt; inThrottle = false, limit);
     }
   };
 }</pre></td></tr></table></pre>
@@ -184,7 +184,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-24T01:34:45.277Z
+                at 2025-09-07T16:49:45.610Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

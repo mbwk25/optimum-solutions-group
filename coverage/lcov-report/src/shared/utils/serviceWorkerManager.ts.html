@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/118</span>
+                <span class='fraction'>0/121</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/112</span>
+                <span class='fraction'>0/115</span>
             </div>
         
             
@@ -400,7 +400,11 @@
 <a name='L335'></a><a href='#L335'>335</a>
 <a name='L336'></a><a href='#L336'>336</a>
 <a name='L337'></a><a href='#L337'>337</a>
-<a name='L338'></a><a href='#L338'>338</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -422,6 +426,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -580,6 +586,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -712,6 +719,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -737,7 +745,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { logger } from './logger';</span>
+&nbsp;
+/**
  * Service Worker Manager
  * Handles registration, updates, and communication with service worker
  */
@@ -802,7 +812,7 @@ class ServiceWorkerManager {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return this.getStatus();</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[SW Manager] Service worker registration failed:', error);</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[SW Manager] Service worker registration failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      this.emit('error', error);</span>
 <span class="cstat-no" title="statement not covered" >      return this.getStatus();</span>
     }
@@ -815,16 +825,16 @@ class ServiceWorkerManager {
 <span class="cstat-no" title="statement not covered" >    if (!this.registration) <span class="cstat-no" title="statement not covered" >return false;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const result = <span class="cstat-no" title="statement not covered" >await this.registration.unregister();</span>
+      const result: boolean = <span class="cstat-no" title="statement not covered" >await this.registration.unregister();</span>
 <span class="cstat-no" title="statement not covered" >      this.stopUpdateChecks();</span>
 <span class="cstat-no" title="statement not covered" >      this.registration = null;</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      console.log('[SW Manager] Service worker unregistered');</span>
 <span class="cstat-no" title="statement not covered" >      this.emit('unregistered');</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      return result;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[SW Manager] Service worker unregistration failed:', error);</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[SW Manager] Service worker unregistration failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
   }
@@ -841,7 +851,7 @@ class ServiceWorkerManager {
 <span class="cstat-no" title="statement not covered" >      await this.registration.update();</span>
 <span class="cstat-no" title="statement not covered" >      console.log('[SW Manager] Service worker update requested');</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[SW Manager] Service worker update failed:', error);</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[SW Manager] Service worker update failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      throw error;</span>
     }
   }
@@ -875,7 +885,7 @@ class ServiceWorkerManager {
 <span class="cstat-no" title="statement not covered" >      await this.registration.update();</span>
 <span class="cstat-no" title="statement not covered" >      return !!this.registration.waiting;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[SW Manager] Update check failed:', error);</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[SW Manager] Update check failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
   }
@@ -901,9 +911,9 @@ class ServiceWorkerManager {
 <span class="cstat-no" title="statement not covered" >      return Notification.permission;</span>
     }
 &nbsp;
-    const permission = <span class="cstat-no" title="statement not covered" >await Notification.requestPermission();</span>
+    const permission: NotificationPermission = <span class="cstat-no" title="statement not covered" >await Notification.requestPermission();</span>
 <span class="cstat-no" title="statement not covered" >    console.log('[SW Manager] Notification permission:', permission);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return permission;</span>
   }
 &nbsp;
@@ -916,15 +926,16 @@ class ServiceWorkerManager {
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const subscription = <span class="cstat-no" title="statement not covered" >await this.registration.pushManager.subscribe({</span>
+      const applicationServerKey: ArrayBuffer = <span class="cstat-no" title="statement not covered" >this.urlB64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer;</span>
+      const subscription: PushSubscription = <span class="cstat-no" title="statement not covered" >await this.registration.pushManager.subscribe({</span>
         userVisibleOnly: true,
-        applicationServerKey: this.urlB64ToUint8Array(vapidPublicKey),
+        applicationServerKey,
       });
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      console.log('[SW Manager] Push subscription created');</span>
 <span class="cstat-no" title="statement not covered" >      return subscription;</span>
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[SW Manager] Push subscription failed:', error);</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[SW Manager] Push subscription failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
     }
   }
@@ -963,7 +974,7 @@ class ServiceWorkerManager {
    * Remove event listener
    */
 <span class="fstat-no" title="function not covered" >  off(</span>event: string, listener: (...args: unknown[]) =&gt; void): void {
-    const eventListeners = <span class="cstat-no" title="statement not covered" >this.listeners.get(event);</span>
+    const eventListeners: Array&lt;(...args: unknown[]) =&gt; void&gt; | undefined = <span class="cstat-no" title="statement not covered" >this.listeners.get(event);</span>
 <span class="cstat-no" title="statement not covered" >    if (eventListeners) {</span>
       const index = <span class="cstat-no" title="statement not covered" >eventListeners.indexOf(listener);</span>
 <span class="cstat-no" title="statement not covered" >      if (index &gt; -1) {</span>
@@ -976,7 +987,7 @@ class ServiceWorkerManager {
    * Emit event to listeners
    */
   private <span class="fstat-no" title="function not covered" >emit(</span>event: string, ...args: unknown[]): void {
-    const eventListeners = <span class="cstat-no" title="statement not covered" >this.listeners.get(event);</span>
+    const eventListeners: Array&lt;(...args: unknown[]) =&gt; void&gt; | undefined = <span class="cstat-no" title="statement not covered" >this.listeners.get(event);</span>
 <span class="cstat-no" title="statement not covered" >    if (eventListeners) {</span>
 <span class="cstat-no" title="statement not covered" >      eventListeners.forEach(<span class="fstat-no" title="function not covered" >listener </span>=&gt; <span class="cstat-no" title="statement not covered" >listener(...args))</span>;</span>
     }
@@ -990,14 +1001,14 @@ class ServiceWorkerManager {
 &nbsp;
     // Handle service worker updates
 <span class="cstat-no" title="statement not covered" >    this.registration.addEventListener('updatefound', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-      const newWorker = <span class="cstat-no" title="statement not covered" >this.registration!.installing;</span>
+      const newWorker: ServiceWorker | null = <span class="cstat-no" title="statement not covered" >this.registration!.installing;</span>
 <span class="cstat-no" title="statement not covered" >      if (newWorker) {</span>
 <span class="cstat-no" title="statement not covered" >        console.log('[SW Manager] New service worker installing');</span>
 <span class="cstat-no" title="statement not covered" >        this.emit('installing', newWorker);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        newWorker.addEventListener('statechange', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          console.log('[SW Manager] Service worker state changed:', newWorker.state);</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          if (newWorker.state === 'installed' &amp;&amp; navigator.serviceWorker.controller) {</span>
 <span class="cstat-no" title="statement not covered" >            console.log('[SW Manager] New service worker available');</span>
 <span class="cstat-no" title="statement not covered" >            this.emit('updateavailable', newWorker);</span>
@@ -1041,16 +1052,17 @@ class ServiceWorkerManager {
   }
 &nbsp;
   /**
-   * Convert VAPID key to Uint8Array
+   * Convert VAPID key to Uint8Array (with ArrayBuffer)
    */
   private <span class="fstat-no" title="function not covered" >urlB64ToUint8Array(</span>base64String: string): Uint8Array {
-    const padding = <span class="cstat-no" title="statement not covered" >'='.repeat((4 - base64String.length % 4) % 4);</span>
-    const base64 = <span class="cstat-no" title="statement not covered" >(base64String + padding)</span>
+    const padding: string = <span class="cstat-no" title="statement not covered" >'='.repeat((4 - base64String.length % 4) % 4);</span>
+    const base64: string = <span class="cstat-no" title="statement not covered" >(base64String + padding)</span>
       .replace(/-/g, '+')
       .replace(/_/g, '/');
 &nbsp;
-    const rawData = <span class="cstat-no" title="statement not covered" >window.atob(base64);</span>
-    const outputArray = <span class="cstat-no" title="statement not covered" >new Uint8Array(rawData.length);</span>
+    const rawData: string = <span class="cstat-no" title="statement not covered" >window.atob(base64);</span>
+    const buffer: ArrayBuffer = <span class="cstat-no" title="statement not covered" >new ArrayBuffer(rawData.length);</span>
+    const outputArray: Uint8Array = <span class="cstat-no" title="statement not covered" >new Uint8Array(buffer);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    for (let i = <span class="cstat-no" title="statement not covered" >0;</span> i &lt; rawData.length; ++i) {</span>
 <span class="cstat-no" title="statement not covered" >      outputArray[i] = rawData.charCodeAt(i);</span>
@@ -1060,7 +1072,7 @@ class ServiceWorkerManager {
 }
 &nbsp;
 // Singleton instance
-export const <span class="cstat-no" title="statement not covered" >serviceWorkerManager = new ServiceWorkerManager();</span>
+export const <span class="cstat-no" title="statement not covered" >serviceWorkerManager: ServiceWorkerManager = new ServiceWorkerManager();</span>
 &nbsp;
 // Auto-register in production
 <span class="cstat-no" title="statement not covered" >if (process.env.NODE_ENV === 'production' &amp;&amp; typeof window !== 'undefined') {</span>
@@ -1081,7 +1093,7 @@ export const <span class="cstat-no" title="statement not covered" >serviceWorker
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-24T01:34:45.277Z
+                at 2025-09-07T16:49:45.610Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
