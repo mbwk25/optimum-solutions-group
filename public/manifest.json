@@ -13,85 +13,56 @@
   
   "icons": [
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-72x72.png.svg",
       "sizes": "72x72",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-96x96.png.svg",
       "sizes": "96x96",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-128x128.png.svg",
       "sizes": "128x128",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-144x144.png.svg",
       "sizes": "144x144",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-152x152.png.svg",
       "sizes": "152x152",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-192x192.png.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-384x384.png.svg",
       "sizes": "384x384",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/icon-512x512.png.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     }
   ],
   
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Home page on desktop"
-    },
-    {
-      "src": "/screenshots/mobile-home.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Home page on mobile"
-    },
-    {
-      "src": "/screenshots/mobile-services.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Services section on mobile"
-    },
-    {
-      "src": "/screenshots/desktop-analytics.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Analytics dashboard on desktop"
-    }
-  ],
+
   
   "categories": [
     "business",
@@ -108,9 +79,9 @@
       "url": "/#services",
       "icons": [
         {
-          "src": "/icons/shortcut-services.png",
+          "src": "/icons/shortcut-services.png.svg",
           "sizes": "96x96",
-          "type": "image/png"
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -121,9 +92,9 @@
       "url": "/#contact",
       "icons": [
         {
-          "src": "/icons/shortcut-contact.png",
+          "src": "/icons/shortcut-contact.png.svg",
           "sizes": "96x96",
-          "type": "image/png"
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -134,9 +105,9 @@
       "url": "/analytics",
       "icons": [
         {
-          "src": "/icons/shortcut-analytics.png",
+          "src": "/icons/shortcut-analytics.png.svg",
           "sizes": "96x96",
-          "type": "image/png"
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -147,9 +118,9 @@
       "url": "/#estimator",
       "icons": [
         {
-          "src": "/icons/shortcut-estimator.png",
+          "src": "/icons/shortcut-estimator.png.svg",
           "sizes": "96x96",
-          "type": "image/png"
+          "type": "image/svg+xml"
         }
       ]
     }

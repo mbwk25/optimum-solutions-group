@@ -1,5 +1,5 @@
 // Safe back to top without hooks
-import ChevronUp from 'lucide-react/dist/esm/icons/chevron-up';
+import { ChevronUp } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 
 const BackToTop = () => {

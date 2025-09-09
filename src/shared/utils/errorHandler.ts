@@ -97,23 +97,27 @@ class ErrorHandler {
     const src: string = (element as HTMLImageElement).src || (element as HTMLLinkElement).href || 'unknown';
     
     // Only log resource errors in development
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       console.warn(`Failed to load ${tagName}: ${src}`);
     }
   }
 
   private shouldLogError(errorType: string): boolean {
     const now: number = Date.now();
-    const minuteAgo: number = now - 60000; // 1 minute ago
+    const currentMinute: number = Math.floor(now / 60000);
+    const minuteAgo: number = currentMinute - 1;
     
-    // Clean old entries
-    for (const [key, timestamp] of this.errorCount.entries()) {
-      if (timestamp < minuteAgo) {
+    // Clean old entries (remove keys from previous minutes)
+    for (const [key, count] of this.errorCount.entries()) {
+      const keyMinute: number = parseInt(key.split('_').pop() || '0');
+      if (keyMinute < minuteAgo) {
         this.errorCount.delete(key);
+        // Optional: log cleanup for debugging
+        console.debug(`Cleaned up ${count} old error entries for key: ${key}`);
       }
     }
 
-    const key: string = `${errorType}_${Math.floor(now / 60000)}`; // Group by minute
+    const key: string = `${errorType}_${currentMinute}`;
     const count: number = this.errorCount.get(key) || 0;
     
     if (count >= this.MAX_ERRORS_PER_MINUTE) {
@@ -138,7 +142,7 @@ class ErrorHandler {
     };
 
     // Log in development
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env["NODE_ENV"] === 'development') {
       console.error('Application Error:', errorInfo);
     } else {
       // In production, send to error tracking service
@@ -223,5 +227,11 @@ export const wrapAsync: <T>(fn: () => Promise<T>, context?: ErrorContext) => Pro
 
 export const wrapSync: <T>(fn: () => T, context?: ErrorContext) => T | null = <T>(fn: () => T, context?: ErrorContext): T | null => 
   errorHandler.wrapSync(fn, context);
+
+export const getStoredErrors: () => ErrorContext[] = (): ErrorContext[] => 
+  errorHandler.getStoredErrors();
+
+export const clearStoredErrors: () => void = (): void => 
+  errorHandler.clearStoredErrors();
 
 export default errorHandler; 
