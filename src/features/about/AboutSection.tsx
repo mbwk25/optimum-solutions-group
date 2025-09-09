@@ -1,7 +1,4 @@
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Target from 'lucide-react/dist/esm/icons/target';
-import Users from 'lucide-react/dist/esm/icons/users';
-import Zap from 'lucide-react/dist/esm/icons/zap';
+import { CheckCircle, Target, Users, Zap } from 'lucide-react';
 
 const AboutSection = () => {
   const features = [

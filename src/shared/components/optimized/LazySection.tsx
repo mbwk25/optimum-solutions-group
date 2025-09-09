@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { cn } from '@/shared/utils/utils';
 
 interface LazySectionProps {
@@ -22,7 +22,7 @@ const LazySection = ({
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
         }

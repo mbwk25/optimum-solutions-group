@@ -1,5 +1,4 @@
-import { useEffect, useCallback } from 'react';
-import { errorHandler } from '@/shared/utils/errorHandler';
+import { useCallback } from 'react';
 
 export interface ErrorHandlerOptions {
   component?: string;
@@ -8,101 +7,17 @@ export interface ErrorHandlerOptions {
   onError?: (error: Error) => void;
 }
 
-/**
- * Hook for handling errors in functional components
- * Provides both synchronous and asynchronous error handling utilities
- */
 export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
-  const { component = 'UnknownComponent', action, context, onError } = options;
-
-  // Handle synchronous errors
-  const handleError = useCallback((error: Error | string, additionalContext?: Record<string, unknown>) => {
-    const errorMessage = error instanceof Error ? error.message : error;
-    const errorObj = error instanceof Error ? error : new Error(error);
-    
-    errorHandler.handleError(errorMessage, {
-      component,
-      action,
-      error: errorObj.message,
-      errorStack: errorObj.stack,
-      ...context,
-      ...additionalContext,
-    });
-    
-    onError?.(errorObj);
-  }, [component, action, context, onError]);
-
-  // Handle asynchronous operations with error boundary
-  const handleAsync = useCallback(async <T>(
-    asyncFn: () => Promise<T>,
-    actionName?: string,
-    additionalContext?: Record<string, unknown>
-  ): Promise<T | null> => {
-    return errorHandler.wrapAsync(asyncFn, {
-      component,
-      action: actionName || action,
-      ...context,
-      ...additionalContext,
-    });
-  }, [component, action, context]);
-
-  // Handle synchronous operations with error boundary
-  const handleSync = useCallback(<T>(
-    syncFn: () => T,
-    actionName?: string,
-    additionalContext?: Record<string, unknown>
-  ): T | null => {
-    return errorHandler.wrapSync(syncFn, {
-      component,
-      action: actionName || action,
-      ...context,
-      ...additionalContext,
-    });
-  }, [component, action, context]);
-
-  // Set up global error listeners for this component
-  useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      handleError(
-        event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
-        { source: 'unhandledrejection' }
-      );
-    };
-
-    const handleGlobalError = (event: ErrorEvent) => {
-      handleError(event.error || new Error(event.message), {
-        source: 'globalerror',
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-      });
-    };
-
-    // Only add listeners in development or if explicitly requested
-    if (import.meta.env.MODE === 'development') {
-      window.addEventListener('unhandledrejection', handleUnhandledRejection);
-      window.addEventListener('error', handleGlobalError);
-
-      return () => {
-        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-        window.removeEventListener('error', handleGlobalError);
-      };
+  const handleError = (error: Error | string) => {
+    // Only log in development or if explicitly requested
+    if (process.env['NODE_ENV'] === 'development' || options.onError) {
+      console.error('Error:', error);
     }
-  }, [handleError]);
-
-  return {
-    handleError,
-    handleAsync,
-    handleSync,
-    // Expose error handler utilities
-    getStoredErrors: errorHandler.getStoredErrors.bind(errorHandler),
-    clearStoredErrors: errorHandler.clearStoredErrors.bind(errorHandler),
+    options.onError?.(error instanceof Error ? error : new Error(String(error)));
   };
+  return { handleError };
 };
 
-/**
- * Hook for retrying failed operations with exponential backoff
- */
 export const useRetry = (maxRetries = 3, baseDelay = 1000) => {
   const retry = useCallback(async <T>(
     operation: () => Promise<T>,
@@ -115,7 +30,6 @@ export const useRetry = (maxRetries = 3, baseDelay = 1000) => {
         throw error;
       }
       
-      // Exponential backoff with jitter
       const delay = baseDelay * Math.pow(2, retryCount) + Math.random() * 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
       

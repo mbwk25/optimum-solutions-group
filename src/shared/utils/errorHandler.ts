@@ -1,57 +1,24 @@
-/**
- * Comprehensive error handling utility for the application
- * Prevents console errors and provides better error management
- * @module ErrorHandler
- * @description Comprehensive error handling utility for the application
- * @requires ErrorContext
- * @requires ErrorHandler
- * @requires errorHandler
- * @requires handleError
- * @requires wrapAsync
- * @requires wrapSync
- * @requires getStoredErrors
- */
+// Comprehensive error handler with advanced features
+export interface ErrorInfo {
+  componentStack: string;
+}
 
-/**
- * Error context interface for error handling
- * @interface ErrorContext
- * @property {string} [message] - Error message
- * @property {string} [timestamp] - Timestamp of the error
- * @property {string} [url] - URL where the error occurred
- * @property {string} [userAgent] - User agent of the browser
- * @property {string} [error] - Error message
- * @property {string} [filename] - Filename where the error occurred
- * @property {number} [lineno] - Line number where the error occurred
- * @property {number} [colno] - Column number where the error occurred
- * @property {string} [component] - Component where the error occurred
- * @property {string} [action] - Action that triggered the error
- * @property {unknown} [data] - Additional data about the error
- * @property {unknown} [reason] - Reason for the error
- */
-
-interface ErrorContext {
+export interface ErrorContext {
+  component?: string;
+  action?: string;
+  userId?: string;
   message?: string;
   timestamp?: string;
   url?: string;
   userAgent?: string;
   error?: string;
-  filename?: string;
-  lineno?: number;
-  component?: string;
-  action?: string;
-  data?: unknown;
-  reason?: unknown;
-  colno?: number;
 }
 
 class ErrorHandler {
-  private static instance: ErrorHandler;
-  private errorCount: Map<string, number> = new Map();
+  private errorCount = new Map<string, number>();
   private readonly MAX_ERRORS_PER_MINUTE = 10;
 
-  private constructor() {
-    this.setupGlobalErrorHandlers();
-  }
+  private static instance: ErrorHandler;
 
   static getInstance(): ErrorHandler {
     if (!ErrorHandler.instance) {
@@ -60,36 +27,17 @@ class ErrorHandler {
     return ErrorHandler.instance;
   }
 
-  private setupGlobalErrorHandlers(): void {
-    // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-      this.handleError('Unhandled Promise Rejection', {
-        reason: event.reason,
-        component: 'Global'
-      });
-      event.preventDefault();
-    });
-
-    // Handle global errors
-    window.addEventListener('error', (event: ErrorEvent) => {
-      this.handleError('Global Error', {
-        message: event.message,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        error: event.error
-      });
-    });
-
-    // Handle resource loading errors
-    window.addEventListener('error', (event: ErrorEvent) => {
-      if (event.target && event.target !== window) {
-        const target: HTMLElement = event.target as HTMLElement;
-        if (target.tagName === 'IMG' || target.tagName === 'LINK' || target.tagName === 'SCRIPT') {
-          this.handleResourceError(target as HTMLImageElement | HTMLLinkElement | HTMLScriptElement);
-        }
+  handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext) {
+    // Only log errors in development
+    if (process.env['NODE_ENV'] === 'development') {
+      console.error('Error caught:', error);
+      if (errorInfo) {
+        console.error('Component stack:', errorInfo.componentStack);
       }
-    }, true);
+      if (context) {
+        console.error('Context:', context);
+      }
+    }
   }
 
   private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
@@ -234,4 +182,4 @@ export const getStoredErrors: () => ErrorContext[] = (): ErrorContext[] =>
 export const clearStoredErrors: () => void = (): void => 
   errorHandler.clearStoredErrors();
 
-export default errorHandler; 
+export default errorHandler;

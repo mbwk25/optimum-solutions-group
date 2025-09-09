@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Checkbox } from '@/shared/ui/checkbox';
-import Calculator from 'lucide-react/dist/esm/icons/calculator';
-import Settings from 'lucide-react/dist/esm/icons/settings';
-import MessageCircle from 'lucide-react/dist/esm/icons/message-circle';
+import { Calculator, Settings, MessageCircle } from 'lucide-react';
 import { useToast } from '@/shared/hooks/use-toast';
 
 const ProjectEstimator = () => {

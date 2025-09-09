@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useCoreWebVitals, WebVitalsMetric, CWV_THRESHOLDS } from '../hooks/useCoreWebVitals';
+import { useCoreWebVitals, type WebVitalsMetric } from '../hooks/useCoreWebVitals';
+import { CWV_THRESHOLDS } from '../types/coreWebVitals';
 
 interface CoreWebVitalsDashboardProps {
   enableAnalytics?: boolean;
@@ -169,19 +170,17 @@ const PerformanceGauge: React.FC<{ score: number; size?: 'sm' | 'md' | 'lg' }> =
 };
 
 export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
-  enableAnalytics = false,
-  analyticsEndpoint,
   compact = false,
   showDetails = true,
   autoRefresh = false,
   refreshInterval = 30000,
   className = '',
 }) => {
-  const webVitals = useCoreWebVitals({
-    enableAnalytics,
-    analyticsEndpoint,
+  const coreWebVitals = useCoreWebVitals({
+    enableAnalytics: true,
+    analyticsEndpoint: import.meta.env['VITE_ANALYTICS_ENDPOINT'],
     enableConsoleLogging: false,
-    reportAllChanges: autoRefresh,
+    reportAllChanges: true,
   });
 
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -192,12 +191,12 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
-      webVitals.collectMetrics();
+      coreWebVitals.collectMetrics();
       setLastUpdate(new Date());
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, webVitals]);
+  }, [autoRefresh, refreshInterval, coreWebVitals]);
 
   // Visibility tracking for performance optimization
   useEffect(() => {
@@ -213,7 +212,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'LCP',
       fullName: 'Largest Contentful Paint',
-      metric: webVitals.metrics.lcp,
+      metric: coreWebVitals.metrics.lcp,
       unit: 'ms',
       threshold: CWV_THRESHOLDS.LCP,
       description: 'Time for the largest content element to become visible',
@@ -221,7 +220,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'FID',
       fullName: 'First Input Delay',
-      metric: webVitals.metrics.fid,
+      metric: coreWebVitals.metrics.fid,
       unit: 'ms',
       threshold: CWV_THRESHOLDS.FID,
       description: 'Time from first user interaction to browser response',
@@ -229,7 +228,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'CLS',
       fullName: 'Cumulative Layout Shift',
-      metric: webVitals.metrics.cls,
+      metric: coreWebVitals.metrics.cls,
       unit: 'score',
       threshold: CWV_THRESHOLDS.CLS,
       description: 'Unexpected layout shifts during page load',
@@ -237,7 +236,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'FCP',
       fullName: 'First Contentful Paint',
-      metric: webVitals.metrics.fcp,
+      metric: coreWebVitals.metrics.fcp,
       unit: 'ms',
       threshold: CWV_THRESHOLDS.FCP,
       description: 'Time for first content element to appear',
@@ -245,7 +244,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'TTFB',
       fullName: 'Time to First Byte',
-      metric: webVitals.metrics.ttfb,
+      metric: coreWebVitals.metrics.ttfb,
       unit: 'ms',
       threshold: CWV_THRESHOLDS.TTFB,
       description: 'Time for first byte of response from server',
@@ -253,7 +252,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
     {
       name: 'INP',
       fullName: 'Interaction to Next Paint',
-      metric: webVitals.metrics.inp,
+      metric: coreWebVitals.metrics.inp,
       unit: 'ms',
       threshold: CWV_THRESHOLDS.INP,
       description: 'Latency of interactions throughout page lifecycle',
@@ -263,7 +262,7 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
   const coreVitals = metricConfigs.slice(0, 3); // LCP, FID, CLS
   const additionalMetrics = metricConfigs.slice(3); // FCP, TTFB, INP
 
-  if (!webVitals.isSupported) {
+  if (!coreWebVitals.isSupported) {
     return (
       <div className={`p-6 bg-yellow-50 border border-yellow-200 rounded-lg ${className}`}>
         <div className="flex items-center space-x-2 text-yellow-700">
@@ -282,29 +281,29 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
       {/* Header with performance score */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <PerformanceGauge score={webVitals.performanceScore} size={compact ? 'sm' : 'md'} />
+          <PerformanceGauge score={coreWebVitals.performanceScore} size={compact ? 'sm' : 'md'} />
           <div>
             <h2 className="text-2xl font-bold">Core Web Vitals</h2>
             <p className="text-gray-600">Real-time performance monitoring</p>
             <div className="flex items-center space-x-4 mt-2 text-sm">
-              <span className="text-green-600">Good: {webVitals.summary.good}</span>
-              <span className="text-yellow-600">Needs Work: {webVitals.summary.needsImprovement}</span>
-              <span className="text-red-600">Poor: {webVitals.summary.poor}</span>
+              <span className="text-green-600">Good: {coreWebVitals.summary.good}</span>
+              <span className="text-yellow-600">Needs Work: {coreWebVitals.summary.needsImprovement}</span>
+              <span className="text-red-600">Poor: {coreWebVitals.summary.poor}</span>
             </div>
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
-          {webVitals.isReporting && (
+          {coreWebVitals.isReporting && (
             <div className="flex items-center space-x-1 text-blue-600 text-sm">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <span>Reporting</span>
             </div>
           )}
           <button
-            onClick={webVitals.collectMetrics}
+            onClick={coreWebVitals.collectMetrics}
             className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-            disabled={webVitals.isReporting}
+            disabled={coreWebVitals.isReporting}
           >
             Refresh Metrics
           </button>
@@ -363,19 +362,19 @@ export const CoreWebVitalsDashboard: React.FC<CoreWebVitalsDashboardProps> = ({
             <div>
               <span className="text-gray-500">Device</span>
               <div className="font-medium">
-                {webVitals.metrics.isLowEndDevice ? '📱 Low-End' : '💪 High-End'}
+                {coreWebVitals.metrics.isLowEndDevice ? '📱 Low-End' : '💪 High-End'}
               </div>
             </div>
-            {webVitals.metrics.deviceMemory && (
+            {coreWebVitals.metrics.deviceMemory && (
               <div>
                 <span className="text-gray-500">Memory</span>
-                <div className="font-medium">{webVitals.metrics.deviceMemory}GB</div>
+                <div className="font-medium">{coreWebVitals.metrics.deviceMemory}GB</div>
               </div>
             )}
-            {webVitals.metrics.connectionType && (
+            {coreWebVitals.metrics.connectionType && (
               <div>
                 <span className="text-gray-500">Connection</span>
-                <div className="font-medium capitalize">{webVitals.metrics.connectionType}</div>
+                <div className="font-medium capitalize">{coreWebVitals.metrics.connectionType}</div>
               </div>
             )}
             <div>

@@ -1,33 +1,22 @@
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
-import Menu from 'lucide-react/dist/esm/icons/menu';
-import X from 'lucide-react/dist/esm/icons/x';
-import logo from '@/assets/logo.png';
-import OptimizedImage from '@/shared/components/optimized/OptimizedImage';
-import { useAccessibility, useRovingTabIndex } from '@/shared/hooks/useAccessibility';
+import { Menu, X } from 'lucide-react';
 import { useAccessibilityContext } from '@/shared/components/AccessibilityProvider';
 
 const Navigation = memo(() => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentNavIndex, setCurrentNavIndex] = useState(0);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   // Accessibility context
-  const { announce, addSkipLink, removeSkipLink, prefersReducedMotion } = useAccessibilityContext();
+  const { prefersReducedMotion } = useAccessibilityContext();
   
   // Accessibility features
-  const {
-    containerRef,
-    announcePolite,
-    ariaIds,
-    saveFocus,
-    focusFirst
-  } = useAccessibility({
-    focusTrap: isMenuOpen,
-    announcements: true
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const announcePolite = (_message: string) => {
+    // Accessibility announcements handled by screen readers
+  };
 
   // Memoized scroll handler to prevent re-creation
   const handleScroll = useCallback(() => {
@@ -81,28 +70,31 @@ const Navigation = memo(() => {
       
       // Focus management
       if (newState) {
-        // When opening, save current focus and focus first menu item
+        // When opening, focus first menu item
         setTimeout(() => {
           if (mobileMenuRef.current) {
-            focusFirst(mobileMenuRef.current);
+            const firstButton = mobileMenuRef.current.querySelector('button');
+            firstButton?.focus();
           }
         }, 100);
       }
       
       return newState;
     });
-  }, [announcePolite, focusFirst]);
+  }, [announcePolite]);
 
   // Register skip links
   useEffect(() => {
-    addSkipLink('nav-main', 'Skip to main content', '#main');
-    addSkipLink('nav-menu', 'Skip to navigation menu', '#nav-menu');
+    const element = document.querySelector('#main');
+    const navElement = document.querySelector('#nav-menu');
     
-    return () => {
-      removeSkipLink('nav-main');
-      removeSkipLink('nav-menu');
-    };
-  }, [addSkipLink, removeSkipLink]);
+    if (element) {
+      element.setAttribute('tabindex', '-1');
+    }
+    if (navElement) {
+      navElement.setAttribute('tabindex', '-1');
+    }
+  }, []);
   
   // Handle escape key to close mobile menu
   useEffect(() => {
@@ -132,44 +124,22 @@ const Navigation = memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div 
-            className="flex items-center gap-3 group cursor-pointer"
-            onClick={() => scrollToSection('#hero', 'Home')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                scrollToSection('#hero', 'Home');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Optimum Solutions Group"
-          >
-            <OptimizedImage 
-              src={logo} 
-              alt="Optimum Solutions Group logo"
-              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
-              role="img"
-              width={32}
-              height={32}
-              quality={75}
-              format="webp"
-              loading="eager"
-              priority
-              responsive={false}
-            />
-            <div className="font-bold text-xl tracking-tight">
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Optimum
-              </span>
-              <span className="text-foreground ml-1 font-light">
-                Solutions
-              </span>
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
-                GROUP
+            <div className="flex items-center gap-3 group cursor-pointer justify-center">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-sm">
+                OSG
+              </div>
+              <div className="font-bold text-xl tracking-tight">
+                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Optimum
+                </span>
+                <span className="text-foreground ml-1 font-light">
+                  Solutions
+                </span>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
+                  GROUP
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Desktop Navigation */}
           <div 
@@ -178,7 +148,7 @@ const Navigation = memo(() => {
             aria-label="Main navigation menu"
             id="nav-menu"
           >
-            {navItems.map((item, index) => (
+            {navItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => scrollToSection(item.href, item.label)}
@@ -219,14 +189,14 @@ const Navigation = memo(() => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div 
-            ref={containerRef as React.RefObject<HTMLDivElement>}
+            ref={containerRef}
             className="md:hidden pb-4 focus-trap"
             id="mobile-menu"
             role="menu"
             aria-label="Mobile navigation menu"
           >
             <div className="flex flex-col space-y-4" ref={mobileMenuRef}>
-              {navItems.map((item, index) => (
+              {navItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => scrollToSection(item.href, item.label)}

@@ -44,9 +44,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.gpteng.co">
     
-    <!-- Preload fonts -->
+    <!-- Preload critical resources -->
+    <link rel="preload" as="font" href="https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2" type="font/woff2" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"></noscript>
+    
+    <!-- Resource hints for better performance -->
+    <link rel="dns-prefetch" href="https://api.lovable.dev">
+    <link rel="preconnect" href="https://api.lovable.dev">
     
     <!-- Inline critical CSS -->
     <style>
@@ -63,11 +68,49 @@
         inset: 0;
         z-index: -20;
       }
+      
+      /* Skip links for accessibility */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 8px;
+        background: #dc2626;
+        color: white;
+        padding: 8px 16px;
+        text-decoration: none;
+        border-radius: 4px;
+        z-index: 9999;
+        transition: top 0.2s;
+      }
+      .skip-link:focus {
+        top: 8px;
+      }
+      
+      /* Performance optimizations */
+      img {
+        content-visibility: auto;
+      }
+      
+      /* Loading indicator */
+      .loading-shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+      
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
     </style>
 
   </head>
 
   <body>
+    <!-- Skip navigation links for accessibility -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <a href="#navigation" class="skip-link">Skip to navigation</a>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

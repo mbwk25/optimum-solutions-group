@@ -282,14 +282,15 @@ export const createMockUsers = (count: number, overrides: Partial<UserProfile> =
 export const createMockPortfolioProjects = (count: number): PortfolioProject[] => {
   const categories: PortfolioProject['category'][] = ['web', 'mobile', 'iot', 'consulting'];
   
-  return Array.from({ length: count }, (_, index) => 
-    createMockPortfolioProject({
+  return Array.from({ length: count }, (_, index) => {
+    const category = categories[index % categories.length];
+    return createMockPortfolioProject({
       id: `project-${index + 1}`,
       title: `Project ${index + 1}`,
-      category: categories[index % categories.length],
+      category: category as PortfolioProject['category'],
       featured: index < 3, // First 3 are featured
     })
-  );
+  });
 };
 
 /**
@@ -299,15 +300,17 @@ export const createMockTestimonials = (count: number): Testimonial[] => {
   const companies = ['Tech Corp', 'Innovate Inc', 'Future Systems', 'Digital Solutions'];
   const roles = ['CEO', 'CTO', 'Product Manager', 'Engineering Lead'];
   
-  return Array.from({ length: count }, (_, index) => 
-    createMockTestimonial({
+  return Array.from({ length: count }, (_, index) => {
+    const company = companies[index % companies.length];
+    const role = roles[index % roles.length];
+    return createMockTestimonial({
       id: `testimonial-${index + 1}`,
       name: `Client ${index + 1}`,
-      company: companies[index % companies.length],
-      role: roles[index % roles.length],
+      company: company as string,
+      role: role as string,
       rating: 4 + (index % 2), // Alternates between 4 and 5 stars
     })
-  );
+  });
 };
 
 // Error state factories

@@ -89,7 +89,6 @@ export const LinkTracker: React.FC<LinkTrackerProps> = ({
   action = 'link_click',
   label,
   value,
-  properties,
   href,
   external = false,
 }) => {
@@ -123,7 +122,6 @@ export const FormTracker: React.FC<FormTrackerProps> = ({
   action = 'submit',
   label,
   value,
-  properties,
   onSubmit,
 }) => {
   const { trackEvent } = useAnalytics();
@@ -164,7 +162,6 @@ export const SectionTracker: React.FC<SectionTrackerProps> = ({
   action = 'section_view',
   label,
   value,
-  properties,
   trackVisibility = true,
   visibilityThreshold = 0.5,
 }) => {
@@ -177,7 +174,7 @@ export const SectionTracker: React.FC<SectionTrackerProps> = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasBeenViewed) {
+        if (entry?.isIntersecting && !hasBeenViewed) {
           setHasBeenViewed(true);
           trackEvent(category, action, label || sectionName, value);
           trackEvent('engagement', 'section_visible', sectionName);
@@ -264,7 +261,6 @@ export const ScrollTracker: React.FC<ScrollTrackerProps> = ({
   milestones = [25, 50, 75, 100],
   category = 'engagement',
   action = 'scroll_depth',
-  properties,
 }) => {
   const { trackEvent } = useAnalytics();
   const contentRef = React.useRef<HTMLDivElement>(null);
@@ -330,10 +326,7 @@ export const TimingTracker: React.FC<TimingTrackerProps> = ({
   children,
   timingCategory,
   timingVariable,
-  category = 'timing',
-  action = 'user_timing',
   label,
-  properties,
   autoStart = true,
 }) => {
   const { trackTiming } = useAnalytics();
@@ -360,8 +353,8 @@ export const TimingTracker: React.FC<TimingTrackerProps> = ({
   return (
     <div 
       onMouseEnter={autoStart ? undefined : startTiming}
-      onMouseLeave={autoStart ? endTiming : undefined}
-      onClick={autoStart ? endTiming : undefined}
+      onMouseLeave={autoStart ? (() => endTiming()) : undefined}
+      onClick={autoStart ? (() => endTiming()) : undefined}
       className="contents"
     >
       {children}

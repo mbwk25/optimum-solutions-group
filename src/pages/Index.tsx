@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 // Direct imports for critical components to ensure proper bundling
 import Navigation from '@/features/navigation/Navigation';
 import HeroSection from '@/features/hero/HeroSection';
@@ -9,6 +9,8 @@ import { usePageLoad } from '@/shared/components/LoadingScreen';
 import SEOHead from '@/shared/components/optimized/SEOHead';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
+import AccessibilityEnhancements from '@/shared/components/AccessibilityEnhancements';
+import PerformanceMonitor from '@/shared/components/PerformanceMonitor';
 // Import analytics hook
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 // Import PWA install prompt
@@ -77,21 +79,11 @@ const SectionFallback = () => (
 const Index = () => {
   const isLoading = usePageLoad();
 
-  // Track page analytics with comprehensive configuration
+  // Simplified analytics tracking
   useAnalytics({
     pageTitle: 'Home - Optimum Solutions Group',
     pageCategory: 'landing',
     trackPageViews: true,
-    trackPerformance: true,
-    trackScrollDepth: true,
-    trackClicks: true,
-    trackErrors: true,
-    enableWebVitals: true,
-    customProperties: {
-      pagePath: '/',
-      pageSection: 'home',
-      businessType: 'digital_transformation',
-    },
   });
 
   if (isLoading) {
@@ -99,15 +91,20 @@ const Index = () => {
   }
 
   return (
-    <>
+    <AccessibilityEnhancements>
       <SEOHead
         title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
         description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
         keywords={['digital transformation', 'IoT solutions', 'custom software', 'business automation', 'web development', 'mobile apps']}
-        structuredData={generateStructuredData()}
+        structuredData={generateStructuredData({
+          siteName: "Optimum Solutions Group",
+          url: "https://example.com"
+        })}
       />
       <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
       <CustomCursor />
+      <PerformanceMonitor />
+      
       <div className="min-h-screen">
         <Navigation />
         <HeroSection />
@@ -122,7 +119,7 @@ const Index = () => {
         />
         
         {/* Main content area with proper landmark structure */}
-        <main id="main" role="main">
+        <main id="main" role="main" tabIndex={-1}>
           <AboutSection />
           
           <Suspense fallback={<SectionFallback />}>
@@ -164,7 +161,7 @@ const Index = () => {
           <BackToTop />
         </Suspense>
       </div>
-    </>
+    </AccessibilityEnhancements>
   );
 };
 

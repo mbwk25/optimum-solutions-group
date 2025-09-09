@@ -1,18 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import Wifi from 'lucide-react/dist/esm/icons/wifi';
-import Database from 'lucide-react/dist/esm/icons/database';
-import Cloud from 'lucide-react/dist/esm/icons/cloud';
-import Smartphone from 'lucide-react/dist/esm/icons/smartphone';
-import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
-import Shield from 'lucide-react/dist/esm/icons/shield';
-import Zap from 'lucide-react/dist/esm/icons/zap';
-import Globe from 'lucide-react/dist/esm/icons/globe';
-import Cpu from 'lucide-react/dist/esm/icons/cpu';
-import Activity from 'lucide-react/dist/esm/icons/activity';
-import Car from 'lucide-react/dist/esm/icons/car';
-import Home from 'lucide-react/dist/esm/icons/home';
+import { Wifi, Database, Cloud, Smartphone, BarChart3, Zap, Globe, Cpu, Activity, Car, Home } from 'lucide-react';
 import useScrollAnimation from '@/shared/hooks/useScrollAnimation';
 
 const IoTSection = () => {
@@ -125,7 +114,7 @@ const IoTSection = () => {
           </div>
           
           <div className="grid lg:grid-cols-5 gap-6 mb-8">
-            {iotLayers.map((layer, index) => (
+            {iotLayers.map((layer) => (
               <Card 
                 key={layer.id}
                 className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${

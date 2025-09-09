@@ -5,13 +5,12 @@ interface ToastOptions {
   duration?: number;
 }
 
-// Safe minimal use-toast without hooks
 export function useToast() {
   return {
     toasts: [],
-    toast: (options?: ToastOptions) => {},
+    toast: (_options?: ToastOptions) => {},
     dismiss: () => {}
   };
 }
 
-export const toast = (options?: ToastOptions) => {};
+export const toast = (_options?: ToastOptions) => {};

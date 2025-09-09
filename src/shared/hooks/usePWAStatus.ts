@@ -1,11 +1,5 @@
-/**
- * PWA Status Hook
- * Separated from PWA component to fix React Fast Refresh warnings
- */
-
 import { useState, useEffect } from 'react';
 
-// PWA Status interface
 export interface PWACapabilities {
   isStandalone: boolean;
   canInstall: boolean;
@@ -37,7 +31,7 @@ export const usePWAStatus = () => {
 
       setStatus({
         isStandalone,
-        canInstall: false, // This would be updated by the install prompt event
+        canInstall: false,
         isInstalled: isStandalone || localStorage.getItem('pwa-installed') === 'true',
         supportsNotifications: 'Notification' in window,
         supportsOffline: 'serviceWorker' in navigator && 'caches' in window,
@@ -53,6 +47,8 @@ export const usePWAStatus = () => {
       mediaQuery.addEventListener('change', updateStatus);
       return () => mediaQuery.removeEventListener('change', updateStatus);
     }
+    
+    return undefined; // Explicit return for all code paths
   }, []);
 
   return status;

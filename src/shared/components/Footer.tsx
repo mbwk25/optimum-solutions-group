@@ -1,11 +1,4 @@
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Linkedin from 'lucide-react/dist/esm/icons/linkedin';
-import Twitter from 'lucide-react/dist/esm/icons/twitter';
-import Github from 'lucide-react/dist/esm/icons/github';
-import logo from '@/assets/logo.png';
-import LazyImage from '@/shared/components/LazyImage';
+import { Mail, Phone, MapPin, Linkedin, Twitter, Github } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -49,14 +42,9 @@ const Footer = () => {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
-              <LazyImage 
-                src={logo} 
-                alt="Optimum Solutions Group"
-                className="h-12 w-12"
-                loading="lazy"
-                width={48}
-                height={48}
-              />
+              <div className="h-12 w-12 bg-secondary rounded-lg flex items-center justify-center text-secondary-foreground font-bold text-sm">
+                OSG
+              </div>
               <div className="font-bold text-xl tracking-tight">
                 <span className="bg-gradient-to-r from-secondary to-primary-foreground bg-clip-text text-transparent">
                   Optimum

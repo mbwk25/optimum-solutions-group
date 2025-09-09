@@ -330,4 +330,62 @@
     transform: none !important;
     opacity: 1 !important;
   }
+
+  /* Disable all animations for reduced motion users */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keyboard focus enhancement */
+.using-keyboard *:focus {
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+.using-keyboard button:focus,
+.using-keyboard a:focus,
+.using-keyboard input:focus,
+.using-keyboard select:focus,
+.using-keyboard textarea:focus {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2) !important;
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .service-card,
+  .testimonial-card,
+  .glass-card {
+    border: 2px solid hsl(var(--border)) !important;
+  }
+
+  button, 
+  input, 
+  select, 
+  textarea {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Performance optimizations */
+img, video {
+  content-visibility: auto;
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    hsl(var(--muted)) 25%, 
+    hsl(var(--accent)) 50%, 
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
