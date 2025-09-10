@@ -130,11 +130,12 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     }
   }, [options.enableAnalytics, options.analyticsEndpoint]);
 
-  // Handle metric updates
+  // Handle metric updates - memoized properly to prevent infinite loops
   const handleMetric = useCallback((metric: Metric) => {
     const processedMetric = processMetric(metric);
     
-    if (options.enableConsoleLogging) {
+    // Throttle console logging to prevent spam
+    if (options.enableConsoleLogging && Math.random() < 0.1) { // Only log 10% of the time
       console.log(`📊 Core Web Vitals - ${metric.name}:`, {
         value: metric.value,
         rating: processedMetric.rating,
@@ -144,31 +145,43 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
 
     // Update metrics state
     setMetrics(prev => {
+      // Prevent unnecessary updates if the metric hasn't changed significantly
+      const existingMetric = prev[metric.name.toLowerCase() as keyof CoreWebVitalsData];
+      if (existingMetric && typeof existingMetric === 'object' && 'value' in existingMetric) {
+        if (Math.abs(existingMetric.value - processedMetric.value) < 0.001) {
+          return prev; // No significant change, don't update
+        }
+      }
+
       const updated = {
         ...prev,
         [metric.name.toLowerCase()]: processedMetric,
         timestamp: Date.now(),
       };
 
-      // Call callbacks
-      options.onMetric?.(processedMetric);
-      
-      // Report complete data if we have key metrics
-      if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
-        options.onReport?.(updated);
-        reportToAnalytics(updated);
-      }
+      // Call callbacks (moved outside of setState to prevent render loops)
+      setTimeout(() => {
+        options.onMetric?.(processedMetric);
+        
+        // Report complete data if we have key metrics
+        if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
+          options.onReport?.(updated);
+          reportToAnalytics(updated);
+        }
+      }, 0);
 
       return updated;
     });
-  }, [processMetric, options, reportToAnalytics]);
+  }, [processMetric]); // Removed options and reportToAnalytics from dependencies
 
-  // Initialize Core Web Vitals monitoring
+  // Initialize Core Web Vitals monitoring - run only once
   useEffect(() => {
     if (typeof window === 'undefined') {
       setIsSupported(false);
       return;
     }
+
+    let isInitialized = false;
 
     try {
       const deviceInfo = detectDeviceCapabilities();
@@ -179,26 +192,35 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
         pageLoadTime: performance.now(),
       }));
 
-      // Register Web Vitals observers
-      const options_internal = { reportAllChanges: options.reportAllChanges ?? false };
+      // Register Web Vitals observers only once
+      if (!isInitialized) {
+        isInitialized = true;
+        
+        const options_internal = { reportAllChanges: options.reportAllChanges ?? false };
 
-      onLCP(handleMetric, options_internal);
-      onFCP(handleMetric, options_internal);
-      onCLS(handleMetric, options_internal);
-      onTTFB(handleMetric);
-      
-      // INP is newer, might not be available in all browsers
-      try {
-        onINP(handleMetric, options_internal);
-      } catch {
-        console.warn('INP metric not supported in this browser');
+        onLCP(handleMetric, options_internal);
+        onFCP(handleMetric, options_internal);
+        onCLS(handleMetric, options_internal);
+        onTTFB(handleMetric);
+        
+        // INP is newer, might not be available in all browsers
+        try {
+          onINP(handleMetric, options_internal);
+        } catch {
+          // INP not supported - silent fail
+        }
       }
 
     } catch (error) {
       console.error('Core Web Vitals not supported:', error);
       setIsSupported(false);
     }
-  }, [handleMetric, detectDeviceCapabilities, options.reportAllChanges]);
+
+    // Cleanup function
+    return () => {
+      isInitialized = false;
+    };
+  }, []); // Empty dependency array to run only once
 
   // Calculate overall performance score
   const getPerformanceScore = useCallback((): number => {
