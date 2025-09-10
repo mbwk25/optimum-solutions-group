@@ -152,7 +152,7 @@ describe('Debounce and Throttle utilities', () => {
 
     describe('Type safety', () => {
       it('should preserve function parameter types', () => {
-        const typedFn = (a: string, b: number, c: boolean) => `${a}-${b}-${c}`;
+        const typedFn = (...args: unknown[]) => `${args[0]}-${args[1]}-${args[2]}`;
         const debouncedFn = debounce(typedFn, 100);
 
         // This should compile without TypeScript errors
@@ -161,9 +161,9 @@ describe('Debounce and Throttle utilities', () => {
       });
 
       it('should work with async functions', async () => {
-        const asyncFn = jest.fn(async (value: string) => {
+        const asyncFn = jest.fn(async (...args: unknown[]) => {
           await new Promise(resolve => setTimeout(resolve, 10));
-          return `processed: ${value}`;
+          return `processed: ${args[0]}`;
         });
         const debouncedFn = debounce(asyncFn, 100);
 
@@ -313,7 +313,7 @@ describe('Debounce and Throttle utilities', () => {
 
     describe('Type safety', () => {
       it('should preserve function parameter types', () => {
-        const typedFn = (a: string, b: number) => `${a}-${b}`;
+        const typedFn = (...args: unknown[]) => `${args[0]}-${args[1]}`;
         const throttledFn = throttle(typedFn, 100);
 
         // This should compile without TypeScript errors
@@ -321,9 +321,9 @@ describe('Debounce and Throttle utilities', () => {
       });
 
       it('should work with async functions', async () => {
-        const asyncFn = jest.fn(async (value: string) => {
+        const asyncFn = jest.fn(async (...args: unknown[]) => {
           await new Promise(resolve => setTimeout(resolve, 10));
-          return `processed: ${value}`;
+          return `processed: ${args[0]}`;
         });
         const throttledFn = throttle(asyncFn, 100);
 

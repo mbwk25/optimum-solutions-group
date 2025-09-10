@@ -1,17 +1,10 @@
 // Comprehensive error handler with advanced features
+import { ErrorContext } from '../types/errorContext';
+import { compositeErrorHandler } from '../factories/errorHandlerFactory';
+import { eventBus, EVENT_TYPES } from '../services/eventBus';
+
 export interface ErrorInfo {
   componentStack: string;
-}
-
-export interface ErrorContext {
-  component?: string;
-  action?: string;
-  userId?: string;
-  message?: string;
-  timestamp?: string;
-  url?: string;
-  userAgent?: string;
-  error?: string;
 }
 
 class ErrorHandler {
@@ -27,16 +20,86 @@ class ErrorHandler {
     return ErrorHandler.instance;
   }
 
-  handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext) {
-    // Only log errors in development
-    if (process.env['NODE_ENV'] === 'development') {
-      console.error('Error caught:', error);
-      if (errorInfo) {
-        console.error('Component stack:', errorInfo.componentStack);
+  constructor() {
+    this.setupGlobalErrorHandlers();
+  }
+
+  private setupGlobalErrorHandlers(): void {
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      this.handleError('Unhandled Promise Rejection', {
+        reason: event.reason,
+        component: 'Global'
+      });
+    });
+
+    // Handle global errors
+    window.addEventListener('error', (event) => {
+      this.handleError(event.message, {
+        error: event.error,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        component: 'Global'
+      });
+    });
+
+    // Handle resource loading errors
+    window.addEventListener('error', (event) => {
+      const target = event.target as HTMLElement;
+      if (target && (target.tagName === 'IMG' || target.tagName === 'LINK' || target.tagName === 'SCRIPT')) {
+        this.handleResourceError(target as HTMLImageElement | HTMLLinkElement | HTMLScriptElement);
       }
-      if (context) {
-        console.error('Context:', context);
+    }, true); // Use capture phase to catch resource errors
+  }
+
+  handleError(error: Error, errorInfo?: ErrorInfo, context?: ErrorContext): void;
+  handleError(message: string, context?: ErrorContext): void;
+  handleError(errorOrMessage: Error | string, errorInfoOrContext?: ErrorInfo | ErrorContext, context?: ErrorContext): void {
+    if (typeof errorOrMessage === 'string') {
+      // String message overload
+      const message = errorOrMessage;
+      const errorContext = errorInfoOrContext as ErrorContext || {};
+      
+      if (!this.shouldLogError(message)) {
+        return; // Prevent error spam
       }
+
+      const errorInfo: ErrorContext = {
+        message,
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        ...errorContext
+      };
+
+      // Use composite error handler for proper categorization
+      const error = new Error(message);
+      compositeErrorHandler.handle(error, errorInfo);
+
+      // Emit event for other components
+      eventBus.emit(EVENT_TYPES.ERROR_OCCURRED, {
+        type: 'application',
+        message,
+        context: errorInfo,
+      });
+    } else {
+      // Error object overload
+      const error = errorOrMessage;
+      const errorInfo = errorInfoOrContext as ErrorInfo;
+      const errorContext = context || {};
+      
+      // Use composite error handler
+      compositeErrorHandler.handle(error, errorContext);
+
+      // Emit event for other components
+      eventBus.emit(EVENT_TYPES.ERROR_OCCURRED, {
+        type: 'application',
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo?.componentStack,
+        context: errorContext,
+      });
     }
   }
 
@@ -76,57 +139,16 @@ class ErrorHandler {
     return true;
   }
 
-  handleError(message: string, context: ErrorContext = {}): void {
-    if (!this.shouldLogError(message)) {
-      return; // Prevent error spam
-    }
-
-    const errorInfo: ErrorContext = {
-      message,
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-      ...context
-    };
-
-    // Log in development
-    if (process.env["NODE_ENV"] === 'development') {
-      console.error('Application Error:', errorInfo);
-    } else {
-      // In production, send to error tracking service
-      this.sendToErrorService(errorInfo);
-    }
-  }
-
-  private sendToErrorService(errorInfo: ErrorContext): void {
-    // Here you would integrate with your error tracking service
-    // Examples: Sentry, LogRocket, Bugsnag, etc.
-    
-    // For now, we'll just store in localStorage for debugging
-    try {
-      const errors: ErrorContext[] = JSON.parse(localStorage.getItem('app_errors') || '[]');
-      errors.push(errorInfo);
-      
-      // Keep only last 50 errors
-      if (errors.length > 50) {
-        errors.splice(0, errors.length - 50);
-      }
-      
-      localStorage.setItem('app_errors', JSON.stringify(errors));
-    } catch (e) {
-      // Silently fail if localStorage is not available
-    }
-  }
+  // Error persistence is now handled by the composite error handler
+  // and error reporting service through the repository pattern
 
   // Utility method to wrap async functions with error handling
   async wrapAsync<T>(fn: () => Promise<T>, context?: ErrorContext): Promise<T | null> {
     try {
       return await fn();
     } catch (error) {
-      this.handleError('Async Function Error', {
-        ...context,
-        error: error instanceof Error ? error.message : String(error)
-      });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.handleError(errorMessage, context);
       return null;
     }
   }
@@ -136,10 +158,8 @@ class ErrorHandler {
     try {
       return fn();
     } catch (error) {
-      this.handleError('Sync Function Error', {
-        ...context,
-        error: error instanceof Error ? error.message : String(error)
-      });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.handleError(errorMessage, context);
       return null;
     }
   }

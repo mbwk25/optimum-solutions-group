@@ -61,7 +61,7 @@ describe('Form Components E2E Tests', () => {
       cy.get('[data-testid="input-email"]').then(($input) => {
         // Use HTMLInputElement to access 'validity' property safely
         const input: HTMLInputElement = $input[0] as HTMLInputElement;
-        expect(input.validity.valid).to.be.false;
+        cy.wrap(input.validity.valid).should('be.false');
       });
 
       cy.get('[data-testid="input-email"]')
@@ -71,7 +71,7 @@ describe('Form Components E2E Tests', () => {
 
       cy.get('[data-testid="input-email"]').then(($input) => {
         const input: HTMLInputElement = $input[0] as HTMLInputElement;
-        expect(input.validity.valid).to.be.true;
+        cy.wrap(input.validity.valid).should('be.true');
       })
     })
 
@@ -275,14 +275,8 @@ describe('Form Components E2E Tests', () => {
   describe('Form Accessibility', () => {
     it('should have no accessibility violations', () => {
       // Ensure axe-core is injected before running accessibility checks
-      cy.window({ log: false }).then((win) => {
-        if (!(win as unknown as { axe: unknown }).axe) {
-          // @ts-expect-error: injectAxe is provided by cypress-axe plugin
-          cy.injectAxe();
-        }
-      });
+      cy.injectAxe();
       cy.get('[data-testid="form-card"]').within(() => {
-        // @ts-expect-error: checkA11y is provided by cypress-axe plugin
         cy.checkA11y(undefined, {
           rules: {
             // Allow some rules that might be false positives in test environment

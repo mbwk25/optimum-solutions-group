@@ -129,7 +129,7 @@ export const usePerformanceBenchmark = (_options: BenchmarkOptions = {}) => {
   };
 };
 
-export const useAutomatedPerformanceTesting = (_options: any = {}) => ({
+export const useAutomatedPerformanceTesting = (_options: BenchmarkOptions = {}) => ({
   isScheduled: false,
   testResults: [],
   lastRegressionAlert: null,
@@ -142,7 +142,7 @@ export const useCoreWebVitalsMonitor = () => ({
   getVitalStatus: (_vital: string) => 'good',
 });
 
-export const usePerformanceRegressionDetector = (_options: any = {}) => ({
+export const usePerformanceRegressionDetector = (_options: BenchmarkOptions = {}) => ({
   baseline: null,
   regressions: [],
   improvements: [],

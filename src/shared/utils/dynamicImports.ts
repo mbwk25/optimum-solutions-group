@@ -1,7 +1,7 @@
 import { lazy, ComponentType } from 'react';
 
 // Simple lazy loading with retry functionality
-export const lazyWithRetry = <T extends ComponentType<any>>(
+export const lazyWithRetry = <T extends ComponentType<Record<string, unknown>>>(
   importFunc: () => Promise<{ default: T }>,
   retries: number = 2,
   delay: number = 1000
@@ -25,7 +25,7 @@ export const lazyWithRetry = <T extends ComponentType<any>>(
 };
 
 // Simple lazy loading with metrics (simplified version)
-export const lazyWithMetrics = <T extends ComponentType<any>>(
+export const lazyWithMetrics = <T extends ComponentType<Record<string, unknown>>>(
   importFunc: () => Promise<{ default: T }>,
   componentName: string
 ) => {

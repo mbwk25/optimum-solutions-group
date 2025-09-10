@@ -45,14 +45,21 @@ export interface SEOAnalysisResult {
   };
 }
 
-export const useSEO = (initialMetadata: SEOMetadata = {}, _options: any = {}) => {
+interface SEOOptions {
+  enableAnalysis?: boolean;
+  enableTracking?: boolean;
+  enableWebVitals?: boolean;
+  trackingInterval?: number;
+}
+
+export const useSEO = (initialMetadata: SEOMetadata = {}, _options: SEOOptions = {}) => {
   const location = useLocation();
   const [currentMetadata, setCurrentMetadata] = useState<SEOMetadata>(initialMetadata);
   const [analysis, setAnalysis] = useState<SEOAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [webVitals] = useState<Record<string, WebVital>>({});
   const [trackingEnabled, setTrackingEnabled] = useState(true);
-  const [metaTags, setMetaTags] = useState<any[]>([]);
+  const [metaTags, setMetaTags] = useState<Array<{ name?: string; property?: string; content: string }>>([]);
   const [structuredDataValid, setStructuredDataValid] = useState(false);
   
   const [performanceMetrics] = useState({
@@ -139,7 +146,11 @@ export const useSEO = (initialMetadata: SEOMetadata = {}, _options: any = {}) =>
 
   const resetSEO = useCallback(() => {
     setCurrentMetadata(initialMetadata);
-    setAnalysis(null);
+    setAnalysis({
+      score: 0,
+      issues: [],
+      recommendations: []
+    });
   }, [initialMetadata]);
 
   const score = useMemo(() => analysis?.score || 0, [analysis]);
@@ -165,7 +176,7 @@ export const useSEO = (initialMetadata: SEOMetadata = {}, _options: any = {}) =>
 
   useEffect(() => {
     runAnalysis();
-  }, []);
+  }, [runAnalysis]);
 
   return {
     updateSEO,

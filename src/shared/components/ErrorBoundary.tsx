@@ -2,8 +2,14 @@ import React, { Component, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 
+type ErrorLevel = 'app' | 'page' | 'section' | 'component';
+
 interface Props {
   children: ReactNode;
+  level?: ErrorLevel;
+  isolate?: boolean;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
@@ -12,6 +18,8 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
+  private retryTimeout?: NodeJS.Timeout;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -22,19 +30,68 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    // Only log errors in non-test environments
+    if (process.env['NODE_ENV'] !== 'test') {
+      console.error('Error caught by boundary:', error, errorInfo);
+    }
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+  }
+
+  override componentWillUnmount() {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+    }
   }
 
   handleRetry = () => {
     this.setState({ hasError: false });
   };
 
+  getErrorTitle = (): string => {
+    const { level = 'component' } = this.props;
+    switch (level) {
+      case 'app':
+        return 'Application Error';
+      case 'page':
+        return 'Page Error';
+      case 'section':
+        return 'Section Error';
+      case 'component':
+        return 'Component Error';
+      default:
+        return 'Something went wrong';
+    }
+  };
+
   override render() {
     if (this.state.hasError) {
+      // Use custom fallback if provided
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      const isDevelopment = process.env['NODE_ENV'] === 'development';
+      const errorTitle = this.getErrorTitle();
+
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className={`flex flex-col items-center justify-center p-4 ${this.props.isolate ? 'min-h-32' : 'min-h-screen'}`}>
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
+          <h1 className="text-xl font-bold mb-2">{errorTitle}</h1>
+          
+          {isDevelopment && this.state.error && (
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg max-w-md">
+              <h3 className="font-semibold mb-2">Error Details (Development Only)</h3>
+              <p className="text-sm text-gray-700">{this.state.error.message}</p>
+              <pre className="text-xs text-gray-600 mt-2 overflow-auto">
+                {this.state.error.stack}
+              </pre>
+            </div>
+          )}
+          
           <Button onClick={this.handleRetry}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again

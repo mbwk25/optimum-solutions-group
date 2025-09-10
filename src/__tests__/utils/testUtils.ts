@@ -12,8 +12,10 @@
  */
 
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { AxeResults } from 'axe-core';
 
 // Extend Jest matchers for accessibility testing
+// @ts-expect-error - jest-axe types are not fully compatible with Jest's expect.extend
 expect.extend(toHaveNoViolations);
 
 // Re-export from data factories
@@ -51,27 +53,27 @@ export { renderWithProviders } from './reactTestUtils';
 export const measureRenderPerformance = async (
   renderComponent: () => HTMLElement | DocumentFragment
 ): Promise<PerformanceMetrics> => {
-  const startTime = performance.now();
+  const startTime: number = performance.now();
   
   // Mark the start of component rendering
   performance.mark('component-render-start');
   
   // Execute the render component function
-  const renderResult = renderComponent();
+  const renderResult: HTMLElement | DocumentFragment = renderComponent();
   
   // Mark the end of component rendering
   performance.mark('component-render-end');
   
-  const endTime = performance.now();
-  const totalRenderTime = endTime - startTime;
+  const endTime: number = performance.now();
+  const totalRenderTime: number = endTime - startTime;
   
   // Measure the render time
   performance.measure('component-render-time', 'component-render-start', 'component-render-end');
   
   // Simulate component mount time (for hooks and effects)
   await new Promise(resolve => setTimeout(resolve, 0));
-  const mountEndTime = performance.now();
-  const componentMountTime = mountEndTime - endTime;
+  const mountEndTime: number = performance.now();
+  const componentMountTime: number = mountEndTime - endTime;
   
   // Suppress unused variable warning by using the result
   void renderResult;
@@ -89,11 +91,11 @@ export const measureRenderPerformance = async (
 export const testAccessibility = async (
   component: HTMLElement | DocumentFragment
 ): Promise<AccessibilityTestResult> => {
-  const results = await axe(component);
-  
+  const results: AxeResults = await axe(component as HTMLElement);
+
   return {
     violations: results.violations,
-    passed: results.violations.length === 0,
+    passed: Array.isArray(results.violations) && results.violations.length === 0,
     results: results,
   };
 };
@@ -105,7 +107,19 @@ export { renderAndTestAccessibility } from './reactTestUtils';
  * Mock data factory for consistent test data
  * Following the coding standards for type definitions
  */
-export const createMockUser = () => ({
+type MockUserPreferences = {
+  theme: 'light' | 'dark';
+  notifications: boolean;
+};
+
+export type MockUser = {
+  id: string;
+  name: string;
+  email: string;
+  preferences: MockUserPreferences;
+};
+
+export const createMockUser = (): MockUser => ({
   id: '1',
   name: 'John Doe',
   email: 'john@example.com',
@@ -132,8 +146,8 @@ export const benchmarkComponent = async (
   renderFn: () => HTMLElement | DocumentFragment,
   expectedMaxRenderTime = 16
 ): Promise<{ passed: boolean; metrics: PerformanceMetrics }> => {
-  const metrics = await measureRenderPerformance(renderFn);
-  const passed = metrics.renderTime < expectedMaxRenderTime;
+  const metrics: PerformanceMetrics = await measureRenderPerformance(renderFn);
+  const passed: boolean = metrics.renderTime < expectedMaxRenderTime;
   
   if (!passed) {
     console.warn(`Component render time ${metrics.renderTime.toFixed(2)}ms exceeds target ${expectedMaxRenderTime}ms`);
@@ -145,45 +159,48 @@ export const benchmarkComponent = async (
 /**
  * Helper to create mock intersection observer for lazy loading tests
  */
-export const mockIntersectionObserver = () => {
-  const mockIntersectionObserver = jest.fn();
+export const mockIntersectionObserver = (): jest.Mock => {
+  const mockIntersectionObserver: jest.Mock = jest.fn();
   mockIntersectionObserver.mockReturnValue({
     observe: jest.fn(),
     unobserve: jest.fn(),
     disconnect: jest.fn(),
   });
-  window.IntersectionObserver = mockIntersectionObserver;
+  window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
   return mockIntersectionObserver;
 };
 
 /**
  * Helper to create mock resize observer for responsive tests
  */
-export const mockResizeObserver = () => {
-  const mockResizeObserver = jest.fn();
+export const mockResizeObserver = (): jest.Mock => {
+  const mockResizeObserver: jest.Mock = jest.fn();
   mockResizeObserver.mockReturnValue({
     observe: jest.fn(),
     unobserve: jest.fn(),
     disconnect: jest.fn(),
   });
-  window.ResizeObserver = mockResizeObserver;
+  window.ResizeObserver = mockResizeObserver as unknown as typeof ResizeObserver;
   return mockResizeObserver;
 };
 
 /**
  * Utility to simulate viewport resize for responsive testing
  */
-export const resizeViewport = (width: number, height: number) => {
+export const resizeViewport = (width: number, height: number): void => {
+
   Object.defineProperty(window, 'innerWidth', {
     writable: true,
     configurable: true,
     value: width,
   });
+
   Object.defineProperty(window, 'innerHeight', {
     writable: true,
     configurable: true,
     value: height,
   });
+  
   window.dispatchEvent(new Event('resize'));
 };
 
@@ -196,10 +213,10 @@ export const waitForCondition = async (
   timeout = 1000,
   interval = 50
 ): Promise<void> => {
-  const startTime = Date.now();
+  const startTime: number = Date.now();
   
   return new Promise((resolve, reject) => {
-    const check = () => {
+    const check: () => void = () => {
       if (condition()) {
         resolve();
       } else if (Date.now() - startTime >= timeout) {

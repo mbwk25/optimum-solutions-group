@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from '@jest/globals';
 import '@testing-library/jest-dom';
 
+
 // Mock the Button component since the real one has complex dependencies
 const MockButton = ({ children, onClick, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
   <button onClick={onClick} {...props}>
@@ -17,7 +18,7 @@ describe('Button Component', () => {
   });
 
   it('should handle click events', () => {
-    const handleClick = jest.fn();
+    const handleClick: jest.Mock = jest.fn();
     render(<MockButton onClick={handleClick}>Click me</MockButton>);
     
     fireEvent.click(screen.getByText('Click me'));
@@ -27,8 +28,8 @@ describe('Button Component', () => {
   it('should accept custom props', () => {
     render(<MockButton data-testid="custom-button" disabled>Click me</MockButton>);
     
-    const button = screen.getByTestId('custom-button');
+    const button: HTMLButtonElement = screen.getByTestId('custom-button');
     expect(button).toBeTruthy();
-    expect(button).toBeDisabled();
+    expect(button.getAttribute('disabled')).toBeTruthy();
   });
 });

@@ -5,17 +5,17 @@
  * @version 1.0.0
  */
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import '@testing-library/jest-dom';
+
 import LazyImage from '../LazyImage';
 
 // Mock IntersectionObserver
-const mockIntersectionObserver = jest.fn();
-const mockObserve = jest.fn();
-const mockUnobserve = jest.fn();
-const mockDisconnect = jest.fn();
+const mockIntersectionObserver: jest.Mock = jest.fn();
+const mockObserve: jest.Mock = jest.fn();
+const mockUnobserve: jest.Mock = jest.fn();
+const mockDisconnect: jest.Mock = jest.fn();
 
 beforeEach(() => {
   mockIntersectionObserver.mockReturnValue({
@@ -23,7 +23,7 @@ beforeEach(() => {
     unobserve: mockUnobserve,
     disconnect: mockDisconnect,
   });
-  window.IntersectionObserver = mockIntersectionObserver;
+  window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
 });
 
 afterEach(() => {
@@ -35,9 +35,9 @@ describe('LazyImage Component - Basic', () => {
     it('should render with required props', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toBeInTheDocument();
-      expect(img).toHaveAttribute('alt', 'Test image');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img).toBeTruthy();
+      expect(img.getAttribute('alt')).toBe('Test image');
     });
 
     it('should render with custom className', () => {
@@ -49,8 +49,8 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveClass('custom-class');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.classList.contains('custom-class')).toBe(true);
     });
 
     it('should render with width and height', () => {
@@ -63,9 +63,9 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('width', '100');
-      expect(img).toHaveAttribute('height', '100');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('width')).toBe('100');
+      expect(img.getAttribute('height')).toBe('100');
     });
 
     it('should render with loading="eager"', () => {
@@ -77,15 +77,15 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('loading', 'eager');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('loading')).toBe('eager');
     });
 
     it('should render with loading="lazy" by default', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('loading', 'lazy');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('loading')).toBe('lazy');
     });
   });
 
@@ -108,8 +108,8 @@ describe('LazyImage Component - Basic', () => {
     it('should show loading skeleton while loading', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toBeInTheDocument();
+      const skeleton: HTMLDivElement | null = document.querySelector('.animate-pulse');
+      expect(skeleton).toBeTruthy();
     });
 
     it('should show blur effect with blurDataURL', () => {
@@ -121,8 +121,8 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveClass('blur-sm');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.classList.contains('blur-sm')).toBe(true);
     });
   });
 
@@ -136,8 +136,8 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('fetchpriority', 'high');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('fetchpriority')).toBe('high');
     });
 
     it('should not set fetchpriority when auto', () => {
@@ -149,15 +149,15 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).not.toHaveAttribute('fetchpriority');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('fetchpriority')).toBeNull();
     });
 
     it('should set decoding="async"', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('decoding', 'async');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('decoding')).toBe('async');
     });
   });
 
@@ -165,15 +165,15 @@ describe('LazyImage Component - Basic', () => {
     it('should have proper alt text', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('alt', 'Test image');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('alt')).toBe('Test image');
     });
 
     it('should handle empty alt text', () => {
       render(<LazyImage src="test.jpg" alt="" />);
       
-      const img = screen.getByAltText('');
-      expect(img).toHaveAttribute('alt', '');
+      const img: HTMLImageElement = screen.getByAltText('');
+      expect(img.getAttribute('alt')).toBe('');
     });
 
     it('should pass through other HTML attributes', () => {
@@ -186,24 +186,24 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByTestId('lazy-image');
-      expect(img).toHaveAttribute('id', 'test-id');
+      const img: HTMLImageElement = screen.getByTestId('lazy-image');
+      expect(img.getAttribute('id')).toBe('test-id');
     });
   });
 
   describe('Edge cases', () => {
     it('should handle undefined src', () => {
-      render(<LazyImage src={undefined as string} alt="Test image" />);
+      render(<LazyImage src={undefined as unknown as string} alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('src');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('src')).toBeTruthy();
     });
 
     it('should handle empty src', () => {
       render(<LazyImage src="" alt="Test image" />);
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('src');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('src')).toBeTruthy();
     });
 
     it('should handle very large images', () => {
@@ -216,15 +216,15 @@ describe('LazyImage Component - Basic', () => {
         />
       );
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toHaveAttribute('width', '2000');
-      expect(img).toHaveAttribute('height', '2000');
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img.getAttribute('width')).toBe('2000');
+      expect(img.getAttribute('height')).toBe('2000');
     });
   });
 
   describe('Cleanup', () => {
     it('should cleanup intersection observer on unmount', () => {
-      const { unmount } = render(
+      const { unmount }: { unmount: () => void } = render(
         <LazyImage src="test.jpg" alt="Test image" loading="lazy" />
       );
       
@@ -244,18 +244,18 @@ describe('LazyImage Component - Basic', () => {
     it('should render with proper container structure', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const container = document.querySelector('.relative.overflow-hidden');
-      expect(container).toBeInTheDocument();
+      const container: HTMLDivElement | null = document.querySelector('.relative.overflow-hidden');
+      expect(container).toBeTruthy();
       
-      const img = screen.getByAltText('Test image');
-      expect(img).toBeInTheDocument();
+      const img: HTMLImageElement = screen.getByAltText('Test image');
+      expect(img).toBeTruthy();
     });
 
     it('should render with loading skeleton', () => {
       render(<LazyImage src="test.jpg" alt="Test image" />);
       
-      const skeleton = document.querySelector('.absolute.inset-0.bg-muted.animate-pulse.rounded');
-      expect(skeleton).toBeInTheDocument();
+      const skeleton: HTMLDivElement | null = document.querySelector('.absolute.inset-0.bg-muted.animate-pulse.rounded');
+      expect(skeleton).toBeTruthy();
     });
   });
 });

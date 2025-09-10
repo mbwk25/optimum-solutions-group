@@ -6,7 +6,7 @@ export interface WebVitalsMetric {
   rating: 'good' | 'needs-improvement' | 'poor';
   navigationType: 'navigate' | 'reload' | 'back_forward' | 'prerender';
   timestamp: number;
-  entries: any[];
+  entries: PerformanceEntry[];
 }
 
 export interface CoreWebVitalsData {

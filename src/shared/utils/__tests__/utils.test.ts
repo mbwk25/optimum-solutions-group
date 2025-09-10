@@ -5,7 +5,7 @@
  * @version 1.0.0
  */
 
-import { describe, it, expect, test } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { cn } from '../utils';
 
 /**
@@ -52,8 +52,8 @@ describe('cn utility function', () => {
     });
 
     it('should handle complex conditional logic', () => {
-      const variant = 'primary';
-      const size = 'large';
+      const variant = 'primary' as 'primary' | 'secondary';
+      const size = 'large' as 'large' | 'small';
       const isDisabled = false;
       
       const result = cn('btn', {

@@ -14,9 +14,9 @@ const Navigation = memo(() => {
   
   // Accessibility features
   const containerRef = useRef<HTMLDivElement>(null);
-  const announcePolite = (_message: string) => {
+  const announcePolite = useCallback((_message: string) => {
     // Accessibility announcements handled by screen readers
-  };
+  }, []);
 
   // Memoized scroll handler to prevent re-creation
   const handleScroll = useCallback(() => {

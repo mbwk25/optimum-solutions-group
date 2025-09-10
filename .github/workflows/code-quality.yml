@@ -177,6 +177,33 @@ jobs:
           echo "Coverage analysis could not be completed. Check test execution." >> coverage-report.md
         fi
 
+    - name: Normalize Coverage Paths
+      run: |
+        echo "🔧 Normalizing coverage file paths..."
+        
+        # Check if clover.xml exists
+        if [ -f "coverage/clover.xml" ]; then
+          echo "📁 Found coverage/clover.xml, normalizing paths..."
+          
+          # Run the normalization script
+          if node scripts/normalize-coverage-paths.js; then
+            echo "✅ Coverage paths normalized successfully"
+            
+            # Verify the normalization worked
+            ABSOLUTE_PATHS=$(grep -c 'path="C:\\\\' coverage/clover.xml 2>/dev/null || echo "0")
+            if [ "$ABSOLUTE_PATHS" -eq 0 ]; then
+              echo "✅ Verification: No absolute Windows paths found in coverage file"
+            else
+              echo "⚠️ Warning: $ABSOLUTE_PATHS absolute Windows paths still found"
+            fi
+          else
+            echo "❌ Failed to normalize coverage paths"
+            exit 1
+          fi
+        else
+          echo "ℹ️ No coverage/clover.xml found, skipping path normalization"
+        fi
+
     - name: Dependency Analysis
       run: |
         echo "📦 Analyzing dependencies..."

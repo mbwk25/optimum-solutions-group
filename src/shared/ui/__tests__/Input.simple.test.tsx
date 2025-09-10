@@ -34,7 +34,7 @@ describe('Input Component', () => {
   it('should accept value prop', () => {
     render(<MockInput value="test value" />);
     
-    const input = screen.getByTestId('input');
+    const input = screen.getByTestId('input') as HTMLInputElement;
     expect(input.value).toBe('test value');
   });
 });

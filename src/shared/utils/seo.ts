@@ -21,7 +21,7 @@ export const SEO_CONFIG = {
   twitterHandle: '@optimumsolutions',
 };
 
-export const generateStructuredData = (data: any) => {
+export const generateStructuredData = (data: { siteName?: string; url?: string; [key: string]: unknown }) => {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",

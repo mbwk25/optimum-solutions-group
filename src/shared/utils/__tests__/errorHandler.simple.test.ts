@@ -7,6 +7,8 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { errorHandler, handleError, wrapAsync, wrapSync, getStoredErrors, clearStoredErrors } from '../errorHandler';
+import { ErrorHandler } from '@/shared/factories/errorHandlerFactory';
+import { ErrorContext } from '@/shared/types/errorContext';
 
 // Mock localStorage
 const localStorageMock = {
@@ -27,7 +29,7 @@ describe('Error Handler utilities - Simplified', () => {
     localStorageMock.removeItem.mockImplementation(() => {});
     
     // Reset error handler instance
-    (errorHandler as ErrorHandler & { errorCount: Map<string, number> }).errorCount.clear();
+    (errorHandler as unknown as ErrorHandler & { errorCount: Map<string, number> }).errorCount.clear();
   });
 
   describe('ErrorHandler class', () => {
@@ -59,7 +61,7 @@ describe('Error Handler utilities - Simplified', () => {
   describe('Utility functions', () => {
     describe('wrapAsync', () => {
       it('should execute async function successfully', async () => {
-        const mockFn = jest.fn().mockResolvedValue('success');
+        const mockFn: jest.MockedFunction<() => Promise<string>> = jest.fn<() => Promise<string>>().mockResolvedValue('success');
         const result = await wrapAsync(mockFn, { component: 'TestComponent' });
 
         expect(result).toBe('success');
@@ -67,15 +69,15 @@ describe('Error Handler utilities - Simplified', () => {
       });
 
       it('should handle async function errors', async () => {
-        const mockFn = jest.fn().mockRejectedValue(new Error('Async error'));
-        const result = await wrapAsync(mockFn, { component: 'TestComponent' });
+        const mockFn: jest.MockedFunction<() => Promise<string>> = jest.fn<() => Promise<string>>().mockRejectedValue(new Error('Async error'));
+        const result: string | null = await wrapAsync(mockFn, { component: 'TestComponent' });
 
         expect(result).toBeNull();
       });
 
       it('should handle non-Error rejections', async () => {
-        const mockFn = jest.fn().mockRejectedValue('String error');
-        const result = await wrapAsync(mockFn);
+        const mockFn: jest.MockedFunction<() => Promise<string>> = jest.fn<() => Promise<string>>().mockRejectedValue('String error');
+        const result: string | null = await wrapAsync(mockFn);
 
         expect(result).toBeNull();
       });
@@ -147,10 +149,10 @@ describe('Error Handler utilities - Simplified', () => {
     });
 
     it('should handle context with undefined values', () => {
-      const contextWithUndefined = {
+      const contextWithUndefined: ErrorContext = {
         component: 'TestComponent',
         action: undefined,
-        data: undefined,
+        // data: undefined,
       };
 
       expect(() => {
@@ -161,13 +163,13 @@ describe('Error Handler utilities - Simplified', () => {
 
   describe('Performance and edge cases', () => {
     it('should handle rapid error generation efficiently', () => {
-      const startTime = performance.now();
+      const startTime: number = performance.now();
 
       for (let i = 0; i < 100; i++) {
         handleError(`Error ${i}`);
       }
 
-      const endTime = performance.now();
+      const endTime: number = performance.now();
       expect(endTime - startTime).toBeLessThan(100); // Should complete quickly
     });
 
@@ -185,44 +187,36 @@ describe('Error Handler utilities - Simplified', () => {
 
   describe('Integration scenarios', () => {
     it('should work with React error boundaries', () => {
-      const error = new Error('React error');
-      const errorInfo = {
-        componentStack: 'ErrorBoundary > Component > Child',
-      };
-
+      const error: Error = new Error('React error');
       expect(() => {
         handleError('React Error Boundary', {
-          error: error.message,
+          error: error,
           component: 'ErrorBoundary',
-          errorStack: error.stack,
-          componentStack: errorInfo.componentStack,
         });
       }).not.toThrow();
     });
 
     it('should work with API error handling', async () => {
-      const apiCall = async () => {
+      const apiCall: () => Promise<string> = async () => {
         throw new Error('API request failed');
       };
 
-      const result = await wrapAsync(apiCall, {
+      const result: string | null = await wrapAsync(apiCall, {
         component: 'ApiService',
         action: 'fetchUserData',
-        data: { userId: 123 },
       });
 
       expect(result).toBeNull();
     });
 
     it('should work with form validation errors', () => {
-      const validateForm = () => {
+      const validateForm: () => string = () => {
         throw new Error('Validation failed');
       };
 
-      const result = wrapSync(validateForm, {
+      const result: string | null = wrapSync(validateForm, {
         component: 'FormValidator',
         action: 'validateEmail',
-        data: { field: 'email', value: 'invalid-email' },
       });
 
       expect(result).toBeNull();
@@ -235,20 +229,19 @@ describe('Error Handler utilities - Simplified', () => {
         handleError('Test error', {
           component: 'TestComponent',
           action: 'testAction',
-          data: { key: 'value' },
         });
       }).not.toThrow();
     });
 
     it('should work with async functions', async () => {
-      const asyncFn = async () => 'test';
-      const result = await wrapAsync(asyncFn);
+      const asyncFn: () => Promise<string> = async () => 'test';
+      const result: string | null = await wrapAsync(asyncFn);
       expect(result).toBe('test');
     });
 
     it('should work with sync functions', () => {
-      const syncFn = () => 'test';
-      const result = wrapSync(syncFn);
+      const syncFn: () => string = () => 'test';
+      const result: string | null = wrapSync(syncFn);
       expect(result).toBe('test');
     });
   });

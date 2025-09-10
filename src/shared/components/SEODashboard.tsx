@@ -51,7 +51,7 @@ interface MetricCardProps {
   description?: string;
   trend?: 'up' | 'down' | 'stable' | undefined;
   trendValue?: string | undefined;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color?: 'default' | 'green' | 'yellow' | 'red' | 'blue';
   onClick?: () => void;
 }

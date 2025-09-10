@@ -547,7 +547,7 @@ describe('Error Handler utilities', () => {
       const error = new Error('React error');
 
       handleError('React Error Boundary', {
-        error: error.message,
+        error: error,
         component: 'ErrorBoundary',
       });
 
@@ -574,7 +574,6 @@ describe('Error Handler utilities', () => {
       const result = await wrapAsync(apiCall, {
         component: 'ApiService',
         action: 'fetchUserData',
-        data: { userId: 123 },
       });
 
       expect(result).toBeNull();
@@ -584,7 +583,6 @@ describe('Error Handler utilities', () => {
           message: 'Async Function Error',
           component: 'ApiService',
           action: 'fetchUserData',
-          data: { userId: 123 },
           error: 'API request failed',
         })
       );
@@ -603,7 +601,6 @@ describe('Error Handler utilities', () => {
       const result = wrapSync(validateForm, {
         component: 'FormValidator',
         action: 'validateEmail',
-        data: { field: 'email', value: 'invalid-email' },
       });
 
       expect(result).toBeNull();
@@ -613,7 +610,6 @@ describe('Error Handler utilities', () => {
           message: 'Sync Function Error',
           component: 'FormValidator',
           action: 'validateEmail',
-          data: { field: 'email', value: 'invalid-email' },
           error: 'Validation failed',
         })
       );

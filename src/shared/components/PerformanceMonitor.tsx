@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCoreWebVitals } from '@/shared/hooks/useCoreWebVitals';
+import { CoreWebVitalsData } from '@/shared/types/coreWebVitals';
 
 interface PerformanceMonitorProps {
   showDevTools?: boolean;
@@ -8,7 +9,7 @@ interface PerformanceMonitorProps {
 const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   showDevTools = import.meta.env.MODE === 'development'
 }) => {
-  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<CoreWebVitalsData | null>(null);
   
   const { 
     metrics, 
@@ -52,9 +53,9 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     if (typeof window === 'undefined') return;
 
     const checkMemoryUsage = () => {
-      // @ts-ignore - performance.memory is experimental but widely supported
+      // @ts-expect-error - performance.memory is experimental but widely supported
       if (window.performance?.memory) {
-        // @ts-ignore
+        // @ts-expect-error - performance.memory is experimental but widely supported
         const memory = window.performance.memory;
         const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
         
