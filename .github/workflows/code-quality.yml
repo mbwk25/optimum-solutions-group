@@ -294,6 +294,8 @@ jobs:
           coverage/coverage-final.json
           coverage/clover.xml
         retention-days: 30
+      # Note: Coverage artifacts are uploaded as build artifacts only
+      # They should NEVER be committed to the repository
 
     - name: Comment Quality Report on PR
       if: github.event_name == 'pull_request'

@@ -52,8 +52,12 @@ dashboard/data.min.json
 test-results/
 playwright-report/
 coverage/
+coverage-*/
+lcov-report/
 .nyc_output/
 lcov.info
+coverage-final.json
+clover.xml
 junit.xml
 *.png
 *.jpg
