@@ -1,3 +1,8 @@
+/**
+ * Core Web Vitals Type Definitions
+ * Comprehensive typing for performance monitoring
+ */
+
 export interface WebVitalsMetric {
   name: string;
   value: number;
@@ -20,30 +25,18 @@ export interface CoreWebVitalsData {
   url: string;
   userAgent: string;
   isLowEndDevice: boolean;
+  pageLoadTime: number;
   deviceMemory?: number | null;
   connectionType?: string | null;
-  pageLoadTime: number;
 }
 
 export interface CoreWebVitalsOptions {
-  enableAnalytics?: boolean;
-  analyticsEndpoint?: string;
   enableConsoleLogging?: boolean;
   reportAllChanges?: boolean;
+  enableAnalytics?: boolean;
+  analyticsEndpoint?: string;
   onMetric?: (metric: WebVitalsMetric) => void;
   onReport?: (data: CoreWebVitalsData) => void;
-}
-
-export interface CoreWebVitalsContextType {
-  metrics: CoreWebVitalsData | null;
-  performanceScore: number;
-  summary: {
-    good: number;
-    needsImprovement: number;
-    poor: number;
-  };
-  collectMetrics: () => void;
-  isSupported: boolean;
 }
 
 export const CWV_THRESHOLDS = {
@@ -53,4 +46,18 @@ export const CWV_THRESHOLDS = {
   FCP: { good: 1800, needsImprovement: 3000 },
   TTFB: { good: 800, needsImprovement: 1800 },
   INP: { good: 200, needsImprovement: 500 },
-};
+} as const;
+
+export interface CoreWebVitalsContextType {
+  metrics: CoreWebVitalsData;
+  isSupported: boolean;
+  performanceScore: number;
+  summary: {
+    good: number;
+    needsImprovement: number;
+    poor: number;
+    total: number;
+    score: number;
+  };
+  collectMetrics: () => void;
+}

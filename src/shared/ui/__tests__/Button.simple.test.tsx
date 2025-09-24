@@ -30,6 +30,6 @@ describe('Button Component', () => {
     
     const button: HTMLButtonElement = screen.getByTestId('custom-button');
     expect(button).toBeTruthy();
-    expect(button.getAttribute('disabled')).toBeTruthy();
+    expect(button.disabled).toBeTruthy();
   });
 });

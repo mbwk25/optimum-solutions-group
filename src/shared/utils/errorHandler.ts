@@ -103,28 +103,16 @@ class ErrorHandler {
     }
   }
 
-  private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
-    const tagName: string = element.tagName.toLowerCase();
-    const src: string = (element as HTMLImageElement).src || (element as HTMLLinkElement).href || 'unknown';
-    
-    // Only log resource errors in development
-    if (process.env["NODE_ENV"] === 'development') {
-      console.warn(`Failed to load ${tagName}: ${src}`);
-    }
-  }
-
   private shouldLogError(errorType: string): boolean {
     const now: number = Date.now();
     const currentMinute: number = Math.floor(now / 60000);
     const minuteAgo: number = currentMinute - 1;
     
     // Clean old entries (remove keys from previous minutes)
-    for (const [key, count] of this.errorCount.entries()) {
+    for (const [key] of this.errorCount.entries()) {
       const keyMinute: number = parseInt(key.split('_').pop() || '0');
       if (keyMinute < minuteAgo) {
         this.errorCount.delete(key);
-        // Optional: log cleanup for debugging
-        console.debug(`Cleaned up ${count} old error entries for key: ${key}`);
       }
     }
 
@@ -137,6 +125,34 @@ class ErrorHandler {
 
     this.errorCount.set(key, count + 1);
     return true;
+  }
+
+  // Handle resource loading errors
+  private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
+    const errorInfo: ErrorContext = {
+      message: `Resource loading error: ${element.tagName}`,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      component: 'ResourceLoader',
+      element: {
+        tagName: element.tagName,
+        src: element.src || element.href || '',
+        id: element.id || '',
+        className: element.className || ''
+      }
+    };
+
+    // Use composite error handler
+    const error = new Error(`Resource loading failed: ${element.tagName}`);
+    compositeErrorHandler.handle(error, errorInfo);
+
+    // Emit event for other components
+    eventBus.emit(EVENT_TYPES.ERROR_OCCURRED, {
+      type: 'resource',
+      message: errorInfo.message,
+      context: errorInfo,
+    });
   }
 
   // Error persistence is now handled by the composite error handler

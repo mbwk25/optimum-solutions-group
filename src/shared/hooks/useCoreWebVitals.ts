@@ -138,12 +138,12 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     }
   }, []);
 
-  // Handle metric updates - create stable function
+  // Handle metric updates - memoized properly to prevent infinite loops
   const handleMetric = useCallback((metric: Metric) => {
     const processedMetric = processMetric(metric);
-    const currentOptions = optionsRef.current;
     
-    if (currentOptions.enableConsoleLogging) {
+    // Throttle console logging to prevent spam
+    if (options.enableConsoleLogging && Math.random() < 0.1) { // Only log 10% of the time
       console.log(`📊 Core Web Vitals - ${metric.name}:`, {
         value: metric.value,
         rating: processedMetric.rating,
@@ -153,29 +153,36 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
 
     // Update metrics state
     setMetrics(prev => {
+      // Prevent unnecessary updates if the metric hasn't changed significantly
+      const existingMetric = prev[metric.name.toLowerCase() as keyof CoreWebVitalsData];
+      if (existingMetric && typeof existingMetric === 'object' && 'value' in existingMetric) {
+        if (Math.abs(existingMetric.value - processedMetric.value) < 0.001) {
+          return prev; // No significant change, don't update
+        }
+      }
+
       const updated = {
         ...prev,
         [metric.name.toLowerCase()]: processedMetric,
         timestamp: Date.now(),
       };
 
-      // Call callbacks
-      currentOptions.onMetric?.(processedMetric);
-      
-      // Report complete data if we have key metrics
-      if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
-        currentOptions.onReport?.(updated);
-        reportToAnalytics(updated);
-      }
+      // Call callbacks (moved outside of setState to prevent render loops)
+      setTimeout(() => {
+        options.onMetric?.(processedMetric);
+        
+        // Report complete data if we have key metrics
+        if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
+          options.onReport?.(updated);
+          reportToAnalytics(updated);
+        }
+      }, 0);
 
       return updated;
     });
-  }, [processMetric, reportToAnalytics]);
-  
-  // Store the stable handleMetric function in ref
-  handleMetricRef.current = handleMetric;
+  }, [processMetric, options, reportToAnalytics]);
 
-  // Initialize Core Web Vitals monitoring
+  // Initialize Core Web Vitals monitoring - run only once
   useEffect(() => {
     if (typeof window === 'undefined') {
       setIsSupported(false);
@@ -183,6 +190,10 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     }
 
     let unsubscribeFunctions: (() => void)[] = [];
+
+    // Store the stable handleMetric function in ref
+    handleMetricRef.current = handleMetric;
+    let isInitialized = false;
 
     try {
       const deviceInfo = detectDeviceCapabilities();
@@ -196,25 +207,32 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
 
       // Register Web Vitals observers using the ref version
       const currentOptions = optionsRef.current;
-      const options_internal = { reportAllChanges: currentOptions.reportAllChanges ?? false };
-      
-      const stableHandleMetric = (metric: Metric) => {
-        if (handleMetricRef.current) {
-          handleMetricRef.current(metric);
-        }
-      };
+      const options_internal: { reportAllChanges: boolean } = { reportAllChanges: currentOptions.reportAllChanges ?? false };
 
-      // Register Web Vitals observers (they don't return unsubscribe functions in current version)
-      onLCP(stableHandleMetric, options_internal);
-      onFCP(stableHandleMetric, options_internal);
-      onCLS(stableHandleMetric, options_internal);
-      onTTFB(stableHandleMetric);
-      
-      // INP is newer, might not be available in all browsers
-      try {
-        onINP(stableHandleMetric, options_internal);
-      } catch {
-        console.warn('INP metric not supported in this browser');
+      // Register Web Vitals observers only once
+      if (!isInitialized) {
+        isInitialized = true;
+        
+        const options_internal = { reportAllChanges: options.reportAllChanges ?? false };
+        
+        const stableHandleMetric = (metric: Metric) => {
+          if (handleMetricRef.current) {
+            handleMetricRef.current(metric);
+          }
+        };
+
+        // Register Web Vitals observers (they don't return unsubscribe functions in current version)
+        onLCP(stableHandleMetric, options_internal);
+        onFCP(stableHandleMetric, options_internal);
+        onCLS(stableHandleMetric, options_internal);
+        onTTFB(stableHandleMetric);
+        
+        // INP is newer, might not be available in all browsers
+        try {
+          onINP(stableHandleMetric, options_internal);
+        } catch {
+          console.warn('INP metric not supported in this browser');
+        }
       }
 
     } catch (error) {
@@ -224,13 +242,9 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
 
     // Cleanup function
     return () => {
-      unsubscribeFunctions.forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      });
+      isInitialized = false;
     };
-  }, [detectDeviceCapabilities]); // Only depend on detectDeviceCapabilities
+  }, [detectDeviceCapabilities, handleMetric, options.reportAllChanges]);
 
   // Calculate overall performance score
   const getPerformanceScore = useCallback((): number => {

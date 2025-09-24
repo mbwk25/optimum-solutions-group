@@ -6,11 +6,14 @@ import AboutSection from '@/features/about/AboutSection';
 import CustomCursor from '@/shared/components/CustomCursor';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { usePageLoad } from '@/shared/components/LoadingScreen';
-import SEOHead from '@/shared/components/optimized/SEOHead';
+import SEOHead from '@/shared/components/SEOHead';
+import { HelmetProvider } from 'react-helmet-async';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
 import AccessibilityEnhancements from '@/shared/components/AccessibilityEnhancements';
 import PerformanceMonitor from '@/shared/components/PerformanceMonitor';
+import HighContrastModeToggle from '@/shared/components/HighContrastModeToggle';
+import ResourcePreloader from '@/shared/components/ResourcePreloader';
 // Import analytics hook
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 // Import PWA install prompt
@@ -91,77 +94,91 @@ const Index = () => {
   }
 
   return (
-    <AccessibilityEnhancements>
-      <SEOHead
-        title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
-        description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
-        keywords={['digital transformation', 'IoT solutions', 'custom software', 'business automation', 'web development', 'mobile apps']}
-        structuredData={generateStructuredData({
-          siteName: "Optimum Solutions Group",
-          url: "https://example.com"
-        })}
-      />
-      <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
-      <CustomCursor />
-      <PerformanceMonitor />
-      
-      <div className="min-h-screen">
-        <Navigation />
-        <HeroSection />
-        
-        {/* PWA Install Prompt - Banner after hero */}
-        <PWAInstallPrompt 
-          variant="banner"
-          autoShow={true}
-          showDelay={5000}
-          hideAfterInstall={true}
-          className="sticky top-0 z-40"
+    <HelmetProvider>
+      <AccessibilityEnhancements>
+        <SEOHead
+          title="Optimum Solutions Group - Digital Transformation & IoT Solutions"
+          description="Transform your business with custom software, IoT systems, and digital solutions. We help ambitious businesses drive real, measurable results through innovative technology."
+          keywords={['digital transformation', 'IoT solutions', 'custom software', 'business automation', 'web development', 'mobile apps']}
+          structuredData={generateStructuredData({
+            siteName: "Optimum Solutions Group",
+            url: typeof window !== 'undefined' ? window.location.origin : ''
+          })}
         />
+        <ResourcePreloader
+          criticalResources={[
+            '/fonts/playfair-display.woff2',
+            '/fonts/inter.woff2'
+          ]}
+          prefetchResources={[
+            '/images/hero-bg.jpg',
+            '/images/about-section.jpg',
+            '/images/services-bg.jpg'
+          ]}
+        />
+        <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
+        <CustomCursor />
+        <PerformanceMonitor />
+        <HighContrastModeToggle />
         
-        {/* Main content area with proper landmark structure */}
-        <main id="main" role="main" tabIndex={-1}>
-          <AboutSection />
+        <div className="min-h-screen">
+          <Navigation />
+          <HeroSection />
           
+          {/* PWA Install Prompt - Banner after hero */}
+          <PWAInstallPrompt 
+            variant="banner"
+            autoShow={true}
+            showDelay={5000}
+            hideAfterInstall={true}
+            className="sticky top-0 z-40"
+          />
+          
+          {/* Main content area with proper landmark structure */}
+          <main id="main" role="main" tabIndex={-1}>
+            <AboutSection />
+            
+            <Suspense fallback={<SectionFallback />}>
+              <ServicesSection />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <IoTSection />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <ProjectEstimator />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <PortfolioSection />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <TestimonialsSection />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <FAQSection />
+            </Suspense>
+            
+            <Suspense fallback={<SectionFallback />}>
+              <ContactSection />
+            </Suspense>
+          </main>
+          
+          {/* Site footer */}
           <Suspense fallback={<SectionFallback />}>
-            <ServicesSection />
+            <Footer />
           </Suspense>
           
+          {/* Utility components */}
           <Suspense fallback={<SectionFallback />}>
-            <IoTSection />
+            <BackToTop />
           </Suspense>
-          
-          <Suspense fallback={<SectionFallback />}>
-            <ProjectEstimator />
-          </Suspense>
-          
-          <Suspense fallback={<SectionFallback />}>
-            <PortfolioSection />
-          </Suspense>
-          
-          <Suspense fallback={<SectionFallback />}>
-            <TestimonialsSection />
-          </Suspense>
-          
-          <Suspense fallback={<SectionFallback />}>
-            <FAQSection />
-          </Suspense>
-          
-          <Suspense fallback={<SectionFallback />}>
-            <ContactSection />
-          </Suspense>
-        </main>
-        
-        {/* Site footer */}
-        <Suspense fallback={<SectionFallback />}>
-          <Footer />
-        </Suspense>
-        
-        {/* Utility components */}
-        <Suspense fallback={<SectionFallback />}>
-          <BackToTop />
-        </Suspense>
-      </div>
-    </AccessibilityEnhancements>
+        </div>
+      </AccessibilityEnhancements>
+    </HelmetProvider>
   );
 };
 
