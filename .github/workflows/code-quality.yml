@@ -281,7 +281,18 @@ jobs:
           *-report.md
           *-results.json
           *-results.txt
-          coverage/
+        retention-days: 30
+
+    - name: Upload Coverage HTML Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ github.sha }}
+        path: |
+          coverage/lcov-report/
+          coverage/lcov.info
+          coverage/coverage-final.json
+          coverage/clover.xml
         retention-days: 30
 
     - name: Comment Quality Report on PR
@@ -292,7 +303,14 @@ jobs:
           const fs = require('fs');
           
           if (fs.existsSync('quality-report.md')) {
-            const report = fs.readFileSync('quality-report.md', 'utf8');
+            let report = fs.readFileSync('quality-report.md', 'utf8');
+            
+            // Add coverage artifact link if coverage was generated
+            if (fs.existsSync('coverage/lcov-report/index.html')) {
+              report += '\n\n## 📊 Coverage Report\n\n';
+              report += '📁 **Coverage HTML Report**: Available as build artifact\n';
+              report += '💡 **How to view**: Download the `coverage-report-${{ github.sha }}` artifact and open `lcov-report/index.html`\n';
+            }
             
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
