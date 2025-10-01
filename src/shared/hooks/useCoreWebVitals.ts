@@ -189,8 +189,6 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       return;
     }
 
-    let unsubscribeFunctions: (() => void)[] = [];
-
     // Store the stable handleMetric function in ref
     handleMetricRef.current = handleMetric;
     let isInitialized = false;
@@ -204,10 +202,6 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
         ...deviceInfo,
         pageLoadTime: performance.now(),
       }));
-
-      // Register Web Vitals observers using the ref version
-      const currentOptions = optionsRef.current;
-      const options_internal: { reportAllChanges: boolean } = { reportAllChanges: currentOptions.reportAllChanges ?? false };
 
       // Register Web Vitals observers only once
       if (!isInitialized) {

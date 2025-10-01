@@ -129,18 +129,14 @@ class ErrorHandler {
 
   // Handle resource loading errors
   private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
+    const resourceUrl = 'src' in element ? element.src : ('href' in element ? element.href : '');
+    
     const errorInfo: ErrorContext = {
-      message: `Resource loading error: ${element.tagName}`,
+      message: `Resource loading error: ${element.tagName} - ${resourceUrl}`,
       timestamp: new Date().toISOString(),
       url: window.location.href,
       userAgent: navigator.userAgent,
-      component: 'ResourceLoader',
-      element: {
-        tagName: element.tagName,
-        src: element.src || element.href || '',
-        id: element.id || '',
-        className: element.className || ''
-      }
+      component: 'ResourceLoader'
     };
 
     // Use composite error handler
