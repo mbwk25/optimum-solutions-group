@@ -27,7 +27,8 @@ declare global {
            normalizeWhitespace?: boolean;
            normalizer?: NormalizerFn;
          }
-       ): R;      toHaveStyle(css: string | Record<string, unknown>): R;
+       ): R;
+      toHaveStyle(css: string | Record<string, unknown>): R;
       toBeVisible(): R;
       toBeEmptyDOMElement(): R;
       toContainElement(element: HTMLElement | null): R;

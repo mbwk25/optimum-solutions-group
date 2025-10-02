@@ -8,7 +8,7 @@
  * @author Optimum Solutions Group
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, type RenderHookResult } from '@testing-library/react';
 import { usePWAStatus, type PWACapabilities } from '../usePWAStatus';
 
 describe('usePWAStatus Hook - Minimal Tests', () => {
@@ -19,7 +19,7 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
   describe('Basic Functionality', () => {
     it('should return initial PWA status with expected properties', () => {
-      const { result } = renderHook(() => usePWAStatus());
+      const { result }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Check that all expected properties exist
       expect(result.current).toHaveProperty('isStandalone');
@@ -42,12 +42,12 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
     it('should handle SSR environment gracefully', () => {
       // Store original window
-      const originalWindow = global.window;
+      const originalWindow: Window & typeof globalThis = global.window;
       try {
         // @ts-expect-error - Intentionally setting window to undefined for SSR test
         global.window = undefined;
 
-        const { result } = renderHook(() => usePWAStatus());
+        const { result }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
         // Should not crash and should return initial state
         expect(result.current).toBeDefined();
@@ -62,19 +62,19 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
   describe('Hook Behavior', () => {
     it('should return the same object reference on re-renders when state does not change', () => {
-      const { result, rerender } = renderHook(() => usePWAStatus());
+      const { result, rerender }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
-      const firstResult = result.current;
+      const firstResult: PWACapabilities = result.current;
       rerender();
-      const secondResult = result.current;
+      const secondResult: PWACapabilities = result.current;
 
       // The hook should return the same object reference if state hasn't changed
       expect(firstResult).toBe(secondResult);
     });
 
     it('should handle multiple hook instances independently', () => {
-      const { result: result1 } = renderHook(() => usePWAStatus());
-      const { result: result2 } = renderHook(() => usePWAStatus());
+      const { result: result1 }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
+      const { result: result2 }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Both instances should return the same initial state
       expect(result1.current).toEqual(result2.current);
@@ -83,7 +83,7 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
   describe('Media Query Integration', () => {
     it('should call window.matchMedia with correct query', () => {
-      const mockMatchMedia = window.matchMedia as jest.Mock;
+      const mockMatchMedia: jest.MockedFunction<typeof window.matchMedia> = window.matchMedia as jest.MockedFunction<typeof window.matchMedia>;
 
       renderHook(() => usePWAStatus());
 
@@ -92,24 +92,24 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
     });
 
     it('should set up event listener on media query', () => {
-      const mockMatchMedia: jest.Mock = window.matchMedia as jest.Mock;
+      const mockMatchMedia: jest.MockedFunction<typeof window.matchMedia> = window.matchMedia as jest.MockedFunction<typeof window.matchMedia>;
 
       renderHook(() => usePWAStatus());
 
       // Get the mock media query that was returned
-      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value;
+      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value as MediaQueryList;
 
       // Should set up change event listener
       expect(mockMediaQuery.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
     });
 
     it('should clean up event listener on unmount', () => {
-      const mockMatchMedia: jest.Mock = window.matchMedia as jest.Mock;
+      const mockMatchMedia: jest.MockedFunction<typeof window.matchMedia> = window.matchMedia as jest.MockedFunction<typeof window.matchMedia>;
 
-      const { unmount } = renderHook(() => usePWAStatus());
+      const { unmount }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Get the mock media query that was returned
-      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value;
+      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value as MediaQueryList;
 
       unmount();
 
@@ -120,15 +120,15 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
   describe('State Updates', () => {
     it('should handle media query change events', () => {
-      const mockMatchMedia: jest.Mock = window.matchMedia as jest.Mock;
+      const mockMatchMedia: jest.MockedFunction<typeof window.matchMedia> = window.matchMedia as jest.MockedFunction<typeof window.matchMedia>;
 
-      const { result } = renderHook(() => usePWAStatus());
+      const { result }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Get the mock media query that was returned
-      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value;
+      const mockMediaQuery: MediaQueryList = mockMatchMedia.mock.results[mockMatchMedia.mock.results.length - 1]?.value as MediaQueryList;
 
       // Get the change handler that was registered
-      const changeHandler = (mockMediaQuery.addEventListener as jest.Mock).mock.calls[0]?.[1];
+      const changeHandler: ((event: Event) => void) | undefined = (mockMediaQuery.addEventListener as jest.MockedFunction<typeof mockMediaQuery.addEventListener>).mock.calls[0]?.[1] as ((event: Event) => void) | undefined;
 
       // Simulate media query change by calling the handler
       act(() => {
@@ -144,7 +144,7 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
 
   describe('Type Safety', () => {
     it('should return PWACapabilities interface', () => {
-      const { result } = renderHook(() => usePWAStatus());
+      const { result }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Type check - this will fail at compile time if the interface doesn't match
       const status: PWACapabilities = result.current;
@@ -161,38 +161,46 @@ describe('usePWAStatus Hook - Minimal Tests', () => {
   });
 
   describe('Edge Cases', () => {
-    describe('Edge Cases', () => {
-      it('should handle undefined window.matchMedia gracefully', () => {
-        // Store original matchMedia
-        const originalMatchMedia = window.matchMedia;
-        try {
-          // Delete matchMedia
-          delete (window as any).matchMedia;
+    it('should handle undefined window.matchMedia gracefully', () => {
+      // Store original matchMedia
+      const originalMatchMedia: typeof window.matchMedia = window.matchMedia;
+      try {
+        // Delete matchMedia
+        delete (window as { matchMedia?: typeof window.matchMedia }).matchMedia;
 
-          const { result } = renderHook(() => usePWAStatus());
+        const { result }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
-          // Should not crash and should return initial state
-          expect(result.current).toBeDefined();
-          expect(result.current.isStandalone).toBe(false);
-        } finally {
-          // Restore matchMedia even if an error occurred above
-          (window as any).matchMedia = originalMatchMedia;
-        }
-      });
+        // Should not crash and should return initial state
+        expect(result.current).toBeDefined();
+        expect(result.current.isStandalone).toBe(false);
+      } finally {
+        // Restore matchMedia even if an error occurred above
+        window.matchMedia = originalMatchMedia;
+      }
     });
 
     it('should handle media query without addEventListener', () => {
-      const mockMatchMedia: jest.Mock = window.matchMedia as jest.Mock;
+      const mockMatchMedia: jest.MockedFunction<typeof window.matchMedia> = window.matchMedia as jest.MockedFunction<typeof window.matchMedia>;
 
-      // Mock a media query without addEventListener
-      mockMatchMedia.mockReturnValueOnce({
+      // Mock a media query with non-functional addEventListener/removeEventListener
+      const mockMediaQuery: MediaQueryList = {
         matches: false,
         media: '(display-mode: standalone)',
-        addEventListener: undefined,
-        removeEventListener: undefined,
-      });
+        addEventListener: jest.fn().mockImplementation(() => {
+          throw new Error('addEventListener not supported');
+        }),
+        removeEventListener: jest.fn().mockImplementation(() => {
+          throw new Error('removeEventListener not supported');
+        }),
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      } as MediaQueryList;
+      
+      mockMatchMedia.mockReturnValueOnce(mockMediaQuery);
 
-      const { result, unmount } = renderHook(() => usePWAStatus());
+      const { result, unmount }: RenderHookResult<PWACapabilities, unknown> = renderHook(() => usePWAStatus());
 
       // Should not crash
       expect(result.current).toBeDefined();
