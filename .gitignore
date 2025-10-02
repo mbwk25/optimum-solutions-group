@@ -51,8 +51,11 @@ dashboard/data.min.json
 # Test artifacts
 test-results/
 playwright-report/
+
 coverage/
 coverage-*/
+coverage/**/*
+
 lcov-report/
 .nyc_output/
 lcov.info

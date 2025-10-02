@@ -29,7 +29,7 @@
     "test:seo": "jest --testPathPatterns=seo --passWithNoTests",
     "test:seo:hook": "jest --testPathPatterns=useSEO --passWithNoTests",
     "test:seo:components": "jest --testPathPatterns=SEODashboard --passWithNoTests",
-    "test:seo:utils": "jest --testPathPatterns=seo.ts --passWithNoTests",
+    "test:seo:utils": "jest --testPathPatterns=\"seo(\\.test)?\\.(ts|tsx)$\" --passWithNoTests",
     "test:accessibility": "jest --testNamePattern=\"accessibility|a11y\" --passWithNoTests",
     "test:performance": "jest --testNamePattern=\"performance|benchmark\" --passWithNoTests",
     "test:ci": "jest --coverage --watchAll=false --passWithNoTests",
