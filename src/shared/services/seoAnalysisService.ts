@@ -71,45 +71,56 @@ export class SEOAnalysisService {
    * Analyze SEO metadata and return comprehensive results
    */
   analyze(metadata: SEOMetadata): SEOAnalysisResult {
+    if (!metadata || typeof metadata !== 'object') {
+      throw new Error('Invalid metadata: expected an object');
+    }
+
     const issues: SEOIssue[] = [];
-    const recommendations: string[] = [];
     let score = 100;
 
     // Analyze title
-    this.analyzeTitle(metadata.title, issues, recommendations);
+    this.analyzeTitle(metadata.title, issues);
     score -= this.calculateTitleScore(metadata.title);
 
     // Analyze description
-    this.analyzeDescription(metadata.description, issues, recommendations);
+    this.analyzeDescription(metadata.description, issues);
     score -= this.calculateDescriptionScore(metadata.description);
 
     // Analyze keywords
-    this.analyzeKeywords(metadata.keywords, issues, recommendations);
+    this.analyzeKeywords(metadata.keywords, issues);
     score -= this.calculateKeywordsScore(metadata.keywords);
 
     // Analyze image
-    this.analyzeImage(metadata.image, issues, recommendations);
+    this.analyzeImage(metadata.image, issues);
     score -= this.calculateImageScore(metadata.image);
 
     // Analyze URL
-    this.analyzeUrl(metadata.url, issues);
-    score -= this.calculateUrlScore(metadata.url);
+    this.analyzeUrl(metadata.canonicalUrl || metadata.url, issues);
+    score -= this.calculateUrlScore(metadata.canonicalUrl || metadata.url);
 
     // Analyze structured data
-    const structuredDataValid = this.analyzeStructuredData(metadata.structuredData, issues);
+    const structuredDataValid: boolean = this.analyzeStructuredData(metadata.structuredData, issues);
     score -= structuredDataValid ? 0 : 10;
 
     // Analyze meta tags
-    const metaTags = this.analyzeMetaTags(metadata, issues, recommendations);
+    const metaTags: Array<{
+      name?: string;
+      property?: string;
+      content: string;
+      status: 'present' | 'missing' | 'invalid';
+    }> = this.analyzeMetaTags(metadata, issues);
     score -= this.calculateMetaTagsScore(metaTags);
 
     // Calculate performance and accessibility scores
-    const performanceScore = this.calculatePerformanceScore(metadata);
-    const accessibilityScore = this.calculateAccessibilityScore(metadata);
+    const performanceScore: number = this.calculatePerformanceScore(metadata);
+    const accessibilityScore: number = this.calculateAccessibilityScore(metadata);
+
+    // Extract recommendations from issues
+    const recommendations: string[] = issues.map((issue: SEOIssue) => issue.recommendation);
 
     const result: SEOAnalysisResult = {
       score: Math.max(0, Math.min(100, score)),
-      issues,
+      issues: issues.slice(),
       recommendations,
       metaTags,
       structuredDataValid,
@@ -122,13 +133,13 @@ export class SEOAnalysisService {
     eventBus.emit(EVENT_TYPES.SEO_ANALYSIS_COMPLETE, {
       score: result.score,
       issuesCount: issues.length,
-      criticalIssues: issues.filter(i => i.impact === 'critical').length,
+      criticalIssues: issues.filter((i: SEOIssue) => i.impact === 'critical').length,
     });
 
     return result;
   }
 
-  private analyzeTitle(title: string | undefined, issues: SEOIssue[], recommendations: string[]): void {
+  private analyzeTitle(title: string | undefined, issues: SEOIssue[]): void {
     if (!title) {
       issues.push({
         category: 'meta',
@@ -138,7 +149,6 @@ export class SEOAnalysisService {
         impact: 'critical',
         element: 'title',
       });
-      recommendations.push('Add a descriptive title tag');
       return;
     }
 
@@ -153,7 +163,6 @@ export class SEOAnalysisService {
         value: title,
         expected: `${this.MIN_TITLE_LENGTH}+ characters`,
       });
-      recommendations.push('Make title more descriptive');
     }
 
     if (title.length > this.MAX_TITLE_LENGTH) {
@@ -167,7 +176,6 @@ export class SEOAnalysisService {
         value: title,
         expected: `${this.MAX_TITLE_LENGTH} characters max`,
       });
-      recommendations.push('Shorten title to avoid truncation');
     }
 
     if (!title.includes(' ')) {
@@ -183,7 +191,7 @@ export class SEOAnalysisService {
     }
   }
 
-  private analyzeDescription(description: string | undefined, issues: SEOIssue[], recommendations: string[]): void {
+  private analyzeDescription(description: string | undefined, issues: SEOIssue[]): void {
     if (!description) {
       issues.push({
         category: 'meta',
@@ -193,7 +201,6 @@ export class SEOAnalysisService {
         impact: 'high',
         element: 'meta[name="description"]',
       });
-      recommendations.push('Add a meta description');
       return;
     }
 
@@ -208,7 +215,6 @@ export class SEOAnalysisService {
         value: description,
         expected: `${this.MIN_DESCRIPTION_LENGTH}+ characters`,
       });
-      recommendations.push('Expand meta description');
     }
 
     if (description.length > this.MAX_DESCRIPTION_LENGTH) {
@@ -222,11 +228,10 @@ export class SEOAnalysisService {
         value: description,
         expected: `${this.MAX_DESCRIPTION_LENGTH} characters max`,
       });
-      recommendations.push('Shorten meta description');
     }
   }
 
-  private analyzeKeywords(keywords: string[] | undefined, issues: SEOIssue[], recommendations: string[]): void {
+  private analyzeKeywords(keywords: string[] | undefined, issues: SEOIssue[]): void {
     if (!keywords || keywords.length === 0) {
       issues.push({
         category: 'meta',
@@ -250,11 +255,10 @@ export class SEOAnalysisService {
         value: keywords.join(', '),
         expected: `${this.MAX_KEYWORDS} keywords max`,
       });
-      recommendations.push('Focus on most relevant keywords');
     }
 
     // Check for keyword stuffing
-    const totalLength = keywords.join(' ').length;
+    const totalLength: number = keywords.join(' ').length;
     if (totalLength > 200) {
       issues.push({
         category: 'meta',
@@ -268,7 +272,7 @@ export class SEOAnalysisService {
     }
   }
 
-  private analyzeImage(image: string | undefined, issues: SEOIssue[], recommendations: string[]): void {
+  private analyzeImage(image: string | undefined, issues: SEOIssue[]): void {
     if (!image) {
       issues.push({
         category: 'meta',
@@ -294,9 +298,34 @@ export class SEOAnalysisService {
       });
     }
 
-    // Check image dimensions (would need actual image analysis)
-    if (!image.includes('width') && !image.includes('height')) {
-      recommendations.push('Specify image dimensions for better performance');
+    // Validate URL format
+    try {
+      new URL(image);
+    } catch {
+      issues.push({
+        category: 'meta',
+        type: 'error',
+        message: 'Invalid image URL format',
+        recommendation: 'Use a valid URL format for the Open Graph image',
+        impact: 'high',
+        element: 'meta[property="og:image"]',
+        value: image,
+      });
+    }
+
+    // Check for image dimension parameters in URL
+    const hasWidthParam: boolean = image.includes('width=') || image.includes('w=');
+    const hasHeightParam: boolean = image.includes('height=') || image.includes('h=');
+    if (!hasWidthParam && !hasHeightParam) {
+      issues.push({
+        category: 'meta',
+        type: 'info',
+        message: 'Image dimensions not specified in URL',
+        recommendation: 'Add width and height parameters to image URL for better performance',
+        impact: 'low',
+        element: 'meta[property="og:image"]',
+        value: image,
+      });
     }
   }
 
@@ -351,7 +380,10 @@ export class SEOAnalysisService {
       return false;
     }
 
+    let structuredDataValid = true;
+
     if (!structuredData['@context']) {
+      structuredDataValid = false;
       issues.push({
         category: 'structured-data',
         type: 'warning',
@@ -363,6 +395,7 @@ export class SEOAnalysisService {
     }
 
     if (!structuredData['@type']) {
+      structuredDataValid = false;
       issues.push({
         category: 'structured-data',
         type: 'warning',
@@ -373,10 +406,10 @@ export class SEOAnalysisService {
       });
     }
 
-    return true;
+    return structuredDataValid;
   }
 
-  private analyzeMetaTags(metadata: SEOMetadata, issues: SEOIssue[], recommendations: string[]): Array<{
+  private analyzeMetaTags(metadata: SEOMetadata, issues: SEOIssue[]): Array<{
     name?: string;
     property?: string;
     content: string;
@@ -390,7 +423,7 @@ export class SEOAnalysisService {
     }> = [];
 
     // Check essential meta tags
-    const essentialTags = [
+    const essentialTags: Array<{ name?: string; property?: string; content: string }> = [
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { name: 'robots', content: 'index, follow' },
       { property: 'og:title', content: metadata.title || '' },
@@ -400,8 +433,8 @@ export class SEOAnalysisService {
       { name: 'twitter:card', content: metadata.twitterCard || 'summary' },
     ];
 
-    essentialTags.forEach(tag => {
-      const status = tag.content ? 'present' : 'missing';
+    essentialTags.forEach((tag: { name?: string; property?: string; content: string }) => {
+      const status: 'present' | 'missing' | 'invalid' = tag.content ? 'present' : 'missing';
       metaTags.push({
         ...tag,
         status,
@@ -416,7 +449,6 @@ export class SEOAnalysisService {
           impact: 'medium',
           element: `meta[${tag.name ? 'name' : 'property'}="${tag.name || tag.property}"]`,
         });
-        recommendations.push(`Add ${tag.name || tag.property} meta tag`);
       }
     });
 
@@ -457,28 +489,33 @@ export class SEOAnalysisService {
   }
 
   private calculateMetaTagsScore(metaTags: Array<{ status: string }>): number {
-    const missingTags = metaTags.filter(tag => tag.status === 'missing').length;
+    const missingTags: number = metaTags.filter((tag: { status: string }) => tag.status === 'missing').length;
     return missingTags * 5;
   }
 
   private calculatePerformanceScore(metadata: SEOMetadata): number {
     let score = 100;
-    
+
     // Check for performance-related issues
-    if (metadata.image && !metadata.image.includes('width')) score -= 10;
+    if (metadata.image) {
+      const hasWidthParam: boolean = metadata.image.includes('width=') || metadata.image.includes('w=');
+      const hasHeightParam: boolean = metadata.image.includes('height=') || metadata.image.includes('h=');
+      if (!hasWidthParam || !hasHeightParam) score -= 10;
+    }
     if (metadata.structuredData && Object.keys(metadata.structuredData).length > 20) score -= 5;
-    
+
     return Math.max(0, score);
   }
 
   private calculateAccessibilityScore(metadata: SEOMetadata): number {
     let score = 100;
-    
+
     // Check for accessibility-related issues
     if (!metadata.title) score -= 20;
     if (!metadata.description) score -= 15;
     if (metadata.title && metadata.title.length > this.MAX_TITLE_LENGTH) score -= 5;
-    
+    if (metadata.description && metadata.description.length > this.MAX_DESCRIPTION_LENGTH) score -= 5;
+
     return Math.max(0, score);
   }
 
