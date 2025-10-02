@@ -10,6 +10,18 @@
 */
 
 declare module 'jest-axe' {
-  export function axe(element: HTMLElement | Document): Promise<import('axe-core').AxeResults>;
-  export const toHaveNoViolations: jest.Expect;
+  export function axe(
+    html?: Element | Element[] | Document | DocumentFragment | string,
+    options?: import('axe-core').RunOptions
+  ): Promise<import('axe-core').AxeResults>;  export const toHaveNoViolations: jest.ExpectExtendMap;
 }
+
+declare global {
+  namespace jest {
+    interface Matchers<R = void> {
+      toHaveNoViolations(): R;
+    }
+  }
+}
+
+export {};

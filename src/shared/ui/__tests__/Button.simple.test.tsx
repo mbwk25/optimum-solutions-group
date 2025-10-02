@@ -28,7 +28,7 @@ describe('Button Component', () => {
   it('should accept custom props', () => {
     render(<MockButton data-testid="custom-button" disabled>Click me</MockButton>);
     
-    const button: HTMLButtonElement = screen.getByTestId('custom-button');
+    const button = screen.getByRole('button', { name: /click me/i }) as HTMLButtonElement;
     expect(button).toBeTruthy();
     expect(button.disabled).toBeTruthy();
   });

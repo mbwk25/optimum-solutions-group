@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import type { NormalizerFn } from '@testing-library/jest-dom';
 
 declare global {
   namespace jest {
@@ -20,8 +21,13 @@ declare global {
       toHaveAccessibleDescription(description?: string | RegExp): R;
       toHaveAccessibleName(name?: string | RegExp): R;
       toHaveDescription(description?: string | RegExp): R;
-      toHaveTextContent(text: string | RegExp | (string | RegExp)[]): R;
-      toHaveStyle(css: string | Record<string, unknown>): R;
+      toHaveTextContent(
+         text: string | RegExp | (string | RegExp)[],
+         options?: {
+           normalizeWhitespace?: boolean;
+           normalizer?: NormalizerFn;
+         }
+       ): R;      toHaveStyle(css: string | Record<string, unknown>): R;
       toBeVisible(): R;
       toBeEmptyDOMElement(): R;
       toContainElement(element: HTMLElement | null): R;
