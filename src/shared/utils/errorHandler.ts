@@ -8,25 +8,25 @@ export interface ErrorInfo {
 }
 
 class ErrorHandler {
-  private errorCount = new Map<string, number>();
+  private errorCount: Map<string, number> = new Map<string, number>();
   private readonly MAX_ERRORS_PER_MINUTE = 10;
 
   private static instance: ErrorHandler;
 
+  constructor() {
+    // Keep constructor lightweight
+  }
+
   static getInstance(): ErrorHandler {
     if (!ErrorHandler.instance) {
       ErrorHandler.instance = new ErrorHandler();
+      ErrorHandler.instance.setupGlobalErrorHandlers();
     }
     return ErrorHandler.instance;
   }
-
-  constructor() {
-    this.setupGlobalErrorHandlers();
-  }
-
   private setupGlobalErrorHandlers(): void {
     // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', (event: Event & { reason: unknown }) => {
       this.handleError('Unhandled Promise Rejection', {
         reason: event.reason,
         component: 'Global'
@@ -34,7 +34,7 @@ class ErrorHandler {
     });
 
     // Handle global errors
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', (event: ErrorEvent) => {
       this.handleError(event.message, {
         error: event.error,
         filename: event.filename,
@@ -45,11 +45,14 @@ class ErrorHandler {
     });
 
     // Handle resource loading errors
-    window.addEventListener('error', (event) => {
-      const target = event.target as HTMLElement;
-      if (target && (target.tagName === 'IMG' || target.tagName === 'LINK' || target.tagName === 'SCRIPT')) {
-        this.handleResourceError(target as HTMLImageElement | HTMLLinkElement | HTMLScriptElement);
+    window.addEventListener('error', (event: ErrorEvent) => {
+      // Early return for non-resource errors to avoid duplicate processing
+      const target: HTMLElement = event.target as HTMLElement;
+      if (!target || !(target.tagName === 'IMG' || target.tagName === 'LINK' || target.tagName === 'SCRIPT')) {
+        return;
       }
+      
+      this.handleResourceError(target as HTMLImageElement | HTMLLinkElement | HTMLScriptElement);
     }, true); // Use capture phase to catch resource errors
   }
 
@@ -58,8 +61,8 @@ class ErrorHandler {
   handleError(errorOrMessage: Error | string, errorInfoOrContext?: ErrorInfo | ErrorContext, context?: ErrorContext): void {
     if (typeof errorOrMessage === 'string') {
       // String message overload
-      const message = errorOrMessage;
-      const errorContext = errorInfoOrContext as ErrorContext || {};
+      const message: string = errorOrMessage;
+      const errorContext: ErrorContext = errorInfoOrContext as ErrorContext || {};
       
       if (!this.shouldLogError(message)) {
         return; // Prevent error spam
@@ -74,7 +77,7 @@ class ErrorHandler {
       };
 
       // Use composite error handler for proper categorization
-      const error = new Error(message);
+      const error: Error = new Error(message);
       compositeErrorHandler.handle(error, errorInfo);
 
       // Emit event for other components
@@ -85,10 +88,14 @@ class ErrorHandler {
       });
     } else {
       // Error object overload
-      const error = errorOrMessage;
-      const errorInfo = errorInfoOrContext as ErrorInfo;
-      const errorContext = context || {};
+      const error: Error = errorOrMessage;
+      const errorInfo: ErrorInfo = errorInfoOrContext as ErrorInfo;
+      const errorContext: ErrorContext = context || {};
       
+      if (!this.shouldLogError(error.message)) {
+        return; // Prevent error spam
+      }
+
       // Use composite error handler
       compositeErrorHandler.handle(error, errorContext);
 
@@ -129,30 +136,54 @@ class ErrorHandler {
 
   // Handle resource loading errors
   private handleResourceError(element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): void {
+    const getResourceType: (tagName: string) => 'image' | 'script' | 'stylesheet' | 'font' | 'other' = (tagName: string): 'image' | 'script' | 'stylesheet' | 'font' | 'other' => {
+      switch (tagName) {
+        case 'IMG': return 'image';
+        case 'SCRIPT': return 'script';
+        case 'LINK': return 'stylesheet';
+        default: return 'other';
+      }
+    };
+
+    const getResourceUrl: (element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement) => string = (element: HTMLImageElement | HTMLLinkElement | HTMLScriptElement): string => {
+      if ('src' in element) {
+        return element.src;
+      }
+      if ('href' in element) {
+        return element.href;
+      }
+      return '';
+    };
+
     const errorInfo: ErrorContext = {
       message: `Resource loading error: ${element.tagName}`,
       timestamp: new Date().toISOString(),
       url: window.location.href,
       userAgent: navigator.userAgent,
       component: 'ResourceLoader',
-      element: {
-        tagName: element.tagName,
-        src: element.src || element.href || '',
-        id: element.id || '',
-        className: element.className || ''
-      }
+      resourceType: getResourceType(element.tagName),
+      resourceUrl: getResourceUrl(element as HTMLImageElement | HTMLLinkElement | HTMLScriptElement)
     };
 
-    // Use composite error handler
-    const error = new Error(`Resource loading failed: ${element.tagName}`);
-    compositeErrorHandler.handle(error, errorInfo);
+    // Build rate limiting key for resource errors
+    const rateLimitKey: string = `${element.tagName}:${getResourceUrl(element as HTMLImageElement | HTMLLinkElement | HTMLScriptElement)}`;
+    
+    // Check if we should log this error (rate limiting)
+    if (this.shouldLogError(rateLimitKey)) {
+      // Use composite error handler
+      const error: Error = new Error(`Resource loading failed: ${element.tagName}`);
+      compositeErrorHandler.handle(error, errorInfo);
 
-    // Emit event for other components
-    eventBus.emit(EVENT_TYPES.ERROR_OCCURRED, {
-      type: 'resource',
-      message: errorInfo.message,
-      context: errorInfo,
-    });
+      // Emit event for other components
+      eventBus.emit(EVENT_TYPES.ERROR_OCCURRED, {
+        type: 'resource',
+        message: errorInfo.message,
+        context: errorInfo,
+      });
+    } else {
+      // Rate limited - use lightweight console.warn instead
+      console.warn(`Resource loading error: ${element.tagName} (rate limited)`, errorInfo);
+    }
   }
 
   // Error persistence is now handled by the composite error handler
@@ -163,8 +194,8 @@ class ErrorHandler {
     try {
       return await fn();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.handleError(errorMessage, context);
+      const errorToHandle: Error = error instanceof Error ? error : new Error(String(error));
+      this.handleError(errorToHandle, undefined, context);
       return null;
     }
   }
@@ -174,8 +205,8 @@ class ErrorHandler {
     try {
       return fn();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.handleError(errorMessage, context);
+      const errorToHandle: Error = error instanceof Error ? error : new Error(String(error));
+      this.handleError(errorToHandle, undefined, context);
       return null;
     }
   }
@@ -183,7 +214,7 @@ class ErrorHandler {
   // Get stored errors for debugging
   getStoredErrors(): ErrorContext[] {
     try {
-      return JSON.parse(localStorage.getItem('app_errors') || '[]');
+      return JSON.parse(localStorage.getItem('app_errors') || '[]') as ErrorContext[] || [];
     } catch {
       return [];
     }

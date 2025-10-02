@@ -7,7 +7,7 @@
 
 import { ErrorContext, isPromiseErrorContext, isResourceErrorContext, isBrowserErrorContext, isUserErrorContext, isNetworkErrorContext } from '../types/errorContext';
 import { eventBus, EVENT_TYPES } from '../services/eventBus';
-import { errorReportingService } from '../services/errorReportingService';
+import { errorReportingService, ErrorReport } from '../services/errorReportingService';
 
 export interface ErrorHandler {
   handle(error: Error, context: ErrorContext): void;
@@ -17,7 +17,7 @@ export interface ErrorHandler {
 
 export class BrowserErrorHandler implements ErrorHandler {
   canHandle(context: ErrorContext): boolean {
-    return 'filename' in context || 'lineno' in context || 'colno' in context;
+    return isBrowserErrorContext(context);
   }
 
   handle(error: Error, context: ErrorContext): void {
@@ -26,6 +26,7 @@ export class BrowserErrorHandler implements ErrorHandler {
       console.warn('BrowserErrorHandler received non-browser context:', context);
       return;
     }
+    // ...
     
     // Now TypeScript knows context is BrowserErrorContext
     // Emit event for other components to react
@@ -38,7 +39,7 @@ export class BrowserErrorHandler implements ErrorHandler {
     });
 
     // Report to analytics
-    const report = errorReportingService.reportError(error, context);
+    const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with context (only in non-test environments)
     if (process.env['NODE_ENV'] !== 'test') {
@@ -60,7 +61,7 @@ export class BrowserErrorHandler implements ErrorHandler {
 
 export class UserErrorHandler implements ErrorHandler {
   canHandle(context: ErrorContext): boolean {
-    return 'userId' in context || 'action' in context;
+    return isUserErrorContext(context);
   }
 
   handle(error: Error, context: ErrorContext): void {
@@ -80,7 +81,7 @@ export class UserErrorHandler implements ErrorHandler {
     });
 
     // Report to analytics
-    const report = errorReportingService.reportError(error, context);
+    const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with user context (only in non-test environments)
     if (process.env['NODE_ENV'] !== 'test') {
@@ -101,7 +102,7 @@ export class UserErrorHandler implements ErrorHandler {
 
 export class NetworkErrorHandler implements ErrorHandler {
   canHandle(context: ErrorContext): boolean {
-    return 'method' in context || 'statusCode' in context || 'responseTime' in context;
+    return isNetworkErrorContext(context);
   }
 
   handle(error: Error, context: ErrorContext): void {
@@ -123,7 +124,7 @@ export class NetworkErrorHandler implements ErrorHandler {
     });
 
     // Report to analytics
-    const report = errorReportingService.reportError(error, context);
+    const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with network context (only in non-test environments)
     if (process.env['NODE_ENV'] !== 'test') {
@@ -145,9 +146,9 @@ export class NetworkErrorHandler implements ErrorHandler {
 
 export class PromiseErrorHandler implements ErrorHandler {
   canHandle(context: ErrorContext): boolean {
-    return 'reason' in context || 'promise' in context;
+    return isPromiseErrorContext(context);
   }
-
+  
   handle(error: Error, context: ErrorContext): void {
     // Type-safe validation using type guard
     if (!isPromiseErrorContext(context)) {
@@ -164,7 +165,7 @@ export class PromiseErrorHandler implements ErrorHandler {
     });
 
     // Report to analytics
-    const report = errorReportingService.reportError(error, context);
+    const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log promise rejection (only in non-test environments)
     if (process.env['NODE_ENV'] !== 'test') {
@@ -183,7 +184,7 @@ export class PromiseErrorHandler implements ErrorHandler {
 
 export class ResourceErrorHandler implements ErrorHandler {
   canHandle(context: ErrorContext): boolean {
-    return 'resourceType' in context || 'resourceUrl' in context;
+    return isResourceErrorContext(context);
   }
 
   handle(error: Error, context: ErrorContext): void {
@@ -203,7 +204,7 @@ export class ResourceErrorHandler implements ErrorHandler {
     });
 
     // Report to analytics
-    const report = errorReportingService.reportError(error, context);
+    const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log resource error (only in non-test environments)
     if (process.env['NODE_ENV'] !== 'test') {
@@ -234,7 +235,7 @@ export class ErrorHandlerFactory {
    * Get the appropriate handler for the given context
    */
   static getHandler(context: ErrorContext): ErrorHandler | null {
-    return this.handlers.find(handler => handler.canHandle(context)) || null;
+    return this.handlers.find((handler: ErrorHandler) => handler.canHandle(context)) || null;
   }
 
   /**
@@ -248,7 +249,7 @@ export class ErrorHandlerFactory {
    * Get handlers by type
    */
   static getHandlersByType(type: string): ErrorHandler[] {
-    return this.handlers.filter(handler => handler.getHandlerType() === type);
+    return this.handlers.filter((handler: ErrorHandler) => handler.getHandlerType() === type);
   }
 
   /**
@@ -262,18 +263,21 @@ export class ErrorHandlerFactory {
    * Unregister a handler
    */
   static unregisterHandler(handlerType: string): void {
-    this.handlers = this.handlers.filter(handler => handler.getHandlerType() !== handlerType);
+    this.handlers = this.handlers.filter((handler: ErrorHandler) => handler.getHandlerType() !== handlerType);
   }
 }
 
 // Composite error handler that uses the factory
 export class CompositeErrorHandler {
   handle(error: Error, context: ErrorContext): void {
-    const handler = ErrorHandlerFactory.getHandler(context);
+    const handler: ErrorHandler | null = ErrorHandlerFactory.getHandler(context);
     
     if (handler) {
       handler.handle(error, context);
     } else {
+      // Report to analytics even for unhandled errors
+      errorReportingService.reportError(error, context);
+      
       // Fallback to generic error handling (only in non-test environments)
       if (process.env['NODE_ENV'] !== 'test') {
         console.error('Unhandled Error:', {

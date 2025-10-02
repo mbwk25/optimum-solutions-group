@@ -23,21 +23,38 @@ export class LocalStorageErrorRepository implements ErrorRepository {
 
   async save(error: ErrorReport): Promise<void> {
     try {
-      const errors = await this.findAll();
+      const errors: ErrorReport[] = await this.findAll();
       errors.unshift(error); // Add to beginning for recent first
       
       // Keep only the most recent errors
-      const limitedErrors = errors.slice(0, this.maxStorageSize);
+      const limitedErrors: ErrorReport[] = errors.slice(0, this.maxStorageSize);
       
       localStorage.setItem(this.storageKey, JSON.stringify(limitedErrors));
     } catch (e) {
-      console.warn('Failed to save error to localStorage:', e);
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        // Clear oldest errors and retry
+        const errors: ErrorReport[] = await this.findAll();
+        // Ensure we drop at least one entry by capping to maxStorageSize - 1
+        const newLength: number = Math.min(errors.length, this.maxStorageSize - 1);
+        const reducedErrors: ErrorReport[] = errors.slice(0, newLength);
+        reducedErrors.unshift(error);
+        try {
+          localStorage.setItem(this.storageKey, JSON.stringify(reducedErrors));
+        } catch (retryError) {
+          if (e instanceof DOMException && retryError instanceof DOMException && retryError.name === 'QuotaExceededError') {
+            console.error('Failed to save error even after clearing space:', retryError);
+          } else {
+            console.warn('Failed to save error to localStorage:', retryError);
+          }
+        }
+      } else {
+        console.warn('Failed to save error to localStorage:', e);
+      }
     }
   }
-
   async findAll(): Promise<ErrorReport[]> {
     try {
-      const data = localStorage.getItem(this.storageKey);
+      const data: string | null = localStorage.getItem(this.storageKey);
       return data ? JSON.parse(data) : [];
     } catch (e) {
       console.warn('Failed to load errors from localStorage:', e);
@@ -46,17 +63,17 @@ export class LocalStorageErrorRepository implements ErrorRepository {
   }
 
   async findByCategory(category: string): Promise<ErrorReport[]> {
-    const errors = await this.findAll();
-    return errors.filter(error => error.category === category);
+    const errors: ErrorReport[] = await this.findAll();
+    return errors.filter((error: ErrorReport) => error.category === category);
   }
 
   async findBySeverity(severity: string): Promise<ErrorReport[]> {
-    const errors = await this.findAll();
-    return errors.filter(error => error.severity === severity);
+    const errors: ErrorReport[] = await this.findAll();
+    return errors.filter((error: ErrorReport) => error.severity === severity);
   }
 
   async findRecent(limit: number): Promise<ErrorReport[]> {
-    const errors = await this.findAll();
+    const errors: ErrorReport[] = await this.findAll();
     return errors.slice(0, limit);
   }
 
@@ -69,7 +86,7 @@ export class LocalStorageErrorRepository implements ErrorRepository {
   }
 
   async count(): Promise<number> {
-    const errors = await this.findAll();
+    const errors: ErrorReport[] = await this.findAll();
     return errors.length;
   }
 }
@@ -81,7 +98,7 @@ export class IndexedDBErrorRepository implements ErrorRepository {
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
+      const request: IDBOpenDBRequest = indexedDB.open(this.dbName, 1);
       
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -89,10 +106,10 @@ export class IndexedDBErrorRepository implements ErrorRepository {
         resolve();
       };
       
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db: IDBDatabase = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
+          const store: IDBObjectStore = db.createObjectStore(this.storeName, { keyPath: 'id' });
           store.createIndex('category', 'category', { unique: false });
           store.createIndex('severity', 'severity', { unique: false });
           store.createIndex('timestamp', 'timestamp', { unique: false });
@@ -105,9 +122,9 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.put(error);
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const request: IDBRequest = store.put(error);
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -118,12 +135,12 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.getAll();
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const request: IDBRequest = store.getAll();
       
       request.onsuccess = () => {
-        const errors = request.result.sort((a, b) => 
+        const errors: ErrorReport[] = request.result.sort((a: ErrorReport, b: ErrorReport) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         resolve(errors);
@@ -136,13 +153,13 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const index = store.index('category');
-      const request = index.getAll(category);
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const index: IDBIndex = store.index('category');
+      const request: IDBRequest = index.getAll(category);
       
       request.onsuccess = () => {
-        const errors = request.result.sort((a, b) => 
+        const errors: ErrorReport[] = request.result.sort((a: ErrorReport, b: ErrorReport) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         resolve(errors);
@@ -155,13 +172,13 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const index = store.index('severity');
-      const request = index.getAll(severity);
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const index: IDBIndex = store.index('severity');
+      const request: IDBRequest = index.getAll(severity);
       
       request.onsuccess = () => {
-        const errors = request.result.sort((a, b) => 
+        const errors: ErrorReport[] = request.result.sort((a: ErrorReport, b: ErrorReport) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         resolve(errors);
@@ -171,7 +188,7 @@ export class IndexedDBErrorRepository implements ErrorRepository {
   }
 
   async findRecent(limit: number): Promise<ErrorReport[]> {
-    const errors = await this.findAll();
+    const errors: ErrorReport[] = await this.findAll();
     return errors.slice(0, limit);
   }
 
@@ -179,9 +196,9 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.clear();
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const request: IDBRequest = store.clear();
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -192,9 +209,9 @@ export class IndexedDBErrorRepository implements ErrorRepository {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.count();
+      const transaction: IDBTransaction = this.db!.transaction([this.storeName], 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(this.storeName);
+      const request: IDBRequest = store.count();
       
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -217,4 +234,4 @@ export class ErrorRepositoryFactory {
 }
 
 // Default repository instance
-export const errorRepository = ErrorRepositoryFactory.create('localStorage');
+export const errorRepository: ErrorRepository = ErrorRepositoryFactory.create('localStorage');

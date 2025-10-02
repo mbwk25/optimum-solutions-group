@@ -34,11 +34,11 @@ export class ErrorReportingService {
   /**
    * Report an error with business logic for categorization and severity
    */
-    reportError(error: Error, context: ErrorContext): ErrorReport {
-    const userAgent = this.extractUserAgent(context);
-    const url = this.extractUrl(context);
-    const sessionId = this.extractSessionId(context);
-    
+  reportError(error: Error, context: ErrorContext): ErrorReport {
+    const userAgent: string | undefined = this.extractUserAgent(context);
+    const url: string | undefined = this.extractUrl(context);
+    const sessionId: string | undefined = this.extractSessionId(context);
+
     const report: ErrorReport = {
       id: this.generateErrorId(),
       timestamp: new Date().toISOString(),
@@ -59,11 +59,11 @@ export class ErrorReportingService {
    * Get error analytics for business insights
    */
   getAnalytics(): ErrorAnalytics {
-    const now = new Date();
-    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const now: Date = new Date();
+    const last24Hours: Date = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const recentErrors = this.reports.filter(
-      report => new Date(report.timestamp) > last24Hours
+    const recentErrors: ErrorReport[] = this.reports.filter(
+      (report: ErrorReport) => new Date(report.timestamp) > last24Hours
     );
 
     return {
@@ -79,14 +79,14 @@ export class ErrorReportingService {
    * Get errors by category for targeted analysis
    */
   getErrorsByCategory(category: string): ErrorReport[] {
-    return this.reports.filter(report => report.category === category);
+    return this.reports.filter((report: ErrorReport) => report.category === category);
   }
 
   /**
    * Get critical errors that need immediate attention
    */
   getCriticalErrors(): ErrorReport[] {
-    return this.reports.filter(report => report.severity === 'critical');
+    return this.reports.filter((report: ErrorReport) => report.severity === 'critical');
   }
 
   /**
@@ -148,17 +148,32 @@ export class ErrorReportingService {
 
   private extractUserAgent(context: ErrorContext): string | undefined {
     if ('userAgent' in context) return context.userAgent;
-    return navigator.userAgent;
+    return typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
   }
 
   private extractUrl(context: ErrorContext): string | undefined {
     if ('url' in context) return context.url;
-    return window.location.href;
+
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.location === 'object' &&
+      typeof window.location.href === 'string'
+    ) {
+      return window.location.href;
+    }
+
+    return undefined;
   }
 
   private extractSessionId(context: ErrorContext): string | undefined {
     if ('sessionId' in context) return context.sessionId;
-    return sessionStorage.getItem('sessionId') || undefined;
+    try {
+      return typeof sessionStorage !== 'undefined'
+        ? sessionStorage.getItem('sessionId') || undefined
+        : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private addReport(report: ErrorReport): void {
@@ -167,21 +182,21 @@ export class ErrorReportingService {
   }
 
   private groupByCategory(reports: ErrorReport[]): Record<string, number> {
-    return reports.reduce((acc, report) => {
+    return reports.reduce((acc: Record<string, number>, report: ErrorReport) => {
       acc[report.category] = (acc[report.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
   }
 
   private groupBySeverity(reports: ErrorReport[]): Record<string, number> {
-    return reports.reduce((acc, report) => {
+    return reports.reduce((acc: Record<string, number>, report: ErrorReport) => {
       acc[report.severity] = (acc[report.severity] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
   }
 
   private calculateErrorTrend(): Array<{ date: string; count: number }> {
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const last7Days: string[] = Array.from({ length: 7 }, (_, i: number) => {
       const date: Date = new Date();
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0]!;
@@ -190,7 +205,7 @@ export class ErrorReportingService {
     return last7Days.map((date: string) => {
       return {
         date,
-        count: this.reports.filter(report => 
+        count: this.reports.filter((report: ErrorReport) =>
           report.timestamp.startsWith(date)
         ).length
       };

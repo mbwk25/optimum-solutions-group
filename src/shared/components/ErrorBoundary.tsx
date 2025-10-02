@@ -18,8 +18,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  private retryTimeout?: NodeJS.Timeout;
-
+  private retryTimeout?: ReturnType<typeof setTimeout>;
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -52,7 +51,7 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   getErrorTitle = (): string => {
-    const { level = 'component' } = this.props;
+    const { level = 'component' }: Props = this.props;
     switch (level) {
       case 'app':
         return 'Application Error';
@@ -67,27 +66,28 @@ class ErrorBoundary extends Component<Props, State> {
     }
   };
 
-  override render() {
+  override render(): ReactNode {
     if (this.state.hasError) {
-      // Use custom fallback if provided
-      if (this.props.fallback) {
-        return this.props.fallback;
+      // Use custom fallback if provided (accepts 0, '' etc.; exclude only null/undefined)
+      const { fallback } = this.props;
+      if (fallback != null) {
+        return fallback;
       }
-
-      const isDevelopment = process.env['NODE_ENV'] === 'development';
-      const errorTitle = this.getErrorTitle();
+      const isDevelopment: boolean = process.env['NODE_ENV'] === 'development';
+      const errorTitle: string = this.getErrorTitle();
 
       return (
-        <div className={`flex flex-col items-center justify-center p-4 ${this.props.isolate ? 'min-h-32' : 'min-h-screen'}`}>
+        // @ts-ignore
+          <div className={`flex flex-col items-center justify-center p-4 ${this.props.isolate ? 'min-h-32' : 'min-h-screen'}`}>
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <h1 className="text-xl font-bold mb-2">{errorTitle}</h1>
           
           {isDevelopment && this.state.error && (
             <div className="mb-4 p-4 bg-gray-100 rounded-lg max-w-md">
               <h3 className="font-semibold mb-2">Error Details (Development Only)</h3>
-              <p className="text-sm text-gray-700">{this.state.error.message}</p>
+              <p className="text-sm text-gray-700">{this.state.error?.message}</p>
               <pre className="text-xs text-gray-600 mt-2 overflow-auto">
-                {this.state.error.stack}
+                {this.state.error?.stack}
               </pre>
             </div>
           )}
