@@ -15,6 +15,9 @@ import {
 // Export types for use in other components
 export type { WebVitalsMetric, CWV_THRESHOLDS };
 
+// Prevent duplicate web-vitals observer registrations across HMR/rerenders
+let __WEB_VITALS_INITIALIZED__ = false;
+
 interface DeviceCapabilities {
   isLowEndDevice: boolean;
   deviceMemory: number | null;
@@ -141,9 +144,10 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
   // Handle metric updates - memoized properly to prevent infinite loops
   const handleMetric = useCallback((metric: Metric) => {
     const processedMetric = processMetric(metric);
+    const currentOptions = optionsRef.current || {} as CoreWebVitalsOptions;
     
     // Throttle console logging to prevent spam
-    if (options.enableConsoleLogging && Math.random() < 0.1) { // Only log 10% of the time
+    if (currentOptions.enableConsoleLogging && Math.random() < 0.1) { // Only log 10% of the time
       console.log(`📊 Core Web Vitals - ${metric.name}:`, {
         value: metric.value,
         rating: processedMetric.rating,
@@ -156,7 +160,7 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       // Prevent unnecessary updates if the metric hasn't changed significantly
       const existingMetric = prev[metric.name.toLowerCase() as keyof CoreWebVitalsData];
       if (existingMetric && typeof existingMetric === 'object' && 'value' in existingMetric) {
-        if (Math.abs(existingMetric.value - processedMetric.value) < 0.001) {
+        if (Math.abs((existingMetric as WebVitalsMetric).value - processedMetric.value) < 0.001) {
           return prev; // No significant change, don't update
         }
       }
@@ -165,22 +169,23 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
         ...prev,
         [metric.name.toLowerCase()]: processedMetric,
         timestamp: Date.now(),
-      };
+      } as CoreWebVitalsData;
 
-      // Call callbacks (moved outside of setState to prevent render loops)
+      // Call callbacks (outside of render cycle)
       setTimeout(() => {
-        options.onMetric?.(processedMetric);
+        const opts = optionsRef.current || {} as CoreWebVitalsOptions;
+        opts.onMetric?.(processedMetric);
         
         // Report complete data if we have key metrics
         if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
-          options.onReport?.(updated);
+          opts.onReport?.(updated);
           reportToAnalytics(updated);
         }
       }, 0);
 
       return updated;
     });
-  }, [processMetric, options, reportToAnalytics]);
+  }, [processMetric, reportToAnalytics]);
 
   // Initialize Core Web Vitals monitoring - run only once
   useEffect(() => {
@@ -188,6 +193,12 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       setIsSupported(false);
       return;
     }
+
+    if (__WEB_VITALS_INITIALIZED__) {
+      // Already initialized, avoid duplicate observers
+      return;
+    }
+    __WEB_VITALS_INITIALIZED__ = true;
 
     // Store the stable handleMetric function in ref
     handleMetricRef.current = handleMetric;
@@ -202,7 +213,7 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
         pageLoadTime: performance.now(),
       }));
 
-      const vitalOptions = { reportAllChanges: options.reportAllChanges ?? false };
+      const vitalOptions = { reportAllChanges: optionsRef.current?.reportAllChanges ?? false };
       
       const stableHandleMetric = (metric: Metric) => {
         if (handleMetricRef.current) {
@@ -231,7 +242,7 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     }
 
     // No cleanup needed - web-vitals handles its own lifecycle
-  }, [detectDeviceCapabilities, handleMetric, options.reportAllChanges]);
+  }, []);
 
   // Calculate overall performance score
   const getPerformanceScore = useCallback((): number => {
