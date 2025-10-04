@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useCoreWebVitals } from '@/shared/hooks/useCoreWebVitals';
 import { CoreWebVitalsData } from '@/shared/types/coreWebVitals';
 
@@ -7,18 +7,22 @@ interface PerformanceMonitorProps {
 }
 
 const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
-  showDevTools = import.meta.env.MODE === 'development'
+  // Disable by default to avoid CLS feedback loops in preview environments
+  showDevTools = false,
 }) => {
   const [performanceData, setPerformanceData] = useState<CoreWebVitalsData | null>(null);
+  const hasReportedRef = useRef(false);
   
   const { 
     metrics, 
     performanceScore, 
     isSupported 
   } = useCoreWebVitals({
-    enableConsoleLogging: import.meta.env.MODE === 'development',
+    enableConsoleLogging: false,
     reportAllChanges: false,
     onReport: (data) => {
+      if (hasReportedRef.current) return;
+      hasReportedRef.current = true;
       setPerformanceData(data);
     }
   });
