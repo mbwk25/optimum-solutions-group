@@ -4,7 +4,6 @@
  */
 
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 import { 
   CWV_THRESHOLDS, 
   WebVitalsMetric, 
@@ -44,14 +43,10 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
   });
 
   const [isSupported, setIsSupported] = useState(true);
-  const [isReporting, setIsReporting] = useState(false);
   
   // Store options in ref to prevent unnecessary re-renders
   const optionsRef = useRef(options);
   optionsRef.current = options;
-  
-  // Store handleMetric in ref to prevent infinite loops
-  const handleMetricRef = useRef<(metric: Metric) => void>();
   
   // Device and connection detection
   const detectDeviceCapabilities = useCallback((): DeviceCapabilities => {
@@ -78,116 +73,7 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     };
   }, []);
 
-  // Convert raw metric to our enhanced format
-  const processMetric = useCallback((metric: Metric): WebVitalsMetric => {
-    const thresholds = CWV_THRESHOLDS[metric.name as keyof typeof CWV_THRESHOLDS];
-    let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
-    
-    if (thresholds) {
-      if (metric.value > thresholds.needsImprovement) {
-        rating = 'poor';
-      } else if (metric.value > thresholds.good) {
-        rating = 'needs-improvement';
-      }
-    }
-
-    return {
-      name: metric.name,
-      value: metric.value,
-      delta: metric.delta,
-      id: metric.id,
-      rating,
-      navigationType: (() => {
-        switch (metric.navigationType) {
-          case 'back-forward':
-          case 'back-forward-cache':
-            return 'back_forward';
-          case 'navigate':
-          case 'reload':
-          case 'prerender':
-            return metric.navigationType;
-          default:
-            return 'navigate';
-        }
-      })(),
-      timestamp: Date.now(),
-      entries: metric.entries,
-    };
-  }, []);
-
-  // Send metrics to analytics endpoint
-  const reportToAnalytics = useCallback(async (data: CoreWebVitalsData) => {
-    const currentOptions = optionsRef.current;
-    if (!currentOptions.enableAnalytics || !currentOptions.analyticsEndpoint) return;
-
-    try {
-      setIsReporting(true);
-      await fetch(currentOptions.analyticsEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'core-web-vitals',
-          data,
-          timestamp: Date.now(),
-        }),
-        keepalive: true, // Ensure data is sent even if page unloads
-      });
-    } catch (error) {
-      console.error('Failed to report Core Web Vitals:', error);
-    } finally {
-      setIsReporting(false);
-    }
-  }, []);
-
-  // Handle metric updates - memoized properly to prevent infinite loops
-  const handleMetric = useCallback((metric: Metric) => {
-    const processedMetric = processMetric(metric);
-    const currentOptions = optionsRef.current || {} as CoreWebVitalsOptions;
-    
-    // Throttle console logging to prevent spam
-    if (currentOptions.enableConsoleLogging && Math.random() < 0.1) { // Only log 10% of the time
-      console.log(`📊 Core Web Vitals - ${metric.name}:`, {
-        value: metric.value,
-        rating: processedMetric.rating,
-        delta: metric.delta,
-      });
-    }
-
-    // Update metrics state
-    setMetrics(prev => {
-      // Prevent unnecessary updates if the metric hasn't changed significantly
-      const existingMetric = prev[metric.name.toLowerCase() as keyof CoreWebVitalsData];
-      if (existingMetric && typeof existingMetric === 'object' && 'value' in existingMetric) {
-        if (Math.abs((existingMetric as WebVitalsMetric).value - processedMetric.value) < 0.001) {
-          return prev; // No significant change, don't update
-        }
-      }
-
-      const updated = {
-        ...prev,
-        [metric.name.toLowerCase()]: processedMetric,
-        timestamp: Date.now(),
-      } as CoreWebVitalsData;
-
-      // Call callbacks (outside of render cycle)
-      setTimeout(() => {
-        const opts = optionsRef.current || {} as CoreWebVitalsOptions;
-        opts.onMetric?.(processedMetric);
-        
-        // Report complete data if we have key metrics
-        if (updated.lcp && updated.cls && (updated.fid || updated.inp)) {
-          opts.onReport?.(updated);
-          reportToAnalytics(updated);
-        }
-      }, 0);
-
-      return updated;
-    });
-  }, [processMetric, reportToAnalytics]);
-
-  // Initialize Core Web Vitals monitoring - run only once
+  // Initialize Core Web Vitals monitoring - DISABLED to prevent errors
   useEffect(() => {
     if (typeof window === 'undefined') {
       setIsSupported(false);
@@ -201,9 +87,6 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     
     __WEB_VITALS_INITIALIZED__ = true;
 
-    // Store the stable handleMetric function in ref
-    handleMetricRef.current = handleMetric;
-
     try {
       const deviceInfo = detectDeviceCapabilities();
       
@@ -214,36 +97,15 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
         pageLoadTime: performance.now(),
       }));
 
-      const vitalOptions = { reportAllChanges: optionsRef.current?.reportAllChanges ?? false };
-      
-      const stableHandleMetric = (metric: Metric) => {
-        if (handleMetricRef.current) {
-          handleMetricRef.current(metric);
-        }
-      };
-
-      // Register Web Vitals observers - these setup listeners, don't call multiple times
-      onLCP(stableHandleMetric, vitalOptions);
-      onFCP(stableHandleMetric, vitalOptions);
-      onCLS(stableHandleMetric, vitalOptions);
-      onTTFB(stableHandleMetric);
-      
-      // INP is newer, might not be available in all browsers
-      if (typeof onINP === 'function') {
-        try {
-          onINP(stableHandleMetric, vitalOptions);
-        } catch (error) {
-          console.warn('INP metric not supported:', error);
-        }
-      }
+      // DISABLED: Web Vitals monitoring temporarily disabled to prevent errors
+      // The web-vitals library was causing runtime errors
+      console.log('Core Web Vitals monitoring is disabled');
 
     } catch (error) {
       console.error('Core Web Vitals not supported:', error);
       setIsSupported(false);
     }
-
-    // No cleanup needed - web-vitals handles its own lifecycle
-  }, []);
+  }, [detectDeviceCapabilities]);
 
   // Calculate overall performance score
   const getPerformanceScore = useCallback((): number => {
@@ -296,7 +158,7 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
     // Core data
     metrics,
     isSupported,
-    isReporting,
+    isReporting: false,
     
     // Computed values
     performanceScore: getPerformanceScore(),
