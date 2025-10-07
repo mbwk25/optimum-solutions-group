@@ -11,7 +11,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { generateStructuredData } from '@/shared/utils/seo';
 import { PageTitleAnnouncer } from '@/shared/components/AccessibilityProvider';
 import AccessibilityEnhancements from '@/shared/components/AccessibilityEnhancements';
-import PerformanceMonitor from '@/shared/components/PerformanceMonitor';
 import HighContrastModeToggle from '@/shared/components/HighContrastModeToggle';
 import ResourcePreloader from '@/shared/components/ResourcePreloader';
 // Import analytics hook
@@ -118,7 +117,6 @@ const Index = () => {
         />
         <PageTitleAnnouncer title="Optimum Solutions Group - Digital Transformation & IoT Solutions" />
         <CustomCursor />
-        <PerformanceMonitor />
         <HighContrastModeToggle />
         
         <div className="min-h-screen">
