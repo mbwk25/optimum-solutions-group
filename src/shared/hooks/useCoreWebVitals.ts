@@ -194,10 +194,11 @@ export function useCoreWebVitals(options: CoreWebVitalsOptions = {}) {
       return;
     }
 
+    // Skip if already initialized globally
     if (__WEB_VITALS_INITIALIZED__) {
-      // Already initialized, avoid duplicate observers
       return;
     }
+    
     __WEB_VITALS_INITIALIZED__ = true;
 
     // Store the stable handleMetric function in ref
