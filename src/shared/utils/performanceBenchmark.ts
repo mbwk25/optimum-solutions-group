@@ -4,9 +4,12 @@ import { logger } from './logger';
  * 
  * Comprehensive performance testing and benchmarking utilities for
  * automated performance regression detection and optimization tracking.
+ * 
+ * DISABLED: Web Vitals monitoring temporarily disabled to prevent errors
  */
 
-import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals';
+// DISABLED: import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals';
+// type Metric = { value: number; name: string };
 
 // ========== TYPES AND INTERFACES ==========
 
@@ -51,8 +54,10 @@ interface FIDFallback {
  * @deprecated First Input Delay (FID) was officially deprecated on March 12, 2024 and replaced by Interaction to Next Paint (INP).
  * This implementation is maintained for backward compatibility but will be removed in future versions.
  * Consider migrating to INP measurement for better user interaction performance tracking.
+ * 
+ * DISABLED: Temporarily unused
  */
-function measureFIDFallback(): Promise<FIDFallback> {
+function _measureFIDFallback(): Promise<FIDFallback> {
   return new Promise((resolve) => {
     // Check if PerformanceObserver is available for FID
     if ('PerformanceObserver' in window) {
@@ -331,58 +336,12 @@ export class PerformanceBenchmarkSuite {
 
   /**
    * Collect Web Vitals metrics
+   * DISABLED: Web Vitals temporarily disabled
    */
-  private async collectWebVitals(metrics: PerformanceBenchmark['metrics']): Promise<void> {
-    return new Promise((resolve) => {
-      let collected = 0;
-      const total = 5; // CLS, FCP, FID, LCP, TTFB
-
-      const checkComplete = (): void => {
-        collected++;
-        if (collected === total) resolve();
-      };
-
-      onCLS((metric: Metric) => {
-        metrics.cls = metric.value;
-        checkComplete();
-      });
-
-      onFCP((metric: Metric) => {
-        metrics.fcp = metric.value;
-        checkComplete();
-      });
-
-      // Use custom FID fallback implementation
-      measureFIDFallback().then((fidResult: FIDFallback) => {
-        if (!fidResult.fidUnavailable && fidResult.value !== null) {
-          metrics.fid = fidResult.value;
-          logger.info(`FID measured: ${fidResult.value}ms`);
-        } else {
-          logger.warn('FID measurement unavailable or timed out');
-          // Set a sentinel value to indicate FID is not available
-          metrics.fid = null;
-        }
-        checkComplete();
-      }).catch((error) => {
-        logger.error('FID measurement failed:', error);
-        metrics.fid = null;
-        checkComplete();
-      });
-
-      onLCP((metric: Metric) => {
-        metrics.lcp = metric.value;
-        metrics.largestContentfulPaint = metric.value;
-        checkComplete();
-      });
-
-      onTTFB((metric: Metric) => {
-        metrics.ttfb = metric.value;
-        checkComplete();
-      });
-
-      // Fallback timeout
-      setTimeout(() => resolve(), 5000);
-    });
+  private async collectWebVitals(_metrics: PerformanceBenchmark['metrics']): Promise<void> {
+    // DISABLED: Web Vitals collection temporarily disabled to prevent errors
+    console.log('[Performance Benchmark] Web Vitals collection disabled');
+    return Promise.resolve();
   }
 
   /**
@@ -850,37 +809,9 @@ export const getPerformanceSnapshot = (): Promise<Partial<PerformanceBenchmark['
 
 /**
  * Monitor Core Web Vitals in real-time
+ * DISABLED: Web Vitals temporarily disabled
  */
-export const monitorCoreWebVitals = (callback: (metric: string, value: number) => void): void => {
-  onCLS((metric: Metric) => callback('CLS', metric.value));
-  onFCP((metric: Metric) => callback('FCP', metric.value));
-  
-  // FID tracking using PerformanceObserver API (web-vitals v5 doesn't export onFID)
-  // Compatible with modern browsers that support PerformanceEventTiming
-  // @deprecated FID was deprecated on March 12, 2024. Consider using INP instead.
-  if ('PerformanceObserver' in window && 'PerformanceEventTiming' in window) {
-    try {
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        for (const entry of entries) {
-          if (entry.entryType === 'first-input') {
-            const firstInputEntry = entry as PerformanceEventTiming;
-            const fid = firstInputEntry.processingStart - firstInputEntry.startTime;
-            callback('FID', fid);
-            observer.disconnect(); // Only measure first input
-            break;
-          }
-        }
-      });
-      
-      observer.observe({ entryTypes: ['first-input'] });
-    } catch (error) {
-      console.warn('FID tracking failed (deprecated metric):', error);
-    }
-  } else {
-    console.warn('FID not supported - PerformanceEventTiming API unavailable (deprecated metric)');
-  }
-  
-  onLCP((metric: Metric) => callback('LCP', metric.value));
-  onTTFB((metric: Metric) => callback('TTFB', metric.value));
+export const monitorCoreWebVitals = (_callback: (metric: string, value: number) => void): void => {
+  console.log('[Performance Benchmark] Web Vitals monitoring disabled');
+  // DISABLED: Web Vitals monitoring temporarily disabled to prevent errors
 };

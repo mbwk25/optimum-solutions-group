@@ -8,6 +8,8 @@
 * License     : MIT
 * Copyright   : Mohammad-BNYAKOB.
 * Contact     : mohammad.bn@optimum-solutions-group.com
+* 
+* DISABLED: Web Vitals monitoring temporarily disabled to prevent errors
 * ** */
 // Déclarations globales déplacées dans global.d.ts
 import { logger } from './logger';
@@ -17,7 +19,8 @@ import { logger } from './logger';
  * Enhanced with Core Web Vitals integration
  */
 
-import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
+// DISABLED: import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
+// type Metric = { value: number; name: string };
 import type { CoreWebVitalsData, WebVitalsMetric } from '../types/coreWebVitals';
 
 export interface PerformanceMetrics {
@@ -293,22 +296,11 @@ class PerformanceMonitor {
   }
 
   private initializeWebVitals(): void {
-    // Enhanced Core Web Vitals tracking with detailed metrics
-    onCLS(this.handleWebVitalMetric.bind(this, 'cls'));
-    onFCP(this.handleWebVitalMetric.bind(this, 'fcp'));
-    this.initializeFIDTracking(); // Custom FID implementation using PerformanceObserver
-    onLCP(this.handleWebVitalMetric.bind(this, 'lcp'));
-    onTTFB(this.handleWebVitalMetric.bind(this, 'ttfb'));
-
-    // Include INP if supported
-    try {
-      onINP(this.handleWebVitalMetric.bind(this, 'inp'));
-    } catch (error) {
-      logger.warn('[Performance Monitor] INP metric not supported:', error);
-    }
+    // DISABLED: Web Vitals tracking temporarily disabled to prevent errors
+    console.log('[Performance Monitor] Web Vitals tracking disabled');
   }
 
-  private initializeFIDTracking(): void {
+  private _initializeFIDTracking(): void {
     // Robust feature detection for FID tracking
     const hasPerformanceObserver = typeof PerformanceObserver !== 'undefined';
     const hasSupportedEntryTypes = hasPerformanceObserver && 
@@ -514,45 +506,8 @@ class PerformanceMonitor {
     });
   }
 
-  private handleWebVitalMetric(metricName: keyof PerformanceMetrics, metric: Metric): void {
-    // Convert to enhanced WebVitalsMetric format
-    const thresholds = this.thresholds[metricName as keyof typeof this.thresholds];
-    let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
-
-    if (thresholds) {
-      if (metric.value > thresholds.poor) {
-        rating = 'poor';
-      } else if (metric.value > thresholds.good) {
-        rating = 'needs-improvement';
-      }
-    }
-
-    const enhancedMetric: WebVitalsMetric = {
-      name: metric.name,
-      value: metric.value,
-      delta: metric.delta,
-      id: metric.id,
-      rating,
-      navigationType: (metric.navigationType as 'navigate' | 'reload' | 'back_forward' | 'prerender') || 'navigate',
-      timestamp: Date.now(),
-      entries: metric.entries,
-    };
-
-    (this.metrics as unknown as Record<string, WebVitalsMetric | null>)[metricName] = enhancedMetric;
-
-    // Update performance scores
-    this.updatePerformanceScores();
-
-    // Check for performance issues
-    this.checkThresholds(metricName, metric.value);
-
-    // Notify observers
-    this.notifyObservers();
-
-    // Log in development
-    if (import.meta.env.MODE === 'development') {
-      console.log(`[Performance Monitor] ${metricName.toUpperCase()}: ${metric.value} (${rating})`);
-    }
+  private _handleWebVitalMetric(_metricName: keyof PerformanceMetrics, _metric: unknown): void {
+    // DISABLED: Web Vitals handling temporarily disabled
   }
 
   private checkThresholds(metricName: string, value: number): void {
