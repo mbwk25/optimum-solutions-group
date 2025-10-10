@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Only log errors in non-test environments
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('Error caught by boundary:', error, errorInfo);
     }
     
@@ -73,7 +73,7 @@ class ErrorBoundary extends Component<Props, State> {
       if (fallback != null) {
         return fallback;
       }
-      const isDevelopment: boolean = process.env['NODE_ENV'] === 'development';
+      const isDevelopment: boolean = import.meta.env.DEV;
       const errorTitle: string = this.getErrorTitle();
 
       return (

@@ -42,7 +42,7 @@ export class BrowserErrorHandler implements ErrorHandler {
     const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with context (only in non-test environments)
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('Browser Error:', {
         message: error.message,
         filename: context.filename,
@@ -84,7 +84,7 @@ export class UserErrorHandler implements ErrorHandler {
     const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with user context (only in non-test environments)
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('User Error:', {
         message: error.message,
         userId: context.userId,
@@ -127,7 +127,7 @@ export class NetworkErrorHandler implements ErrorHandler {
     const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log with network context (only in non-test environments)
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('Network Error:', {
         message: error.message,
         url: context.url,
@@ -168,7 +168,7 @@ export class PromiseErrorHandler implements ErrorHandler {
     const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log promise rejection (only in non-test environments)
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('Promise Error:', {
         message: error.message,
         reason: context.reason,
@@ -207,7 +207,7 @@ export class ResourceErrorHandler implements ErrorHandler {
     const report: ErrorReport = errorReportingService.reportError(error, context);
     
     // Log resource error (only in non-test environments)
-    if (process.env['NODE_ENV'] !== 'test') {
+    if (import.meta.env.MODE !== 'test') {
       console.error('Resource Error:', {
         message: error.message,
         resourceType: context.resourceType,
@@ -279,7 +279,7 @@ export class CompositeErrorHandler {
       errorReportingService.reportError(error, context);
       
       // Fallback to generic error handling (only in non-test environments)
-      if (process.env['NODE_ENV'] !== 'test') {
+      if (import.meta.env.MODE !== 'test') {
         console.error('Unhandled Error:', {
           message: error.message,
           context,
