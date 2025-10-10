@@ -113,16 +113,6 @@ class PerformanceMonitor {
   private startTime: number = Date.now();
   private isMonitoring: boolean = false;
 
-  // Performance thresholds (Core Web Vitals)
-  private thresholds = {
-    cls: { good: 0.1, poor: 0.25 },
-    fcp: { good: 1800, poor: 3000 },
-    fid: { good: 100, poor: 300 },
-    lcp: { good: 2500, poor: 4000 },
-    ttfb: { good: 800, poor: 1800 },
-    inp: { good: 200, poor: 500 },
-  };
-
   // private coreWebVitalsMonitor: ReturnType<typeof useCoreWebVitals> | null = null; // Non utilisé
 
   constructor() {
@@ -300,131 +290,6 @@ class PerformanceMonitor {
     console.log('[Performance Monitor] Web Vitals tracking disabled');
   }
 
-  private _initializeFIDTracking(): void {
-    // Robust feature detection for FID tracking
-    const hasPerformanceObserver = typeof PerformanceObserver !== 'undefined';
-    const hasSupportedEntryTypes = hasPerformanceObserver && 
-      PerformanceObserver.supportedEntryTypes && 
-      PerformanceObserver.supportedEntryTypes.includes('first-input');
-    const hasPerformanceEventTiming = typeof PerformanceEventTiming !== 'undefined';
-    
-    // Check if FID tracking is supported
-    if (!hasPerformanceObserver || (!hasSupportedEntryTypes && !hasPerformanceEventTiming)) {
-      logger.warn('[Performance Monitor] FID not supported - PerformanceObserver or first-input entry type unavailable');
-      return;
-    }
-
-    try {
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        
-        for (const entry of entries) {
-          // Validate entry type
-          if (entry.entryType !== 'first-input') {
-            continue;
-          }
-
-          // Safe type assertion with validation
-          const firstInputEntry = entry as PerformanceEventTiming;
-          
-          // Robust null checks and type validation
-          if (!firstInputEntry || 
-              typeof firstInputEntry.processingStart !== 'number' || 
-              typeof firstInputEntry.startTime !== 'number') {
-            logger.warn('[Performance Monitor] Invalid FID entry - missing required timing properties', {
-              entry: firstInputEntry,
-              processingStart: firstInputEntry?.processingStart,
-              startTime: firstInputEntry?.startTime
-            });
-            continue;
-          }
-
-          // Coerce to numbers and compute FID
-          const processingStart = Number(firstInputEntry.processingStart);
-          const startTime = Number(firstInputEntry.startTime);
-          const fid = processingStart - startTime;
-
-          // Validate computed FID value
-          if (isNaN(fid) || fid < 0 || !isFinite(fid)) {
-            logger.warn('[Performance Monitor] Invalid FID value computed', {
-              fid,
-              processingStart,
-              startTime,
-              entry: firstInputEntry
-            });
-            continue;
-          }
-
-          // Create enhanced FID metric with fallback ID
-          const thresholds = this.thresholds.fid;
-          let rating: 'good' | 'needs-improvement' | 'poor' = 'good';
-          
-          if (thresholds) {
-            if (fid > thresholds.poor) {
-              rating = 'poor';
-            } else if (fid > thresholds.good) {
-              rating = 'needs-improvement';
-            }
-          }
-          
-          const enhancedMetric: WebVitalsMetric = {
-            name: 'FID',
-            value: fid,
-            delta: fid,
-            id: firstInputEntry.name || `fid-${Date.now()}`, // Fallback ID
-            rating,
-            navigationType: 'navigate',
-            timestamp: Date.now(),
-            entries: [firstInputEntry],
-          };
-          
-          // Update metrics and notify observers
-          this.metrics.fid = enhancedMetric;
-          this.updatePerformanceScores();
-          this.checkThresholds('fid', fid);
-          this.notifyObservers();
-          
-          // Log detailed FID information when first input is observed
-          logger.info('[Performance Monitor] First Input Delay recorded', {
-            fid: `${fid}ms`,
-            rating,
-            entryName: firstInputEntry.name || 'unknown',
-            startTime: `${startTime}ms`,
-            duration: `${firstInputEntry.duration || 0}ms`,
-            processingStart: `${processingStart}ms`,
-            processingEnd: `${firstInputEntry.processingEnd || 0}ms`,
-            target: (firstInputEntry.target as Element)?.tagName || 'unknown',
-            interactionId: firstInputEntry.interactionId || 'none'
-          });
-          
-          if (import.meta.env.MODE === 'development') {
-            console.log(`[Performance Monitor] FID: ${fid}ms (${rating}) - ${firstInputEntry.name || 'unknown'} on ${(firstInputEntry.target as Element)?.tagName || 'unknown'}`);
-          }
-          
-          // Only disconnect after successful FID measurement
-          observer.disconnect();
-          break;
-        }
-      });
-      
-      // Try modern observe syntax first, fall back to legacy
-      try {
-        observer.observe({ type: 'first-input', buffered: true });
-      } catch (observeError) {
-        try {
-          observer.observe({ entryTypes: ['first-input'] });
-        } catch (legacyObserveError) {
-          logger.warn('[Performance Monitor] Failed to observe first-input entries', {
-            modernError: observeError,
-            legacyError: legacyObserveError
-          });
-          observer.disconnect();
-        }
-      }
-    } catch (error) {
-      logger.warn('[Performance Monitor] FID tracking failed:', error);
-    }
-  }
 
   private initializeCustomMetrics(): void {
     // Navigation Timing API
@@ -506,72 +371,9 @@ class PerformanceMonitor {
     });
   }
 
-  private _handleWebVitalMetric(_metricName: keyof PerformanceMetrics, _metric: unknown): void {
-    // DISABLED: Web Vitals handling temporarily disabled
-  }
 
-  private checkThresholds(metricName: string, value: number): void {
-    const threshold = this.thresholds[metricName as keyof typeof this.thresholds];
-    if (!threshold) return;
 
-    if (value > threshold.poor) {
-      this.addAlert('critical', metricName, value, threshold.poor,
-        `${metricName.toUpperCase()} is critically slow (${value} > ${threshold.poor})`);
-    } else if (value > threshold.good) {
-      this.addAlert('warning', metricName, value, threshold.good,
-        `${metricName.toUpperCase()} needs improvement (${value} > ${threshold.good})`);
-    }
-  }
 
-  private addAlert(type: 'warning' | 'critical', metric: string, value: number, threshold: number, message: string): void {
-    const alert: PerformanceAlert = {
-      type,
-      metric,
-      value,
-      threshold,
-      message,
-      timestamp: new Date(),
-    };
-
-    this.alerts.push(alert);
-
-    // Limit alerts to prevent memory issues
-    if (this.alerts.length > 50) {
-      this.alerts = this.alerts.slice(-25);
-    }
-  }
-
-  private updatePerformanceScores(): void {
-    const scores: number[] = [];
-    const coreVitalScores: number[] = [];
-
-    // Calculate scores for each metric
-    ['cls', 'fcp', 'fid', 'lcp', 'ttfb', 'inp'].forEach(metricName => {
-      const metric = this.metrics[metricName as keyof PerformanceMetrics] as WebVitalsMetric | null;
-      if (metric && 'rating' in metric) {
-        let score = 0;
-        switch (metric.rating) {
-          case 'good': score = 100; break;
-          case 'needs-improvement': score = 50; break;
-          case 'poor': score = 0; break;
-        }
-        scores.push(score);
-
-        // Core Web Vitals are LCP, FID, CLS
-        if (['lcp', 'fid', 'cls'].includes(metricName)) {
-          coreVitalScores.push(score);
-        }
-      }
-    });
-
-    // Calculate overall performance score
-    this.metrics.performanceScore = scores.length > 0 ?
-      Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-
-    // Calculate Core Web Vitals score (Google's main metrics)
-    this.metrics.coreWebVitalsScore = coreVitalScores.length > 0 ?
-      Math.round(coreVitalScores.reduce((a, b) => a + b, 0) / coreVitalScores.length) : 0;
-  }
 
   /**
    * Get Core Web Vitals data in the format expected by the dashboard
@@ -641,9 +443,6 @@ class PerformanceMonitor {
     }
   }
 
-  private notifyObservers(): void {
-    this.observers.forEach(observer => observer(this.metrics));
-  }
 
   private logEnhancedMetric(name: string, metric: WebVitalsMetric | null, unit: string = ''): void {
     if (!metric) {
