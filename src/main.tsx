@@ -1,15 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-import './shared/styles/accessibility.css'
-import { serviceWorkerManager } from './shared/utils/serviceWorkerManager'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+import "./shared/styles/accessibility.css";
+import { serviceWorkerManager } from "./shared/utils/serviceWorkerManager";
 
-// Performance optimization: Register service worker after initial render
-serviceWorkerManager.register()
+// Ensure DOM is ready before initializing React
+const initializeApp = () => {
+  // Performance optimization: Register service worker after initial render
+  serviceWorkerManager.register();
 
-// Accessibility enhancement: Initialize focus management
-document.addEventListener('DOMContentLoaded', () => {
+  // Accessibility enhancement: Initialize focus management
   // Add keyboard navigation class detection
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
@@ -30,10 +31,30 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.body.classList.add('prefers-reduced-motion');
   }
-});
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+  // Initialize React app
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    console.error('Failed to find root element');
+    return;
+  }
+
+  try {
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  } catch (error) {
+    console.error('Failed to initialize React app:', error);
+  }
+};
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  // DOM already loaded
+  initializeApp();
+}
