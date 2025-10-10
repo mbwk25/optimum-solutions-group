@@ -117,7 +117,11 @@ const config = async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      // Ensure single React instance
+      "react": resolve(__dirname, "./node_modules/react"),
+      "react-dom": resolve(__dirname, "./node_modules/react-dom"),
     },
+    dedupe: ['react', 'react-dom'],
   },
   ssr: {
     noExternal: ["lovable-tagger"],

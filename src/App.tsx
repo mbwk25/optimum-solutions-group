@@ -1,7 +1,6 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense } from "react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { AccessibilityProvider } from "@/shared/components/AccessibilityProvider";
 
