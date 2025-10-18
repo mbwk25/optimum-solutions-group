@@ -1,0 +1,98 @@
+{
+  "lastUpdated": "2025-10-18T06:25:17.148Z",
+  "summary": {
+    "overallScore": 0,
+    "totalAudits": 2,
+    "lastAudit": "2025-10-18T06:20:36.064Z",
+    "status": "critical",
+    "keyMetrics": {
+      "performanceScore": 0,
+      "lcp": 0,
+      "cls": 0,
+      "bundleSize": 0
+    },
+    "alertCounts": {
+      "critical": 1,
+      "error": 0,
+      "warning": 0
+    }
+  },
+  "history": [
+    {
+      "type": "performance",
+      "performanceScore": 0,
+      "accessibilityScore": 0,
+      "bestPracticesScore": 0,
+      "seoScore": 0,
+      "lcp": 0,
+      "fid": 0,
+      "cls": 0,
+      "fcp": 0,
+      "ttfb": 0
+    }
+  ],
+  "trends": {},
+  "alerts": [
+    {
+      "id": "perf-score-critical",
+      "type": "critical",
+      "category": "performance",
+      "title": "Critical Performance Score",
+      "message": "Performance score is 0/100, which is critically low",
+      "timestamp": "2025-10-18T06:25:17.154Z",
+      "value": 0,
+      "threshold": 50
+    }
+  ],
+  "recommendations": [],
+  "performance": {
+    "current": {
+      "performanceScore": 0,
+      "accessibilityScore": 0,
+      "bestPracticesScore": 0,
+      "seoScore": 0,
+      "lcp": 0,
+      "fid": 0,
+      "cls": 0,
+      "fcp": 0,
+      "ttfb": 0,
+      "tbt": 0,
+      "si": 0
+    },
+    "history": [
+      {
+        "performanceScore": 0,
+        "accessibilityScore": 0,
+        "bestPracticesScore": 0,
+        "seoScore": 0,
+        "lcp": 0,
+        "fid": 0,
+        "cls": 0,
+        "fcp": 0,
+        "ttfb": 0
+      }
+    ],
+    "totalAudits": 1
+  },
+  "bundle": {
+    "current": {
+      "totalSize": 0,
+      "totalFiles": 0,
+      "jsSize": 0,
+      "cssSize": 0,
+      "violations": 0,
+      "warnings": 0
+    },
+    "history": [
+      {
+        "timestamp": "2025-10-18T06:20:36.064Z",
+        "totalSize": 0,
+        "jsSize": 0,
+        "cssSize": 0,
+        "violations": 0
+      }
+    ],
+    "lastAnalysis": "2025-10-18T06:20:36.064Z",
+    "totalAnalyses": 1
+  }
+}
